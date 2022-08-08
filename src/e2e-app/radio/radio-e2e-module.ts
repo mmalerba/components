@@ -7,7 +7,7 @@
  */
 
 import {NgModule} from '@angular/core';
-import {MatRadioModule} from '@angular/material/radio';
+import {MatRadioModule} from '@angular/material/legacy-radio';
 import {SimpleRadioButtons} from './radio-e2e';
 
 @NgModule({

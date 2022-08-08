@@ -64,7 +64,7 @@ export const IMPORT_REPLACEMENTS: {[component: string]: {old: string; new: strin
     new: '@angular/material-experimental/mdc-progress-spinner',
   },
   'radio': {
-    old: '@angular/material/radio',
+    old: '@angular/material/legacy-radio',
     new: '@angular/material-experimental/mdc-radio',
   },
   'sidenav': {

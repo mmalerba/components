@@ -20,7 +20,7 @@ import {
 } from '@angular/material/expansion';
 import {MatLegacyFormFieldModule} from '@angular/material/legacy-form-field';
 import {MatLegacyInputModule} from '@angular/material/legacy-input';
-import {MatRadioModule} from '@angular/material/radio';
+import {MatRadioModule} from '@angular/material/legacy-radio';
 import {MatLegacySlideToggleModule} from '@angular/material/legacy-slide-toggle';
 
 @Component({

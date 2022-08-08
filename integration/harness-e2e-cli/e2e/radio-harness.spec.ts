@@ -1,4 +1,4 @@
-import {MatRadioGroupHarness} from '@angular/material/radio/testing';
+import {MatRadioGroupHarness} from '@angular/material/legacy-radio/testing';
 import {SeleniumWebDriverHarnessEnvironment} from '@angular/cdk/testing/selenium-webdriver';
 import {HarnessLoader} from '@angular/cdk/testing';
 import {configureDriver} from './driver.js';

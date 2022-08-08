@@ -12,7 +12,7 @@ import {
   RadioGroupHarnessFilters,
   _MatRadioGroupHarnessBase,
   _MatRadioButtonHarnessBase,
-} from '@angular/material/radio/testing';
+} from '@angular/material/legacy-radio/testing';
 
 /** Harness for interacting with an MDC-based mat-radio-group in tests. */
 export class MatRadioGroupHarness extends _MatRadioGroupHarnessBase<

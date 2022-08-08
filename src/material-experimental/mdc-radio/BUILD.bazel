@@ -23,7 +23,7 @@ ng_module(
         "//src/cdk/coercion",
         "//src/cdk/collections",
         "//src/material/core",
-        "//src/material/radio",
+        "//src/material/legacy-radio",
         "@npm//@angular/forms",
         "@npm//@material/radio",
     ],

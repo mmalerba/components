@@ -3,7 +3,7 @@ import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {Component} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {ReactiveFormsModule} from '@angular/forms';
-import {MatRadioModule} from '@angular/material/radio';
+import {MatRadioModule} from '@angular/material/legacy-radio';
 import {MatRadioButtonHarness, MatRadioGroupHarness} from './radio-harness';
 
 /** Shared tests to run on both the original and MDC-based radio components. */

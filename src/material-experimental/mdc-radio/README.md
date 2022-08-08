@@ -69,5 +69,5 @@ Assuming your application is already up and running using Angular Material, you 
 
 ## API differences
 
-The API of the radio matches the one from `@angular/material/radio`. Simply replace imports to
-`@angular/material/radio` with imports to `@angular/material-experimental/mdc-radio`.
+The API of the radio matches the one from `@angular/material/legacy-radio`. Simply replace imports to
+`@angular/material/legacy-radio` with imports to `@angular/material-experimental/mdc-radio`.

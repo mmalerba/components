@@ -24,7 +24,7 @@ import {MenuStylesMigrator} from './components/menu/menu-styles';
 import {PaginatorStylesMigrator} from './components/paginator/paginator-styles';
 import {ProgressBarStylesMigrator} from './components/progress-bar/progress-bar-styles';
 import {ProgressSpinnerStylesMigrator} from './components/progress-spinner/progress-spinner-styles';
-import {RadioStylesMigrator} from './components/radio/radio-styles';
+import {RadioStylesMigrator} from './components/legacy-radio/radio-styles';
 import {RuntimeMigrator} from './ts-migration/runtime-migrator';
 import {SelectStylesMigrator} from './components/select/select-styles';
 import {SlideToggleStylesMigrator} from './components/slide-toggle/slide-toggle-styles';

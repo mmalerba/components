@@ -112,7 +112,7 @@ export class SecondaryEntryPointsMigration extends Migration<null> {
     // Transforms the import declaration into multiple import declarations that import
     // the given symbols from the individual secondary entry-points. For example:
     // import {MatCardModule, MatCardTitle} from '@angular/material/legacy-card';
-    // import {MatRadioModule} from '@angular/material/radio';
+    // import {MatRadioModule} from '@angular/material/legacy-radio';
     const newImportStatements = Array.from(importMap.entries())
       .sort()
       .map(([name, elements]) => {

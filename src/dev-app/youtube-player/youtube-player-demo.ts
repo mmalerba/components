@@ -16,7 +16,7 @@ import {
 } from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
-import {MatRadioModule} from '@angular/material/radio';
+import {MatRadioModule} from '@angular/material/legacy-radio';
 import {YouTubePlayerModule} from '@angular/youtube-player';
 
 interface Video {

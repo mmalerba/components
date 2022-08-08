@@ -11,7 +11,7 @@ import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MatLegacyCheckboxModule} from '@angular/material/legacy-checkbox';
-import {MatRadioModule} from '@angular/material/radio';
+import {MatRadioModule} from '@angular/material/legacy-radio';
 
 @Component({
   selector: 'radio-demo',

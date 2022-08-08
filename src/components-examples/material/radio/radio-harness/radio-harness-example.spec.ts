@@ -1,8 +1,8 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
-import {MatRadioButtonHarness, MatRadioGroupHarness} from '@angular/material/radio/testing';
+import {MatRadioButtonHarness, MatRadioGroupHarness} from '@angular/material/legacy-radio/testing';
 import {HarnessLoader} from '@angular/cdk/testing';
-import {MatRadioModule} from '@angular/material/radio';
+import {MatRadioModule} from '@angular/material/legacy-radio';
 import {RadioHarnessExample} from './radio-harness-example';
 import {ReactiveFormsModule} from '@angular/forms';
 
