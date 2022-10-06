@@ -19,10 +19,14 @@ export class ThemingStylesMigration extends Migration<ComponentMigrator[], Schem
   namespace: string;
 
   override visitStylesheet(stylesheet: ResolvedResource) {
+    const migratedContent = this.migrate(stylesheet.content, stylesheet.filePath).replace(
+      new RegExp(`${this.namespace}.define-legacy-typography-config\\(`, 'g'),
+      `${this.namespace}.define-typography-config(`,
+    );
     this.fileSystem
       .edit(stylesheet.filePath)
       .remove(stylesheet.start, stylesheet.content.length)
-      .insertRight(stylesheet.start, this.migrate(stylesheet.content, stylesheet.filePath));
+      .insertRight(stylesheet.start, migratedContent);
   }
 
   migrate(styles: string, filename: string): string {
