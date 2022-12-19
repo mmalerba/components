@@ -1,0 +1,51 @@
+html {
+  --mdc-theme-primary: #3f51b5;
+  --mdc-theme-secondary: #ff4081;
+  --mdc-typography-body1-family: Roboto, sans-serif;
+  --mdc-typography-body1-size: 16px;
+  --mdc-text-button-container-height: 36px;
+  --mdc-text-button-container-shape: var(--mdc-shape-small, 4px);
+  --mdc-text-button-disabled-label-text-color: rgba(0, 0, 0, 0.38);
+  --mdc-text-button-focus-state-layer-color: var(--mdc-theme-primary, #6200ee);
+  --mdc-text-button-focus-state-layer-opacity: 0.12;
+  --mdc-text-button-hover-state-layer-color: var(--mdc-theme-primary, #6200ee);
+  --mdc-text-button-hover-state-layer-opacity: 0.04;
+  --mdc-text-button-label-text-color: var(--mdc-theme-primary, #6200ee);
+  --mdc-text-button-label-text-font: var(--mdc-typography-button-font-family, var(--mdc-typography-font-family, Roboto, sans-serif));
+  --mdc-text-button-label-text-size: var(--mdc-typography-button-font-size, 0.875rem);
+  --mdc-text-button-label-text-tracking: var(--mdc-typography-button-letter-spacing, 0.0892857143em);
+  --mdc-text-button-label-text-transform: var(--mdc-typography-button-text-transform, uppercase);
+  --mdc-text-button-label-text-weight: var(--mdc-typography-button-font-weight, 500);
+  --mdc-text-button-pressed-state-layer-color: var(--mdc-theme-primary, #6200ee);
+  --mdc-text-button-pressed-state-layer-opacity: 0.12;
+  --mdc-text-button-with-icon-icon-size: 18px;
+  --mdc-checkbox-disabled-selected-checkmark-color: #fff;
+  --mdc-checkbox-disabled-selected-icon-color: rgba(0, 0, 0, 0.38);
+  --mdc-checkbox-disabled-unselected-icon-color: rgba(0, 0, 0, 0.38);
+  --mdc-checkbox-selected-checkmark-color: #fff;
+  --mdc-checkbox-selected-focus-icon-color: var(--mdc-theme-secondary, #018786);
+  --mdc-checkbox-selected-focus-state-layer-color: #000;
+  --mdc-checkbox-selected-focus-state-layer-opacity: 0.12;
+  --mdc-checkbox-selected-hover-icon-color: var(--mdc-theme-secondary, #018786);
+  --mdc-checkbox-selected-hover-state-layer-color: var(--mdc-theme-secondary, #018786);
+  --mdc-checkbox-selected-hover-state-layer-opacity: 0.04;
+  --mdc-checkbox-selected-icon-color: var(--mdc-theme-secondary, #018786);
+  --mdc-checkbox-selected-pressed-icon-color: var(--mdc-theme-secondary, #018786);
+  --mdc-checkbox-selected-pressed-state-layer-color: #000;
+  --mdc-checkbox-state-layer-size: 40px;
+  --mdc-checkbox-unselected-focus-icon-color: var(--mdc-theme-secondary, #018786);
+  --mdc-checkbox-unselected-focus-state-layer-color: #000;
+  --mdc-checkbox-unselected-focus-state-layer-opacity: 0.12;
+  --mdc-checkbox-unselected-hover-icon-color: var(--mdc-theme-secondary, #018786);
+  --mdc-checkbox-unselected-hover-state-layer-color: #000;
+  --mdc-checkbox-unselected-hover-state-layer-opacity: 0.04;
+  --mdc-checkbox-unselected-icon-color: rgba(0, 0, 0, 0.54);
+  --mdc-checkbox-unselected-pressed-icon-color: rgba(0, 0, 0, 0.54);
+  --mdc-checkbox-unselected-pressed-state-layer-color: #000
+}
+
+.my-special-button {
+  --mdc-text-button-container-height: 60px;
+  --mdc-text-button-container-shape: 10px;
+  --mdc-text-button-label-text-color: magenta
+}

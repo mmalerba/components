@@ -136,6 +136,46 @@ sass_binary(
     ],
 )
 
+sass_binary(
+    name = "prototype-basic",
+    src = "prototype-basic.scss",
+    deps = [
+        "//src/material:sass_lib",
+        "//src/material-experimental:sass_lib",
+        "//src/material/core:theming_scss_lib",
+    ],
+)
+
+sass_binary(
+    name = "prototype-themed-sidebar",
+    src = "prototype-themed-sidebar.scss",
+    deps = [
+        "//src/material:sass_lib",
+        "//src/material-experimental:sass_lib",
+        "//src/material/core:theming_scss_lib",
+    ],
+)
+
+sass_binary(
+    name = "prototype-special-button",
+    src = "prototype-special-button.scss",
+    deps = [
+        "//src/material:sass_lib",
+        "//src/material-experimental:sass_lib",
+        "//src/material/core:theming_scss_lib",
+    ],
+)
+
+sass_binary(
+    name = "prototype-no-typography",
+    src = "prototype-no-typography.scss",
+    deps = [
+        "//src/material:sass_lib",
+        "//src/material-experimental:sass_lib",
+        "//src/material/core:theming_scss_lib",
+    ],
+)
+
 # Variables that are going to be inlined into the dev app index.html.
 filegroup(
     name = "variables",

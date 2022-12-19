@@ -1,0 +1,132 @@
+@use 'sass:map';
+@use '@material/button/button-text-theme' as mdc-text-button-theme;
+@use '@material/checkbox/checkbox-theme' as mdc-checkbox-theme;
+@use './theming' as theming;
+@use '../../core/typography/typography-utils' as typography-utils;
+
+@function configure-colors($theme) {
+  // TODO: allow passing theme or set of tokens and normalize to a list of tokens.
+  @return (
+      id: 'mat-colors',
+      tokens: $theme
+  )
+}
+
+@function configure-typography($theme) {
+  // TODO: allow passing theme or set of tokens and normalize to a list of tokens.
+  @return (
+      id: 'mat-typography',
+      tokens: $theme
+  )
+}
+
+@function configure-button($tokens: ()) {
+  @return (
+      id: 'mat-button',
+      tokens: $tokens,
+      deps: ('mat-colors', 'mat-typography')
+  );
+}
+
+@function configure-checkbox($tokens: ()) {
+  @return (
+      id: 'mat-checkbox',
+      tokens: $tokens,
+      deps: ('mat-colors', 'mat-typography')
+  );
+}
+
+@mixin theme($components...) {
+  @include _apply-theme($components, $emit-default-token-values: true, $validate-deps: true);
+}
+
+@mixin override-theme($components...) {
+  @include _apply-theme($components, $emit-default-token-values: false, $validate-deps: false)
+}
+
+@mixin _apply-theme($components, $emit-default-token-values, $validate-deps) {
+  $selector: &;
+  $configured: ();
+  $needs-configuration: ();
+
+  // This ignores density for now, we'd have to figure out how to incorporate it. Ideas:
+  // - Get MDC to provide system level density
+  // - Make our own system level density token and override the defaults in various components to depend on it
+  // - Add a "density" token for each component to individually set the density for that component
+  @at-root #{if($selector, $selector, 'html')} {
+    @each $component in $components {
+      $id: map.get($component, 'id');
+
+      // TODO: Should we warn about this?
+      // I could see allowing mat.configure-all-components() followed by
+      // mat.configure-button((...)) to reconfigure button with tweaks.
+      @if map.has-key($configured, $id) {
+        @warn 'Overwriting previous configuration for #{$id}';
+      }
+
+      $tokens: map.get($component, 'tokens');
+      $deps: map.get($component, 'deps') or ();
+      $configured: map.set($configured, $id, true);
+
+      @if $validate-deps {
+        @each $dep in $deps {
+          $needs-configuration: map.set($needs-configuration, $dep, $id);
+        }
+      }
+
+      @if $id == 'mat-colors' {
+        @include _apply-colors-theme($tokens, $emit-default-token-values);
+      } @else if $id == 'mat-typography' {
+        @include _apply-typography-theme($tokens, $emit-default-token-values);
+      } @else if $id == 'mat-button' {
+        @include _apply-button-theme($tokens, $emit-default-token-values);
+      } @else if $id == 'mat-checkbox' {
+        @include _apply-checkbox-theme($tokens, $emit-default-token-values);
+      }
+    }
+
+    @if $validate-deps {
+      @each $needed, $dependant in $needs-configuration {
+        @if map.get($configured, $needed) != true {
+          @error 'You must configure #{$needed} since you configured #{$dependant}';
+        }
+      }
+    }
+  }
+}
+
+@mixin _apply-colors-theme($theme, $emit-default-token-values: false) {
+  // TODO: Just for demonstration, replace with call to MDC mixin when it exists.
+  $colors: theming.get-color-config($theme);
+  $primary: map.get($colors, primary);
+  $secondary: map.get($colors, accent);
+  --mdc-theme-primary: #{theming.get-color-from-palette($primary)};
+  --mdc-theme-secondary: #{theming.get-color-from-palette($secondary)};
+}
+
+@mixin _apply-typography-theme($theme, $emit-default-token-values: false) {
+  // TODO: Just for demonstration, replace with call to MDC mixin when it exists.
+  $typography: theming.get-typography-config($theme);
+  --mdc-typography-body1-family: #{typography-utils.font-family($typography, body-1)};
+  --mdc-typography-body1-size: #{typography-utils.font-size($typography, body-1)};
+}
+
+@mixin _apply-button-theme($override-tokens: (), $emit-default-token-values: false) {
+  $tokens: if(
+          $emit-default-token-values,
+          map.merge(mdc-text-button-theme.$light-theme, $override-tokens),
+          $override-tokens);
+  // There are separate mixins for text-button, icon-button, elevated-button, etc.
+  // How do we specify which override goes to which mixin in $override-tokens?
+  // It would be nice if there was a mixin like `mdc.apply-tokens()` that just took fully qualified
+  // token names (e.g. `mdc.comp.text-button.label-text-color`) or an equivalent structured map
+  @include mdc-text-button-theme.theme($tokens);
+}
+
+@mixin _apply-checkbox-theme($override-tokens: (), $emit-default-token-values: false) {
+  $tokens: if(
+          $emit-default-token-values,
+          map.merge(mdc-checkbox-theme.$light-theme, $override-tokens),
+          $override-tokens);
+  @include mdc-checkbox-theme.theme($tokens);
+}

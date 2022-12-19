@@ -1,0 +1,17 @@
+@use '@angular/material' as mat;
+
+// Use Case: Forgot to configure required dependency, compilation error.
+
+$theme: mat.define-light-theme((
+    color: (
+        primary: mat.define-palette(mat.$indigo-palette),
+        accent: mat.define-palette(mat.$pink-palette, A200, A100, A400),
+    ),
+    typography: mat.define-typography-config(),
+));
+
+@include mat.theme(
+        mat.configure-colors($theme),
+        mat.configure-button(),
+        mat.configure-checkbox(),
+);

@@ -50,6 +50,7 @@ ALL_THEMING_FILES = [
     "density/private/_all-density.scss",
     "density/private/_all-density.import.scss",
     "theming/_all-theme.scss",
+    "theming/_prototype.scss",
     "theming/_all-theme.import.scss",
     "typography/_all-typography.scss",
     "typography/_all-typography.import.scss",

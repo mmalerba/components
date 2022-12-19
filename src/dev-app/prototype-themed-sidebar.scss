@@ -1,0 +1,31 @@
+@use '@angular/material' as mat;
+
+// Use Case: Define light theme for the main app, but with a dark themed sidebar
+
+$theme: mat.define-light-theme((
+    color: (
+        primary: mat.define-palette(mat.$indigo-palette),
+        accent: mat.define-palette(mat.$pink-palette, A200, A100, A400),
+    ),
+    typography: mat.define-typography-config(),
+));
+
+$sidebar-theme: mat.define-dark-theme((
+    color: (
+        primary: mat.define-palette(mat.$red-palette),
+        accent: mat.define-palette(mat.$green-palette),
+    ),
+));
+
+@include mat.theme(
+        mat.configure-colors($theme),
+        mat.configure-typography($theme),
+        mat.configure-button(),
+        mat.configure-checkbox(),
+);
+
+sidebar {
+  @include mat.override-theme(
+          mat.configure-colors($sidebar-theme),
+  );
+}

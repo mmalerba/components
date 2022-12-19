@@ -1,0 +1,28 @@
+@use '@angular/material' as mat;
+
+// Use Case: Customize the look of my special button, while leaving normal buttons the same.
+
+$theme: mat.define-light-theme((
+    color: (
+        primary: mat.define-palette(mat.$indigo-palette),
+        accent: mat.define-palette(mat.$pink-palette, A200, A100, A400),
+    ),
+    typography: mat.define-typography-config(),
+));
+
+@include mat.theme(
+        mat.configure-colors($theme),
+        mat.configure-typography($theme),
+        mat.configure-button(),
+        mat.configure-checkbox(),
+);
+
+.my-special-button {
+  @include mat.override-theme(
+      mat.configure-button((
+          container-height: 60px,
+          container-shape: 10px,
+          label-text-color: magenta,
+      ))
+  );
+}

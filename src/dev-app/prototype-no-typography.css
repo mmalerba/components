@@ -1,0 +1,10 @@
+/*
+ERROR: /usr/local/google/home/mmalerba/components/src/dev-app/BUILD.bazel:169:12: SassCompiler src/dev-app/prototype-no-typography.css failed: (Exit 1): compiler.sh failed: error executing command bazel-out/host/bin/tools/sass/compiler.sh @bazel-out/k8-fastbuild/bin/src/dev-app/prototype-no-typography.css-0.params
+sass.Exception [Error]: "You must configure mat-typography since you configured mat-checkbox"
+   ╷
+40 │   @include _apply-theme($components, $emit-default-token-values: true, $validate-deps: true);
+   │   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   ╵
+  src/material/core/theming/_prototype.scss 40:3  theme()
+  src/dev-app/prototype-no-typography.scss 13:1   root stylesheet
+*/
