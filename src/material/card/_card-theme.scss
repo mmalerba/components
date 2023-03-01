@@ -19,16 +19,6 @@
     @include mdc-elevated-card-theme.theme($mdc-elevated-card-color-tokens);
     @include mdc-outlined-card-theme.theme($mdc-outlined-card-color-tokens);
     @include token-utils.create-token-values(tokens-mat-card.$prefix, $mat-card-color-tokens);
-
-    // TODO(mmalerba): This should be based on tokens, but the elevation tokens don't seem to be
-    //  working currently. They wind up setting values like `box-shadow: var(--e); --e: 1`
-    @include private.private-theme-elevation(1, $config);
-  }
-
-  .mat-mdc-card-outlined {
-    // TODO(mmalerba): This should be based on tokens, but the elevation tokens don't seem to be
-    //  working currently. They wind up setting values like `box-shadow: var(--e); --e: 1`
-    @include private.private-theme-elevation(0, $config);
   }
 }
 

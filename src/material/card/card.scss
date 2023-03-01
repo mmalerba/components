@@ -1,7 +1,12 @@
+@use 'sass:list';
+@use 'sass:map';
+@use 'sass:meta';
 @use '@material/card' as mdc-card;
 @use '@material/card/elevated-card-theme' as mdc-elevated-card-theme;
+@use '@material/elevation/elevation-theme' as mdc-elevation-theme;
 @use '@material/card/outlined-card-theme' as mdc-outlined-card-theme;
 @use '@material/theme/custom-properties' as mdc-custom-properties;
+@use '@material/theme/keys' as mdc-theme-keys;
 @use '../core/tokens/token-utils';
 @use '../core/tokens/m2/mat/card' as tokens-mat-card;
 @use '../core/tokens/m2/mdc/elevated-card' as tokens-mdc-elevated-card;
@@ -29,6 +34,18 @@
   .mat-mdc-card-outlined {
     // Add the official slots for the MDC outlined-card.
     @include mdc-outlined-card-theme.theme-styles($mdc-outlined-card-token-slots);
+  }
+
+  .mat-mdc-card {
+    $elevated-card-custom-properties: mdc-theme-keys.create-theme-properties(
+        $mdc-elevated-card-token-slots,
+        $prefix: list.nth(tokens-mdc-elevated-card.$prefix, 2),
+    );
+    @include mdc-elevation-theme.with-resolver(
+        meta.get-function(resolver, $module: mdc-elevation-theme),
+        $elevation: map.get($elevated-card-custom-properties, container-elevation),
+        $shadow-color: map.get($elevated-card-custom-properties, container-shadow-color)
+    );
   }
 
   // Add slots for custom Angular Material card tokens.
