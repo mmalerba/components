@@ -12,6 +12,7 @@ import {Platform} from '@angular/cdk/platform';
 import {
   afterNextRender,
   AfterRenderPhase,
+  ApplicationRef,
   booleanAttribute,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -178,6 +179,8 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
 
   private _injector = inject(Injector);
 
+  private _applicationRef = inject(ApplicationRef);
+
   private _isDestroyed = false;
 
   constructor(
@@ -279,7 +282,7 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
           this._dataLength = newLength;
           this._scrollStrategy.onDataLengthChanged();
         }
-        this._doChangeDetection();
+        this.ngZone.runOutsideAngular(() => queueMicrotask(() => this._doChangeDetection()));
       });
     });
   }
@@ -497,11 +500,7 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
     // properties sequentially we only have to run `_doChangeDetection` once at the end.
     if (!this._isChangeDetectionPending) {
       this._isChangeDetectionPending = true;
-      this.ngZone.runOutsideAngular(() =>
-        Promise.resolve().then(() => {
-          this._doChangeDetection();
-        }),
-      );
+      this.ngZone.runOutsideAngular(() => queueMicrotask(() => this._doChangeDetection()));
     }
   }
 
@@ -510,6 +509,8 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
     if (this._isDestroyed) {
       return;
     }
+
+    let isDone = false;
 
     this.ngZone.run(() => {
       this._changeDetectorRef.markForCheck();
@@ -527,6 +528,7 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
 
       afterNextRender(
         () => {
+          isDone = true;
           this._isChangeDetectionPending = false;
           const runAfterChangeDetection = this._runAfterChangeDetection;
           this._runAfterChangeDetection = [];
@@ -537,6 +539,11 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
         {injector: this._injector},
       );
     });
+
+    if (!isDone) {
+      console.log('ApplicationRef.tick()');
+      this._applicationRef.tick();
+    }
   }
 
   /** Calculates the `style.width` and `style.height` for the spacer element. */
