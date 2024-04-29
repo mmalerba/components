@@ -12,8 +12,8 @@ import '@angular/localize/init';
 import {HttpClientModule} from '@angular/common/http';
 import {
   importProvidersFrom,
-  provideZoneChangeDetection,
   provideExperimentalZonelessChangeDetection,
+  provideZoneChangeDetection,
 } from '@angular/core';
 import {bootstrapApplication} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
@@ -53,6 +53,6 @@ bootstrapApplication(DevApp, {
     {provide: Directionality, useClass: DevAppDirectionality},
     cachedAppState.zoneless
       ? provideExperimentalZonelessChangeDetection()
-      : provideZoneChangeDetection({eventCoalescing: true, runCoalescing: true}),
+      : provideZoneChangeDetection({eventCoalescing: true, runCoalescing: false}),
   ],
 });
