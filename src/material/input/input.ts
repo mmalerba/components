@@ -7,10 +7,12 @@
  */
 
 import {BooleanInput, coerceBooleanProperty} from '@angular/cdk/coercion';
-import {getSupportedInputTypes, Platform} from '@angular/cdk/platform';
+import {Platform, getSupportedInputTypes} from '@angular/cdk/platform';
 import {AutofillMonitor} from '@angular/cdk/text-field';
 import {
   AfterViewInit,
+  ChangeDetectorRef,
+  DestroyRef,
   Directive,
   DoCheck,
   ElementRef,
@@ -21,10 +23,12 @@ import {
   OnDestroy,
   Optional,
   Self,
+  inject,
 } from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {FormGroupDirective, NgControl, NgForm, Validators} from '@angular/forms';
 import {ErrorStateMatcher, _ErrorStateTracker} from '@angular/material/core';
-import {MatFormFieldControl, MatFormField, MAT_FORM_FIELD} from '@angular/material/form-field';
+import {MAT_FORM_FIELD, MatFormField, MatFormFieldControl} from '@angular/material/form-field';
 import {Subject} from 'rxjs';
 import {getMatInputUnsupportedTypeError} from './input-errors';
 import {MAT_INPUT_VALUE_ACCESSOR} from './input-value-accessor';
@@ -257,6 +261,10 @@ export class MatInput
     'week',
   ].filter(t => getSupportedInputTypes().has(t));
 
+  private readonly _changeDetectorRef = inject(ChangeDetectorRef);
+
+  private readonly _destroyRef = inject(DestroyRef);
+
   constructor(
     protected _elementRef: ElementRef<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
     protected _platform: Platform,
@@ -318,6 +326,10 @@ export class MatInput
         this.stateChanges.next();
       });
     }
+
+    this.ngControl?.control?.events.pipe(takeUntilDestroyed(this._destroyRef)).subscribe(() => {
+      this._changeDetectorRef.detectChanges();
+    });
   }
 
   ngOnChanges() {
