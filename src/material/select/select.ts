@@ -32,6 +32,7 @@ import {
   ScrollStrategy,
 } from '@angular/cdk/overlay';
 import {ViewportRuler} from '@angular/cdk/scrolling';
+import {NgClass} from '@angular/common';
 import {
   AfterContentInit,
   Attribute,
@@ -98,7 +99,6 @@ import {
   getMatSelectNonArrayValueError,
   getMatSelectNonFunctionValueError,
 } from './select-errors';
-import {NgClass} from '@angular/common';
 
 let nextUniqueId = 0;
 
@@ -656,6 +656,10 @@ export class MatSelect
           this._changeDetectorRef.detectChanges();
         }
       });
+
+    this.ngControl?.control?.events.pipe(takeUntil(this._destroy)).subscribe(() => {
+      this._changeDetectorRef.markForCheck();
+    });
   }
 
   ngAfterContentInit() {
