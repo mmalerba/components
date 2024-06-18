@@ -20,12 +20,11 @@ import {Platform} from '@angular/cdk/platform';
 import {CdkScrollable, ScrollDispatcher, ViewportRuler} from '@angular/cdk/scrolling';
 import {DOCUMENT} from '@angular/common';
 import {
+  ANIMATION_MODULE_TYPE,
   AfterContentChecked,
   AfterContentInit,
-  afterNextRender,
   AfterRenderPhase,
   AfterViewInit,
-  ANIMATION_MODULE_TYPE,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -34,8 +33,6 @@ import {
   DoCheck,
   ElementRef,
   EventEmitter,
-  forwardRef,
-  inject,
   Inject,
   InjectionToken,
   Injector,
@@ -47,8 +44,11 @@ import {
   QueryList,
   ViewChild,
   ViewEncapsulation,
+  afterNextRender,
+  forwardRef,
+  inject,
 } from '@angular/core';
-import {fromEvent, merge, Observable, Subject} from 'rxjs';
+import {Observable, Subject, fromEvent, merge} from 'rxjs';
 import {
   debounceTime,
   distinctUntilChanged,
@@ -323,6 +323,8 @@ export class MatDrawer implements AfterViewInit, AfterContentChecked, OnDestroy 
 
   private _injector = inject(Injector);
 
+  private readonly _changeDetectorRef = inject(ChangeDetectorRef);
+
   constructor(
     private _elementRef: ElementRef<HTMLElement>,
     private _focusTrapFactory: FocusTrapFactory,
@@ -594,6 +596,7 @@ export class MatDrawer implements AfterViewInit, AfterContentChecked, OnDestroy 
     }
 
     this._updateFocusTrapState();
+    this._changeDetectorRef.markForCheck();
 
     return new Promise<MatDrawerToggleResult>(resolve => {
       this.openedChange.pipe(take(1)).subscribe(open => resolve(open ? 'open' : 'close'));
