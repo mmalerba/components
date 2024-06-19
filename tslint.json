@@ -190,9 +190,7 @@
         // TODO(mmalerba): following files to be cleaned up and removed from this list:
         "**/src/cdk/a11y/focus-trap/focus-trap.ts",
         "**/src/cdk/testing/tests/testbed.spec.ts",
-        "**/src/material/select/**/*.spec.ts",
-        "**/src/material/stepper/**/*.spec.ts",
-        "**/src/material/tabs/**/*.spec.ts"
+        "**/src/material/select/**/*.spec.ts"
       ]
     ]
   },
