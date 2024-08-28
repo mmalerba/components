@@ -1,0 +1,18 @@
+<p>
+  Press 'f' to toggle focus management strategy:
+  <b>{{useActiveDescendant() ? 'aria-activedescendant' : 'roving tabindex'}}</b>
+</p>
+<p>
+  Press 'w' to toggle key navigation wrapping: <b>{{wrap() ? 'wrap' : 'no wrap'}}</b>
+</p>
+<p>Press 'r' to remove the active item</p>
+<p>Press 'd' to disable the active item</p>
+<p>Press 0-9 to add an item at that index</p>
+<p>Press ctrl + 0-9 to remove an item at that index</p>
+<ul tbd-listbox [options]="options()">
+  @for (item of items(); track item) {
+    <li tbd-listbox-option #option="ListboxOption" [disabled]="disabled().includes(option)">
+      <span>{{ item }}</span>
+    </li>
+  }
+</ul>

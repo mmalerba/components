@@ -13,6 +13,10 @@ import {DevAppHome} from './dev-app/dev-app-home';
 export const DEV_APP_ROUTES: Routes = [
   {path: '', component: DevAppHome},
   {
+    path: 'a11y-primitives',
+    loadComponent: () => import('./primitives/primitives-demo').then(m => m.PrimitivesDemo),
+  },
+  {
     path: 'autocomplete',
     loadComponent: () => import('./autocomplete/autocomplete-demo').then(m => m.AutocompleteDemo),
   },

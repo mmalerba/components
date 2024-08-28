@@ -56,6 +56,7 @@ ng_module(
         "//src/dev-app/platform",
         "//src/dev-app/popover-edit",
         "//src/dev-app/portal",
+        "//src/dev-app/primitives",
         "//src/dev-app/progress-bar",
         "//src/dev-app/progress-spinner",
         "//src/dev-app/radio",

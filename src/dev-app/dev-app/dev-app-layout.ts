@@ -25,9 +25,9 @@ import {MatSidenavModule} from '@angular/material/sidenav';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltip, MatTooltipModule} from '@angular/material/tooltip';
 import {RouterModule} from '@angular/router';
+import {DevAppDirectionality} from './dev-app-directionality';
 import {getAppState, setAppState} from './dev-app-state';
 import {DevAppRippleOptions} from './ripple-options';
-import {DevAppDirectionality} from './dev-app-directionality';
 
 /** Root component for the dev-app demos. */
 @Component({
@@ -59,6 +59,7 @@ export class DevAppLayout {
   state = getAppState();
   navItems = [
     {name: 'Examples', route: '/examples'},
+    {name: 'A11y Primitives', route: '/a11y-primitives'},
     {name: 'CDK Dialog', route: '/cdk-dialog'},
     {name: 'CDK Experimental Combobox', route: '/cdk-experimental-combobox'},
     {name: 'CDK Listbox', route: '/cdk-listbox'},
