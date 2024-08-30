@@ -17,9 +17,11 @@ let nextItem = 0;
 export class PrimitivesDemo {
   wrap = signal(false);
   useActiveDescendant = signal(true);
+  selectionFollowsFocus = signal(true);
   options = computed(() => ({
     wrapKeyNavigation: this.wrap(),
     useActiveDescendant: this.useActiveDescendant(),
+    selectionFollowsFocus: this.selectionFollowsFocus(),
   }));
   items = signal(Array.from({length: 10}, (_, i) => `item-${i}`));
   listbox = viewChild.required(Listbox);
@@ -33,6 +35,9 @@ export class PrimitivesDemo {
         break;
       case 'w':
         this.wrap.update(wrap => !wrap);
+        break;
+      case 's':
+        this.selectionFollowsFocus.update(selectionFollowsFocus => !selectionFollowsFocus);
         break;
       case 'r':
         if (active) {

@@ -17,16 +17,19 @@ import {toSignal} from '@angular/core/rxjs-interop';
 import {AriaActiveDescendantBehavior} from '../behaviors/aria-active-descendant';
 import {EventDispatcher} from '../behaviors/base';
 import {ListKeyNavigationBehavior} from '../behaviors/list-key-navigation';
+import {ListSingleSelectionBehavior} from '../behaviors/list-single-selection';
 import {RovingTabindexBehavior} from '../behaviors/roving-tabindex';
 
 export interface ListboxOptions {
   wrapKeyNavigation: boolean;
   useActiveDescendant: boolean;
+  selectionFollowsFocus: boolean;
 }
 
 export const DEFAULT_LISTBOX_OPTIONS: ListboxOptions = {
   wrapKeyNavigation: false,
   useActiveDescendant: true,
+  selectionFollowsFocus: true,
 };
 
 let nextId = 0;
@@ -40,6 +43,7 @@ let nextId = 0;
     '[id]': 'id()',
     '[attr.disabled]': 'disabled()',
     '[attr.tabindex]': 'tabindex()',
+    '[attr.aria-selected]': 'selected()',
     '[class.active]': 'active()',
   },
 })
@@ -51,7 +55,8 @@ export class ListboxOption {
   readonly disabled = input(false);
   readonly tabindex = signal<number | undefined>(undefined);
   readonly id = signal<string>(`tbd-listbox-option-${nextId++}`);
-  readonly active = computed(() => this.listbox.active()?.identity === this.identity);
+  readonly active = computed(() => this.listbox.active() === this);
+  readonly selected = computed(() => this.listbox.selected() === this || undefined);
 }
 
 @Directive({
@@ -61,7 +66,7 @@ export class ListboxOption {
   host: {
     'role': 'listbox',
     '[tabindex]': 'tabindex()',
-    '[attr.disabled]': 'disabled()',
+    '[attr.disabled]': 'disabledOrDisabledBySelection()',
     '[attr.aria-orientation]': 'orientation()',
     '[attr.aria-activedescendant]': 'activeDescendantId()',
     '(keydown)': 'keydownEvents.dispatch($event)',
@@ -89,32 +94,45 @@ export class Listbox {
   readonly focusinEvents = new EventDispatcher<FocusEvent>();
   readonly focusoutEvents = new EventDispatcher<FocusEvent>();
   readonly keydownEvents = new EventDispatcher<KeyboardEvent>();
+  readonly disabledOrDisabledBySelection = computed(
+    () => this.disabled() || !!this.selected()?.disabled?.(),
+  );
 
   protected navigationBehavior: ListKeyNavigationBehavior<ListboxOption> | undefined;
   protected focusBehavior:
     | AriaActiveDescendantBehavior<ListboxOption>
     | RovingTabindexBehavior<ListboxOption>
     | undefined;
+  protected selectionBehavior: ListSingleSelectionBehavior<ListboxOption> | undefined;
 
   constructor() {
     effect(onCleanup => {
       const options = {...DEFAULT_LISTBOX_OPTIONS, ...this.options()};
 
-      untracked(() => {
-        runInInjectionContext(this.injector, () => {
-          this.navigationBehavior = new ListKeyNavigationBehavior(this, {
-            wrap: options.wrapKeyNavigation,
-          });
-          this.focusBehavior = options.useActiveDescendant
-            ? new AriaActiveDescendantBehavior(this)
-            : new RovingTabindexBehavior(this);
-        });
-      });
+      untracked(() => runInInjectionContext(this.injector, () => this.addBehaviors(options)));
 
       onCleanup(() => {
         this.navigationBehavior?.remove();
         this.focusBehavior?.remove();
+        this.selectionBehavior?.remove();
       });
     });
+  }
+
+  private addBehaviors(options: ListboxOptions) {
+    const context = {
+      ...this,
+      disabled: this.disabledOrDisabledBySelection,
+    };
+
+    this.selectionBehavior = new ListSingleSelectionBehavior(context, {
+      selectionFollowsFocus: options.selectionFollowsFocus,
+    });
+    this.navigationBehavior = new ListKeyNavigationBehavior(context, {
+      wrap: options.wrapKeyNavigation,
+    });
+    this.focusBehavior = options.useActiveDescendant
+      ? new AriaActiveDescendantBehavior(context)
+      : new RovingTabindexBehavior(context);
   }
 }

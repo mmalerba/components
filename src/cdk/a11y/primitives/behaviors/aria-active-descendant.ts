@@ -37,18 +37,17 @@ export class AriaActiveDescendantBehavior<I> extends Behavior {
       return active?.id();
     });
 
+    const active = computed(() => {
+      const activeItem = control.items().find(item => item.identity === control.active());
+      return control.disabled?.() || activeItem?.disabled?.() ? undefined : activeItem?.identity;
+    });
+
     this.effects.push(
       effect(() => control.tabindex.set(tabindex()), {allowSignalWrites: true}),
       effect(() => control.activeDescendantId.set(activeDescendantId()), {
         allowSignalWrites: true,
       }),
-      effect(
-        () => {
-          const activeItem = control.items().find(item => item.identity === control.active());
-          control.active.set(activeItem?.disabled?.() ? undefined : activeItem?.identity);
-        },
-        {allowSignalWrites: true},
-      ),
+      effect(() => control.active.set(active()), {allowSignalWrites: true}),
       effect(
         () => {
           for (const item of control.items()) {

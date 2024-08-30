@@ -31,7 +31,7 @@ export class RovingTabindexBehavior<I> extends Behavior {
     );
 
     const active = computed(() =>
-      activeItem() && !activeItem()?.disabled?.()
+      activeItem() && (control.disabled?.() || !activeItem()?.disabled?.())
         ? control.active()
         : this.getFirstEnabledItem()?.identity,
     );
@@ -41,7 +41,11 @@ export class RovingTabindexBehavior<I> extends Behavior {
       effect(
         () => {
           for (const item of control.items()) {
-            item.tabindex.set(item === activeItem() ? 0 : -1);
+            item.tabindex.set(
+              !control.disabled?.() && !activeItem()?.disabled?.() && item === activeItem()
+                ? 0
+                : -1,
+            );
           }
         },
         {allowSignalWrites: true},

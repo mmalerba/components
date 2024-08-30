@@ -2,11 +2,19 @@
   background: rgba(0, 0, 0, 0.1);
 }
 
-ul:focus .active,
-.active:focus {
+ul:focus-within .active {
   background: rgba(0, 0, 255, 0.15);
 }
 
 [disabled='true'] {
   opacity: 0.5;
+}
+
+[aria-selected='true'] {
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+ul:focus-within [aria-selected='true'] {
+  background: blue;
 }
