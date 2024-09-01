@@ -18,10 +18,12 @@ export class PrimitivesDemo {
   wrap = signal(false);
   useActiveDescendant = signal(true);
   selectionFollowsFocus = signal(true);
+  multiple = signal(false);
   options = computed(() => ({
     wrapKeyNavigation: this.wrap(),
     useActiveDescendant: this.useActiveDescendant(),
     selectionFollowsFocus: this.selectionFollowsFocus(),
+    multiple: this.multiple(),
   }));
   items = signal(Array.from({length: 10}, (_, i) => `item-${i}`));
   listbox = viewChild.required(Listbox);
@@ -35,6 +37,9 @@ export class PrimitivesDemo {
         break;
       case 'w':
         this.wrap.update(wrap => !wrap);
+        break;
+      case 'm':
+        this.multiple.update(multiple => !multiple);
         break;
       case 's':
         this.selectionFollowsFocus.update(selectionFollowsFocus => !selectionFollowsFocus);

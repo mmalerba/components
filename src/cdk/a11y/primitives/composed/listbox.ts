@@ -17,6 +17,7 @@ import {toSignal} from '@angular/core/rxjs-interop';
 import {AriaActiveDescendantBehavior} from '../behaviors/aria-active-descendant';
 import {EventDispatcher} from '../behaviors/base';
 import {ListKeyNavigationBehavior} from '../behaviors/list-key-navigation';
+import {ListMultipleSelectionBehavior} from '../behaviors/list-multiple-selection';
 import {ListSingleSelectionBehavior} from '../behaviors/list-single-selection';
 import {RovingTabindexBehavior} from '../behaviors/roving-tabindex';
 
@@ -24,12 +25,14 @@ export interface ListboxOptions {
   wrapKeyNavigation: boolean;
   useActiveDescendant: boolean;
   selectionFollowsFocus: boolean;
+  multiple: boolean;
 }
 
 export const DEFAULT_LISTBOX_OPTIONS: ListboxOptions = {
   wrapKeyNavigation: false,
   useActiveDescendant: true,
   selectionFollowsFocus: true,
+  multiple: false,
 };
 
 let nextId = 0;
@@ -56,7 +59,7 @@ export class ListboxOption {
   readonly tabindex = signal<number | undefined>(undefined);
   readonly id = signal<string>(`tbd-listbox-option-${nextId++}`);
   readonly active = computed(() => this.listbox.active() === this);
-  readonly selected = computed(() => this.listbox.selected() === this || undefined);
+  readonly selected = computed(() => this.listbox.selected().includes(this) || undefined);
 }
 
 @Directive({
@@ -86,7 +89,8 @@ export class Listbox {
   readonly activeDescendantId = signal<string | undefined>(undefined);
   readonly tabindex = signal<number | undefined>(undefined);
   readonly active = model<ListboxOption | undefined>();
-  readonly selected = model<ListboxOption | undefined>();
+  readonly singleSelection = model<ListboxOption | undefined>();
+  readonly multipleSelection = model<ListboxOption[]>([]);
   readonly direction = toSignal(this.directionality.change, {
     initialValue: this.directionality.value,
   });
@@ -94,8 +98,15 @@ export class Listbox {
   readonly focusinEvents = new EventDispatcher<FocusEvent>();
   readonly focusoutEvents = new EventDispatcher<FocusEvent>();
   readonly keydownEvents = new EventDispatcher<KeyboardEvent>();
+  readonly selected = computed((): ListboxOption[] =>
+    this.options().multiple
+      ? this.multipleSelection()
+      : this.singleSelection() === undefined
+        ? []
+        : [this.singleSelection()!],
+  );
   readonly disabledOrDisabledBySelection = computed(
-    () => this.disabled() || !!this.selected()?.disabled?.(),
+    () => this.disabled() || (!this.options().multiple && !!this.singleSelection()?.disabled?.()),
   );
 
   protected navigationBehavior: ListKeyNavigationBehavior<ListboxOption> | undefined;
@@ -103,7 +114,10 @@ export class Listbox {
     | AriaActiveDescendantBehavior<ListboxOption>
     | RovingTabindexBehavior<ListboxOption>
     | undefined;
-  protected selectionBehavior: ListSingleSelectionBehavior<ListboxOption> | undefined;
+  protected selectionBehavior:
+    | ListSingleSelectionBehavior<ListboxOption>
+    | ListMultipleSelectionBehavior<ListboxOption>
+    | undefined;
 
   constructor() {
     effect(onCleanup => {
@@ -120,19 +134,34 @@ export class Listbox {
   }
 
   private addBehaviors(options: ListboxOptions) {
-    const context = {
-      ...this,
-      disabled: this.disabledOrDisabledBySelection,
-    };
-
-    this.selectionBehavior = new ListSingleSelectionBehavior(context, {
-      selectionFollowsFocus: options.selectionFollowsFocus,
-    });
-    this.navigationBehavior = new ListKeyNavigationBehavior(context, {
-      wrap: options.wrapKeyNavigation,
-    });
-    this.focusBehavior = options.useActiveDescendant
-      ? new AriaActiveDescendantBehavior(context)
-      : new RovingTabindexBehavior(context);
+    if (options.multiple) {
+      const context = {
+        ...this,
+        disabled: this.disabledOrDisabledBySelection,
+        selected: this.multipleSelection,
+      };
+      this.selectionBehavior = new ListMultipleSelectionBehavior(context);
+      this.navigationBehavior = new ListKeyNavigationBehavior(context, {
+        wrap: options.wrapKeyNavigation,
+      });
+      this.focusBehavior = options.useActiveDescendant
+        ? new AriaActiveDescendantBehavior(context)
+        : new RovingTabindexBehavior(context);
+    } else {
+      const context = {
+        ...this,
+        disabled: this.disabledOrDisabledBySelection,
+        selected: this.singleSelection,
+      };
+      this.selectionBehavior = new ListSingleSelectionBehavior(context, {
+        selectionFollowsFocus: options.selectionFollowsFocus,
+      });
+      this.navigationBehavior = new ListKeyNavigationBehavior(context, {
+        wrap: options.wrapKeyNavigation,
+      });
+      this.focusBehavior = options.useActiveDescendant
+        ? new AriaActiveDescendantBehavior(context)
+        : new RovingTabindexBehavior(context);
+    }
   }
 }
