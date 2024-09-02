@@ -27,10 +27,10 @@ export class PrimitivesDemo {
   }));
   items = signal(Array.from({length: 10}, (_, i) => `item-${i}`));
   listbox = viewChild.required(Listbox);
-  disabled = signal<ListboxOption[]>([]);
+  disabled = signal<Set<ListboxOption>>(new Set());
 
   handleKeydown(event: KeyboardEvent) {
-    const active = this.listbox().active();
+    const active = this.listbox().uiState.active();
     switch (event.key) {
       case 'f':
         this.useActiveDescendant.update(useActiveDescendant => !useActiveDescendant);
@@ -54,7 +54,10 @@ export class PrimitivesDemo {
         break;
       case 'd':
         if (active) {
-          this.disabled.update(disabled => [...disabled, active]);
+          this.disabled.update(disabled => {
+            disabled.has(active) ? disabled.delete(active) : disabled.add(active);
+            return new Set(disabled);
+          });
         }
         break;
       case '0':

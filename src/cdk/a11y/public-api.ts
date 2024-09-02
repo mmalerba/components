@@ -37,4 +37,4 @@ export * from './key-manager/tree-key-manager-strategy';
 export * from './live-announcer/live-announcer';
 export * from './live-announcer/live-announcer-tokens';
 
-export * from './primitives/composed/listbox';
+export * from './primitives2/composed/listbox';

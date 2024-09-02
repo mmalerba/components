@@ -19,7 +19,7 @@
 <p>Press ctrl + 0-9 to remove an item at that index</p>
 <ul tbd-listbox [options]="options()">
   @for (item of items(); track item) {
-    <li tbd-listbox-option #option="ListboxOption" [disabled]="disabled().includes(option)">
+    <li tbd-listbox-option #option="ListboxOption" [disabled]="disabled().has(option)">
       <span>{{ item }}</span>
     </li>
   }
