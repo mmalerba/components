@@ -134,13 +134,13 @@ export class CdkTree<T, K = T>
   private readonly _onDestroy = new Subject<void>();
 
   /** Differ used to find the changes in the data provided by the data source. */
-  private _dataDiffer: IterableDiffer<T>;
+  private _dataDiffer!: IterableDiffer<T>;
 
   /** Stores the node definition that does not have a when predicate. */
-  private _defaultNodeDef: CdkTreeNodeDef<T> | null;
+  private _defaultNodeDef: CdkTreeNodeDef<T> | null = null;
 
   /** Data subscription */
-  private _dataSubscription: Subscription | null;
+  private _dataSubscription: Subscription | undefined;
 
   /** Level of nodes */
   private _levels: Map<K, number> = new Map<K, number>();
@@ -172,7 +172,7 @@ export class CdkTree<T, K = T>
       this._switchDataSource(dataSource);
     }
   }
-  private _dataSource: DataSource<T> | Observable<T[]> | T[];
+  private _dataSource!: DataSource<T> | Observable<T[]> | T[];
 
   /**
    * The tree controller
@@ -205,7 +205,7 @@ export class CdkTree<T, K = T>
    * relative to the function to know if a node should be added/removed/moved.
    * Accepts a function that takes two parameters, `index` and `item`.
    */
-  @Input() trackBy: TrackByFunction<T>;
+  @Input() trackBy!: TrackByFunction<T>;
 
   /**
    * Given a data node, determines the key by which we determine whether or not this node is expanded.
@@ -213,7 +213,7 @@ export class CdkTree<T, K = T>
   @Input() expansionKey?: (dataNode: T) => K;
 
   // Outlets within the tree's template where the dataNodes will be inserted.
-  @ViewChild(CdkTreeNodeOutlet, {static: true}) _nodeOutlet: CdkTreeNodeOutlet;
+  @ViewChild(CdkTreeNodeOutlet, {static: true}) _nodeOutlet!: CdkTreeNodeOutlet;
 
   /** The tree node template for the tree */
   @ContentChildren(CdkTreeNodeDef, {
@@ -221,7 +221,7 @@ export class CdkTree<T, K = T>
     // indirect descendants if it's left as false.
     descendants: true,
   })
-  _nodeDefs: QueryList<CdkTreeNodeDef<T>>;
+  _nodeDefs!: QueryList<CdkTreeNodeDef<T>>;
 
   // TODO(tinayuangao): Setup a listener for scrolling, emit the calculated view to viewChange.
   //     Remove the MAX_VALUE in viewChange
@@ -264,7 +264,7 @@ export class CdkTree<T, K = T>
   private _keyManagerFactory = inject(TREE_KEY_MANAGER) as TreeKeyManagerFactory<CdkTreeNode<T, K>>;
 
   /** The key manager for this tree. Handles focus and activation based on user keyboard input. */
-  _keyManager: TreeKeyManagerStrategy<CdkTreeNode<T, K>>;
+  _keyManager!: TreeKeyManagerStrategy<CdkTreeNode<T, K>>;
   private _viewInit = false;
 
   constructor(...args: unknown[]);
@@ -282,6 +282,10 @@ export class CdkTree<T, K = T>
   ngOnDestroy() {
     this._nodeOutlet.viewContainer.clear();
 
+    this._nodes.complete();
+    this._keyManagerNodes.complete();
+    this._nodeType.complete();
+    this._flattenedNodes.complete();
     this.viewChange.complete();
     this._onDestroy.next();
     this._onDestroy.complete();
@@ -290,10 +294,8 @@ export class CdkTree<T, K = T>
       (this.dataSource as DataSource<T>).disconnect(this);
     }
 
-    if (this._dataSubscription) {
-      this._dataSubscription.unsubscribe();
-      this._dataSubscription = null;
-    }
+    this._dataSubscription?.unsubscribe();
+    this._dataSubscription = undefined;
 
     // In certain tests, the tree might be destroyed before this is initialized
     // in `ngAfterContentInit`.
@@ -347,10 +349,8 @@ export class CdkTree<T, K = T>
       (this.dataSource as DataSource<T>).disconnect(this);
     }
 
-    if (this._dataSubscription) {
-      this._dataSubscription.unsubscribe();
-      this._dataSubscription = null;
-    }
+    this._dataSubscription?.unsubscribe();
+    this._dataSubscription = undefined;
 
     // Remove the all dataNodes if there is now no data source
     if (!dataSource) {
@@ -603,6 +603,7 @@ export class CdkTree<T, K = T>
 
     // Node context that will be provided to created embedded view
     const context = new CdkTreeNodeOutletContext<T>(nodeData);
+    context.index = index;
 
     parentData ??= this._parents.get(key) ?? undefined;
     // If the tree is flat tree, then use the `getLevel` function in flat tree control
@@ -1259,13 +1260,13 @@ export class CdkTreeNode<T, K = T> implements OnDestroy, OnInit, TreeKeyManagerI
    * Whether or not this node is disabled. If it's disabled, then the user won't be able to focus
    * or activate this node.
    */
-  @Input({transform: booleanAttribute}) isDisabled: boolean;
+  @Input({transform: booleanAttribute}) isDisabled: boolean = false;
 
   /**
    * The text used to locate this item during typeahead. If not specified, the `textContent` will
    * will be used.
    */
-  @Input('cdkTreeNodeTypeaheadLabel') typeaheadLabel: string | null;
+  @Input('cdkTreeNodeTypeaheadLabel') typeaheadLabel: string | null = null;
 
   getLabel(): string {
     return this.typeaheadLabel || this._elementRef.nativeElement.textContent?.trim() || '';
@@ -1300,7 +1301,7 @@ export class CdkTreeNode<T, K = T> implements OnDestroy, OnInit, TreeKeyManagerI
    * (e.g. menu, dialog).
    */
   private _shouldFocus = true;
-  private _parentNodeAriaLevel: number;
+  private _parentNodeAriaLevel!: number;
 
   /** The tree node's data. */
   get data(): T {
@@ -1312,7 +1313,7 @@ export class CdkTreeNode<T, K = T> implements OnDestroy, OnInit, TreeKeyManagerI
       this._dataChanges.next();
     }
   }
-  protected _data: T;
+  protected _data!: T;
 
   /* If leaf node, return true to not assign aria-expanded attribute */
   get isLeafNode(): boolean {
@@ -1402,6 +1403,7 @@ export class CdkTreeNode<T, K = T> implements OnDestroy, OnInit, TreeKeyManagerI
         distinctUntilChanged(),
         takeUntil(this._destroyed),
       )
+      .pipe(takeUntil(this._destroyed))
       .subscribe(() => this._changeDetectorRef.markForCheck());
     this._tree._setNodeTypeIfUnset(this._type);
     this._tree._registerNode(this);

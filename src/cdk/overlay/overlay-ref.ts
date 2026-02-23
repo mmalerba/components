@@ -32,6 +32,11 @@ export type ImmutableObject<T> = {
   readonly [P in keyof T]: T[P];
 };
 
+/** Checks if a value is an element. */
+export function isElement(value: any): value is Element {
+  return value && (value as Element).nodeType === 1;
+}
+
 /**
  * Reference to an overlay that has been created with the Overlay service.
  * Used to manipulate or dispose of said overlay.
@@ -46,12 +51,13 @@ export class OverlayRef implements PortalOutlet {
   private _backdropRef: BackdropRef | null = null;
   private _detachContentMutationObserver: MutationObserver | undefined;
   private _detachContentAfterRenderRef: AfterRenderRef | undefined;
+  private _disposed = false;
 
   /**
    * Reference to the parent of the `_host` at the time it was detached. Used to restore
    * the `_host` to its original position in the DOM when it gets re-attached.
    */
-  private _previousHostParent: HTMLElement;
+  private _previousHostParent!: HTMLElement;
 
   /** Stream of keydown events dispatched to this overlay. */
   readonly _keydownEvents = new Subject<KeyboardEvent>();
@@ -103,6 +109,14 @@ export class OverlayRef implements PortalOutlet {
     return this._host;
   }
 
+  /**
+   * Function that determines if this overlay should receive a specific event.
+   */
+  get eventPredicate(): ((event: Event) => boolean) | null {
+    // Note: the safe read here is redundant, but some internal tests mock out the overlay ref.
+    return this._config?.eventPredicate || null;
+  }
+
   attach<T>(portal: ComponentPortal<T>): ComponentRef<T>;
   attach<T>(portal: TemplatePortal<T>): EmbeddedViewRef<T>;
   attach(portal: any): any;
@@ -115,18 +129,16 @@ export class OverlayRef implements PortalOutlet {
    * @returns The portal attachment result.
    */
   attach(portal: Portal<any>): any {
+    if (this._disposed) {
+      return null;
+    }
+
     // Insert the host into the DOM before attaching the portal, otherwise
     // the animations module will skip animations on repeat attachments.
-    if (!this._host.parentElement && this._previousHostParent) {
-      this._previousHostParent.appendChild(this._host);
-    }
+    this._attachHost();
 
     const attachResult = this._portalOutlet.attach(portal);
-
-    if (this._positionStrategy) {
-      this._positionStrategy.attach(this);
-    }
-
+    this._positionStrategy?.attach(this);
     this._updateStackingOrder();
     this._updateElementSize();
     this._updateElementDirection();
@@ -241,6 +253,10 @@ export class OverlayRef implements PortalOutlet {
 
   /** Cleans up the overlay from the DOM. */
   dispose(): void {
+    if (this._disposed) {
+      return;
+    }
+
     const isAttached = this.hasAttached();
 
     if (this._positionStrategy) {
@@ -267,6 +283,7 @@ export class OverlayRef implements PortalOutlet {
 
     this._detachments.complete();
     this._completeDetachContent();
+    this._disposed = true;
   }
 
   /** Whether the overlay has attached content. */
@@ -409,6 +426,31 @@ export class OverlayRef implements PortalOutlet {
     this._pane.style.pointerEvents = enablePointer ? '' : 'none';
   }
 
+  private _attachHost() {
+    if (!this._host.parentElement) {
+      const customInsertionPoint = this._config.usePopover
+        ? this._positionStrategy?.getPopoverInsertionPoint?.()
+        : null;
+
+      if (isElement(customInsertionPoint)) {
+        customInsertionPoint.after(this._host);
+      } else if (customInsertionPoint?.type === 'parent') {
+        customInsertionPoint.element.appendChild(this._host);
+      } else {
+        this._previousHostParent?.appendChild(this._host);
+      }
+    }
+
+    if (this._config.usePopover) {
+      // We need the try/catch because the browser will throw if the
+      // host or any of the parents are outside the DOM. Also note
+      // the string access which is there for compatibility with Closure.
+      try {
+        this._host['showPopover']();
+      } catch {}
+    }
+  }
+
   /** Attaches a backdrop for this overlay. */
   private _attachBackdrop() {
     const showingClass = 'cdk-overlay-backdrop-showing';
@@ -426,9 +468,14 @@ export class OverlayRef implements PortalOutlet {
       this._toggleClasses(this._backdropRef.element, this._config.backdropClass, true);
     }
 
-    // Insert the backdrop before the pane in the DOM order,
-    // in order to handle stacked overlays properly.
-    this._host.parentElement!.insertBefore(this._backdropRef.element, this._host);
+    if (this._config.usePopover) {
+      // When using popovers, the backdrop needs to be inside the popover.
+      this._host.prepend(this._backdropRef.element);
+    } else {
+      // Insert the backdrop before the pane in the DOM order,
+      // in order to handle stacked overlays properly.
+      this._host.parentElement!.insertBefore(this._backdropRef.element, this._host);
+    }
 
     // Add class to fade-in the backdrop after one frame.
     if (!this._animationsDisabled && typeof requestAnimationFrame !== 'undefined') {
@@ -448,7 +495,7 @@ export class OverlayRef implements PortalOutlet {
    * in its original DOM position.
    */
   private _updateStackingOrder() {
-    if (this._host.nextSibling) {
+    if (!this._config.usePopover && this._host.nextSibling) {
       this._host.parentNode!.appendChild(this._host);
     }
   }

@@ -72,10 +72,7 @@ export class CdkFooterCellDef implements CellDef {
  * Column definition for the CDK table.
  * Defines a set of cells available for a table column.
  */
-@Directive({
-  selector: '[cdkColumnDef]',
-  providers: [{provide: 'MAT_SORT_HEADER_COLUMN_DEF', useExisting: CdkColumnDef}],
-})
+@Directive({selector: '[cdkColumnDef]'})
 export class CdkColumnDef implements CanStick {
   _table? = inject(CDK_TABLE, {optional: true});
 
@@ -89,7 +86,7 @@ export class CdkColumnDef implements CanStick {
   set name(name: string) {
     this._setNameInput(name);
   }
-  protected _name: string;
+  protected _name!: string;
 
   /** Whether the cell is sticky. */
   @Input({transform: booleanAttribute})
@@ -122,26 +119,26 @@ export class CdkColumnDef implements CanStick {
   _stickyEnd: boolean = false;
 
   /** @docs-private */
-  @ContentChild(CdkCellDef) cell: CdkCellDef;
+  @ContentChild(CdkCellDef) cell!: CdkCellDef;
 
   /** @docs-private */
-  @ContentChild(CdkHeaderCellDef) headerCell: CdkHeaderCellDef;
+  @ContentChild(CdkHeaderCellDef) headerCell!: CdkHeaderCellDef;
 
   /** @docs-private */
-  @ContentChild(CdkFooterCellDef) footerCell: CdkFooterCellDef;
+  @ContentChild(CdkFooterCellDef) footerCell!: CdkFooterCellDef;
 
   /**
    * Transformed version of the column name that can be used as part of a CSS classname. Excludes
    * all non-alphanumeric characters and the special characters '-' and '_'. Any characters that
    * do not match are replaced by the '-' character.
    */
-  cssClassFriendlyName: string;
+  cssClassFriendlyName!: string;
 
   /**
    * Class name for cells in this column.
    * @docs-private
    */
-  _columnCssClassName: string[];
+  _columnCssClassName!: string[];
 
   constructor(...args: unknown[]);
   constructor() {}

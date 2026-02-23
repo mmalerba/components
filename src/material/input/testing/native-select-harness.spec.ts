@@ -3,7 +3,7 @@ import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {HarnessLoader, parallel} from '@angular/cdk/testing';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
 import {FormsModule} from '@angular/forms';
-import {MatInputModule} from '../module';
+import {MatInputModule} from '../input-module';
 import {MatNativeSelectHarness} from './native-select-harness';
 
 describe('MatNativeSelectHarness', () => {
@@ -225,7 +225,7 @@ describe('MatNativeSelectHarness', () => {
   imports: [MatInputModule, FormsModule],
 })
 class SelectHarnessTest {
-  favoriteFood: string;
+  favoriteFood!: string;
   favoriteDrink: string[] = [];
   favoriteFoodRequired = signal(false);
   favoriteDrinkDisabled = signal(false);

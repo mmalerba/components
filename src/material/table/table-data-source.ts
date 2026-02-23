@@ -40,7 +40,11 @@ const MAX_SAFE_INTEGER = 9007199254740991;
  * interactions. If your app needs to support more advanced use cases, consider implementing your
  * own `DataSource`.
  */
-export class MatTableDataSource<T, P extends MatPaginator = MatPaginator> extends DataSource<T> {
+export class MatTableDataSource<
+  // TODO: Remove `any` type below in a breaking change:
+  T extends object | any,
+  P extends MatPaginator = MatPaginator,
+> extends DataSource<T> {
   /** Stream that emits when a new data array is set on the data source. */
   private readonly _data: BehaviorSubject<T[]>;
 
@@ -65,7 +69,7 @@ export class MatTableDataSource<T, P extends MatPaginator = MatPaginator> extend
    * For example, a 'selectAll()' function would likely want to select the set of filtered data
    * shown to the user rather than all the data.
    */
-  filteredData: T[];
+  filteredData!: T[];
 
   /** Array of data that should be rendered by the table, where each object represents one row. */
   get data() {
@@ -103,16 +107,16 @@ export class MatTableDataSource<T, P extends MatPaginator = MatPaginator> extend
    * Instance of the MatSort directive used by the table to control its sorting. Sort changes
    * emitted by the MatSort will trigger an update to the table's rendered data.
    */
-  get sort(): MatSort | null {
+  get sort(): MatSort | null | undefined {
     return this._sort;
   }
 
-  set sort(sort: MatSort | null) {
+  set sort(sort: MatSort | null | undefined) {
     this._sort = sort;
     this._updateChangeSubscription();
   }
 
-  private _sort: MatSort | null;
+  private _sort: MatSort | null | undefined;
 
   /**
    * Instance of the paginator component used by the table to control what page of the data is
@@ -124,16 +128,16 @@ export class MatTableDataSource<T, P extends MatPaginator = MatPaginator> extend
    * e.g. `[pageLength]=100` or `[pageIndex]=1`, then be sure that the paginator's view has been
    * initialized before assigning it to this data source.
    */
-  get paginator(): P | null {
+  get paginator(): P | null | undefined {
     return this._paginator;
   }
 
-  set paginator(paginator: P | null) {
+  set paginator(paginator: P | null | undefined) {
     this._paginator = paginator;
     this._updateChangeSubscription();
   }
 
-  private _paginator: P | null;
+  private _paginator: P | null | undefined;
 
   /**
    * Data accessor function that is used for accessing data properties for sorting through
@@ -229,10 +233,20 @@ export class MatTableDataSource<T, P extends MatPaginator = MatPaginator> extend
    * @returns Whether the filter matches against the data
    */
   filterPredicate: (data: T, filter: string) => boolean = (data: T, filter: string): boolean => {
+    if (
+      (typeof ngDevMode === 'undefined' || ngDevMode) &&
+      (typeof data !== 'object' || data === null)
+    ) {
+      console.warn(
+        'Default implementation of filterPredicate requires data to be a non-null object.',
+      );
+    }
+
     // Transform the filter by converting it to lowercase and removing whitespace.
     const transformedFilter = filter.trim().toLowerCase();
     // Loops over the values in the array and returns true if any of them match the filter string
-    return Object.values(data as {[key: string]: any}).some(value =>
+    // TODO: Remove `as object` cast when `T` stops extending `any`:
+    return Object.values(data as object).some(value =>
       `${value}`.toLowerCase().includes(transformedFilter),
     );
   };

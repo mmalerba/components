@@ -18,8 +18,6 @@ const wrapperClass = 'cdk-global-overlay-wrapper';
  * @param injector Injector used to resolve dependencies for the strategy.
  */
 export function createGlobalPositionStrategy(_injector: Injector): GlobalPositionStrategy {
-  // Note: `injector` is unused, but we may need it in
-  // the future which would introduce a breaking change.
   return new GlobalPositionStrategy();
 }
 
@@ -31,7 +29,7 @@ export function createGlobalPositionStrategy(_injector: Injector): GlobalPositio
  */
 export class GlobalPositionStrategy implements PositionStrategy {
   /** The overlay to which this strategy is attached. */
-  private _overlayRef: OverlayRef;
+  private _overlayRef!: OverlayRef;
   private _cssPosition = 'static';
   private _topOffset = '';
   private _bottomOffset = '';

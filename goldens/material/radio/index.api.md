@@ -12,7 +12,7 @@ import { ElementRef } from '@angular/core';
 import { EventEmitter } from '@angular/core';
 import { FocusOrigin } from '@angular/cdk/a11y';
 import * as i0 from '@angular/core';
-import * as i1 from '@angular/cdk/bidi';
+import * as i2 from '@angular/cdk/bidi';
 import { InjectionToken } from '@angular/core';
 import { OnDestroy } from '@angular/core';
 import { OnInit } from '@angular/core';
@@ -20,9 +20,6 @@ import { QueryList } from '@angular/core';
 
 // @public (undocumented)
 export const MAT_RADIO_DEFAULT_OPTIONS: InjectionToken<MatRadioDefaultOptions>;
-
-// @public @deprecated
-export function MAT_RADIO_DEFAULT_OPTIONS_FACTORY(): MatRadioDefaultOptions;
 
 // @public
 export const MAT_RADIO_GROUP: InjectionToken<MatRadioGroup>;
@@ -33,9 +30,9 @@ export const MAT_RADIO_GROUP_CONTROL_VALUE_ACCESSOR: any;
 // @public (undocumented)
 export class MatRadioButton implements OnInit, AfterViewInit, DoCheck, OnDestroy {
     constructor(...args: unknown[]);
-    ariaDescribedby: string;
-    ariaLabel: string;
-    ariaLabelledby: string;
+    ariaDescribedby: string | null;
+    ariaLabel: string | null;
+    ariaLabelledby: string | null;
     readonly change: EventEmitter<MatRadioChange>;
     get checked(): boolean;
     set checked(value: boolean);
@@ -164,7 +161,7 @@ export class MatRadioModule {
     // (undocumented)
     static ɵinj: i0.ɵɵInjectorDeclaration<MatRadioModule>;
     // (undocumented)
-    static ɵmod: i0.ɵɵNgModuleDeclaration<MatRadioModule, never, [typeof MatCommonModule, typeof MatRippleModule, typeof MatRadioGroup, typeof MatRadioButton], [typeof MatCommonModule, typeof MatRadioGroup, typeof MatRadioButton]>;
+    static ɵmod: i0.ɵɵNgModuleDeclaration<MatRadioModule, never, [typeof MatRippleModule, typeof MatRadioGroup, typeof MatRadioButton], [typeof i2.BidiModule, typeof MatRadioGroup, typeof MatRadioButton]>;
 }
 
 // (No @packageDocumentation comment for this package)

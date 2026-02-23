@@ -27,7 +27,6 @@ describe('Row Chips', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [MatChipsModule, SingleChip],
       providers: [provideFakeDirectionality('ltr')],
     });
   }));
@@ -436,6 +435,30 @@ describe('Row Chips', () => {
       }));
     });
 
+    describe('_hasInteractiveActions', () => {
+      it('should return true if the chip has a remove icon', () => {
+        testComponent.removable = true;
+        fixture.changeDetectorRef.markForCheck();
+        fixture.detectChanges();
+        expect(chipInstance._hasInteractiveActions()).toBe(true);
+      });
+
+      it('should return true if the chip has an edit icon', () => {
+        testComponent.editable = true;
+        testComponent.showEditIcon = true;
+        fixture.changeDetectorRef.markForCheck();
+        fixture.detectChanges();
+        expect(chipInstance._hasInteractiveActions()).toBe(true);
+      });
+
+      it('should return true even with a non-interactive trailing icon', () => {
+        testComponent.showTrailingIcon = true;
+        fixture.changeDetectorRef.markForCheck();
+        fixture.detectChanges();
+        expect(chipInstance._hasInteractiveActions()).toBe(true);
+      });
+    });
+
     describe('with edit icon', () => {
       beforeEach(async () => {
         testComponent.showEditIcon = true;
@@ -468,25 +491,10 @@ describe('Row Chips', () => {
 
         expect(primaryGridCell!.getAttribute('aria-label')).toMatch(/chip name/i);
 
-        const primaryGridCellDescribedBy = primaryGridCell!.getAttribute('aria-describedby');
-        expect(primaryGridCellDescribedBy)
-          .withContext('expected primary grid cell to have a non-empty aria-describedby attribute')
+        const primaryGridCellDescription = primaryGridCell!.getAttribute('aria-description');
+        expect(primaryGridCellDescription)
+          .withContext('expected primary grid cell to have a non-empty aria-description attribute')
           .toBeTruthy();
-
-        const primaryGridCellDescriptions = Array.from(
-          (fixture.nativeElement as HTMLElement).querySelectorAll(
-            primaryGridCellDescribedBy!
-              .split(/\s+/g)
-              .map(x => `#${x}`)
-              .join(','),
-          ),
-        );
-
-        const primaryGridCellDescription = primaryGridCellDescriptions
-          .map(x => x.textContent?.trim())
-          .join(' ')
-          .trim();
-
         expect(primaryGridCellDescription).toMatch(/chip description/i);
       });
     });
@@ -507,9 +515,14 @@ describe('Row Chips', () => {
               <button matChipEdit>edit</button>
             }
             {{name}}
-            <button matChipRemove>x</button>
+            @if (removable) {
+              <button matChipRemove>x</button>
+            }
             @if (useCustomEditInput) {
               <span class="projected-edit-input" matChipEditInput></span>
+            }
+            @if (showTrailingIcon) {
+              <span matChipTrailingIcon>trailing</span>
             }
           </mat-chip-row>
           <input matInput [matChipInputFor]="chipGrid" #chipInput>
@@ -519,8 +532,8 @@ describe('Row Chips', () => {
   imports: [MatChipsModule],
 })
 class SingleChip {
-  @ViewChild(MatChipGrid) chipList: MatChipGrid;
-  @ViewChild('chipInput') chipInput: ElementRef;
+  @ViewChild(MatChipGrid) chipList!: MatChipGrid;
+  @ViewChild('chipInput') chipInput!: ElementRef;
   disabled: boolean = false;
   name: string = 'Test';
   color: string = 'primary';
@@ -529,6 +542,7 @@ class SingleChip {
   editable: boolean = false;
   showEditIcon: boolean = false;
   useCustomEditInput: boolean = true;
+  showTrailingIcon = false;
   ariaLabel: string | null = null;
   ariaDescription: string | null = null;
 

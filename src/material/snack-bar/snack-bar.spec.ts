@@ -16,7 +16,6 @@ import {
   MAT_SNACK_BAR_DATA,
   MatSnackBar,
   MatSnackBarConfig,
-  MatSnackBarModule,
   MatSnackBarRef,
   SimpleSnackBar,
 } from './index';
@@ -39,12 +38,6 @@ describe('MatSnackBar', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        MatSnackBarModule,
-        ComponentWithChildViewContainer,
-        BurritosNotification,
-        DirectiveWithViewContainer,
-      ],
       providers: [{provide: MATERIAL_ANIMATIONS, useValue: {animationsDisabled: true}}],
     });
 
@@ -516,7 +509,6 @@ describe('MatSnackBar', () => {
     viewContainerFixture.destroy();
 
     TestBed.resetTestingModule().overrideProvider(MAT_SNACK_BAR_DEFAULT_OPTIONS, {
-      deps: [],
       useFactory: () => ({panelClass: 'custom-class'}),
     });
 
@@ -671,10 +663,6 @@ describe('MatSnackBar with parent MatSnackBar', () => {
   let fixture: ComponentFixture<ComponentThatProvidesMatSnackBar>;
 
   beforeEach(fakeAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [MatSnackBarModule, ComponentThatProvidesMatSnackBar, DirectiveWithViewContainer],
-    });
-
     parentSnackBar = TestBed.inject(MatSnackBar);
     overlayContainerElement = TestBed.inject(OverlayContainer).getContainerElement();
     fixture = TestBed.createComponent(ComponentThatProvidesMatSnackBar);
@@ -741,10 +729,6 @@ describe('MatSnackBar Positioning', () => {
   let simpleActionLabel = 'pickup';
 
   beforeEach(fakeAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [MatSnackBarModule, ComponentWithChildViewContainer, DirectiveWithViewContainer],
-    });
-
     snackBar = TestBed.inject(MatSnackBar);
     overlayContainerEl = TestBed.inject(OverlayContainer).getContainerElement();
     viewContainerFixture = TestBed.createComponent(ComponentWithChildViewContainer);
@@ -995,7 +979,7 @@ class DirectiveWithViewContainer {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class ComponentWithChildViewContainer {
-  @ViewChild(DirectiveWithViewContainer) childWithViewContainer: DirectiveWithViewContainer;
+  @ViewChild(DirectiveWithViewContainer) childWithViewContainer!: DirectiveWithViewContainer;
 
   childComponentExists = signal(true);
 
@@ -1013,8 +997,8 @@ class ComponentWithChildViewContainer {
   `,
 })
 class ComponentWithTemplateRef {
-  @ViewChild(TemplateRef) templateRef: TemplateRef<any>;
-  localValue: string;
+  @ViewChild(TemplateRef) templateRef!: TemplateRef<any>;
+  localValue!: string;
 }
 
 /** Simple component for testing ComponentPortal. */

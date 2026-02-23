@@ -33,12 +33,9 @@ describe('FlexibleConnectedPositionStrategy', () => {
   let overlayRef: OverlayRef;
   let viewport: ViewportRuler;
   let injector: Injector;
+  let portal: ComponentPortal<TestOverlay>;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [ScrollingModule, OverlayModule, PortalModule, TestOverlay],
-    });
-
     injector = TestBed.inject(Injector);
     overlayContainer = TestBed.inject(OverlayContainer);
     viewport = TestBed.inject(ViewportRuler);
@@ -54,7 +51,8 @@ describe('FlexibleConnectedPositionStrategy', () => {
 
   function attachOverlay(config: OverlayConfig) {
     overlayRef = createOverlayRef(injector, config);
-    overlayRef.attach(new ComponentPortal(TestOverlay));
+    portal = new ComponentPortal(TestOverlay);
+    overlayRef.attach(portal);
     TestBed.inject(ApplicationRef).tick();
   }
 
@@ -129,7 +127,7 @@ describe('FlexibleConnectedPositionStrategy', () => {
     origin.remove();
   });
 
-  it('should for the virtual keyboard offset when positioning the overlay', () => {
+  it('should account for the virtual keyboard offset when positioning the overlay', () => {
     const originElement = createPositionedBlockElement();
     document.body.appendChild(originElement);
 
@@ -142,6 +140,7 @@ describe('FlexibleConnectedPositionStrategy', () => {
     overlayContainer.getContainerElement().style.top = '-100px';
 
     attachOverlay({
+      usePopover: false,
       positionStrategy: createFlexibleConnectedPositionStrategy(injector, originElement)
         .withFlexibleDimensions(false)
         .withPush(false)
@@ -1366,6 +1365,50 @@ describe('FlexibleConnectedPositionStrategy', () => {
 
       const overlayRect = overlayRef.overlayElement.getBoundingClientRect();
       expect(Math.floor(overlayRect.top)).toBe(15);
+    });
+
+    it('should set separate margins when pushing the overlay into the viewport', () => {
+      originElement.style.top = `${-OVERLAY_HEIGHT}px`;
+      originElement.style.left = `${-OVERLAY_WIDTH / 2}px`;
+
+      positionStrategy.withViewportMargin({top: 15, start: 10}).withPositions([
+        {
+          originX: 'start',
+          originY: 'bottom',
+          overlayX: 'start',
+          overlayY: 'top',
+        },
+      ]);
+
+      attachOverlay({positionStrategy});
+
+      const overlayRect = overlayRef.overlayElement.getBoundingClientRect();
+      expect(Math.floor(overlayRect.top)).toBe(15);
+      expect(Math.floor(overlayRect.left)).toBe(10);
+    });
+
+    it('should only set the margins that were provided when pushing the overlay into the viewport from both axes', () => {
+      originElement.style.top = `${-OVERLAY_HEIGHT / 2}px`;
+      originElement.style.left = `${-OVERLAY_WIDTH / 2}px`;
+
+      positionStrategy.withViewportMargin({start: 30}).withPositions([
+        {
+          originX: 'start',
+          originY: 'top',
+          overlayX: 'start',
+          overlayY: 'bottom',
+        },
+      ]);
+
+      attachOverlay({positionStrategy});
+
+      const overlayRect = overlayRef.overlayElement.getBoundingClientRect();
+      expect(Math.floor(overlayRect.left)).toBe(OVERLAY_WIDTH / 2);
+      expect(Math.floor(overlayRect.right)).toBe(
+        originElement.offsetWidth - OVERLAY_WIDTH / 2 + OVERLAY_WIDTH,
+      );
+      expect(Math.floor(overlayRect.top)).toBe(0);
+      expect(Math.floor(overlayRect.bottom)).toBe(OVERLAY_HEIGHT);
     });
 
     it('should not mess with the left offset when pushing from the top', () => {
@@ -2600,7 +2643,7 @@ describe('FlexibleConnectedPositionStrategy', () => {
         attachOverlay({positionStrategy});
 
         expect(overlayRef.hostElement.style.left).toBeTruthy();
-        expect(overlayRef.hostElement.style.right).toBeFalsy();
+        expect(overlayRef.hostElement.style.right).toBe('auto');
       });
 
       it('should use `right` when positioning an element at the end', () => {
@@ -2616,7 +2659,7 @@ describe('FlexibleConnectedPositionStrategy', () => {
         attachOverlay({positionStrategy});
 
         expect(overlayRef.hostElement.style.right).toBeTruthy();
-        expect(overlayRef.hostElement.style.left).toBeFalsy();
+        expect(overlayRef.hostElement.style.left).toBe('auto');
       });
     });
 
@@ -2637,7 +2680,7 @@ describe('FlexibleConnectedPositionStrategy', () => {
         });
 
         expect(overlayRef.hostElement.style.right).toBeTruthy();
-        expect(overlayRef.hostElement.style.left).toBeFalsy();
+        expect(overlayRef.hostElement.style.left).toBe('auto');
       });
 
       it('should use `left` when positioning an element at the end', () => {
@@ -2653,7 +2696,7 @@ describe('FlexibleConnectedPositionStrategy', () => {
         attachOverlay({positionStrategy, direction: 'rtl'});
 
         expect(overlayRef.hostElement.style.left).toBeTruthy();
-        expect(overlayRef.hostElement.style.right).toBeFalsy();
+        expect(overlayRef.hostElement.style.right).toBe('auto');
       });
     });
 
@@ -2671,7 +2714,7 @@ describe('FlexibleConnectedPositionStrategy', () => {
         attachOverlay({positionStrategy});
 
         expect(overlayRef.hostElement.style.top).toBeTruthy();
-        expect(overlayRef.hostElement.style.bottom).toBeFalsy();
+        expect(overlayRef.hostElement.style.bottom).toBe('auto');
       });
 
       it('should use `bottom` when positioning at element along the bottom', () => {
@@ -2687,7 +2730,7 @@ describe('FlexibleConnectedPositionStrategy', () => {
         attachOverlay({positionStrategy});
 
         expect(overlayRef.hostElement.style.bottom).toBeTruthy();
-        expect(overlayRef.hostElement.style.top).toBeFalsy();
+        expect(overlayRef.hostElement.style.top).toBe('auto');
       });
     });
   });
@@ -2909,6 +2952,81 @@ describe('FlexibleConnectedPositionStrategy', () => {
       overlayRef.updatePosition();
 
       expect(overlayClassList).toContain('custom-panel-class');
+    });
+  });
+
+  describe('DOM location', () => {
+    let positionStrategy: FlexibleConnectedPositionStrategy;
+    let containerElement: HTMLElement;
+    let originElement: HTMLElement;
+    let customHostElement: HTMLElement;
+
+    beforeEach(() => {
+      containerElement = overlayContainer.getContainerElement();
+      originElement = createPositionedBlockElement();
+      customHostElement = createBlockElement('span');
+      document.body.appendChild(originElement);
+      document.body.appendChild(customHostElement);
+
+      positionStrategy = createFlexibleConnectedPositionStrategy(injector, originElement)
+        .withPopoverLocation('inline')
+        .withPositions([
+          {
+            overlayX: 'start',
+            overlayY: 'top',
+            originX: 'start',
+            originY: 'bottom',
+          },
+        ]);
+    });
+
+    afterEach(() => {
+      originElement.remove();
+      customHostElement.remove();
+    });
+
+    it('should place the overlay inside the overlay container by default', () => {
+      attachOverlay({positionStrategy, usePopover: false});
+      expect(containerElement.contains(overlayRef.hostElement)).toBe(true);
+      expect(overlayRef.hostElement.getAttribute('popover')).toBeFalsy();
+    });
+
+    it('should be able to opt into placing the overlay inside an adjacent popover element', () => {
+      attachOverlay({positionStrategy, usePopover: true});
+
+      expect(containerElement.contains(overlayRef.hostElement)).toBe(false);
+      expect(originElement.nextElementSibling).toBe(overlayRef.hostElement);
+      expect(overlayRef.hostElement.getAttribute('popover')).toBe('manual');
+    });
+
+    it('should re-attach the popover next to the origin element', () => {
+      attachOverlay({positionStrategy, usePopover: true});
+      expect(originElement.nextElementSibling).toBe(overlayRef.hostElement);
+
+      overlayRef.detach();
+      TestBed.inject(ApplicationRef).tick();
+      expect(overlayRef.hostElement.parentNode).toBeFalsy();
+
+      overlayRef.attach(portal);
+      expect(originElement.nextElementSibling).toBe(overlayRef.hostElement);
+    });
+
+    it('should insert the overlay as a child of a custom element', () => {
+      positionStrategy.withPopoverLocation({type: 'parent', element: customHostElement});
+      attachOverlay({positionStrategy, usePopover: true});
+
+      expect(containerElement.contains(overlayRef.hostElement)).toBe(false);
+      expect(customHostElement.contains(overlayRef.hostElement)).toBe(true);
+      expect(overlayRef.hostElement.getAttribute('popover')).toBe('manual');
+    });
+
+    it('should insert the overlay as a child of the origin', () => {
+      positionStrategy.withPopoverLocation({type: 'parent', element: originElement});
+      attachOverlay({positionStrategy, usePopover: true});
+
+      expect(containerElement.contains(overlayRef.hostElement)).toBe(false);
+      expect(originElement.contains(overlayRef.hostElement)).toBe(true);
+      expect(overlayRef.hostElement.getAttribute('popover')).toBe('manual');
     });
   });
 });

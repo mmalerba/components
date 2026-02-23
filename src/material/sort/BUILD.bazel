@@ -6,7 +6,6 @@ load(
     "ng_web_test_suite",
     "sass_binary",
     "sass_library",
-    "ts_project",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -67,7 +66,6 @@ ng_project(
         "index.ts",
         "public-api.ts",
         "sort.ts",
-        "sort-animations.ts",
         "sort-direction.ts",
         "sort-errors.ts",
         "sort-header.ts",
@@ -84,11 +82,12 @@ ng_project(
         "//src:dev_mode_types",
         "//src/cdk/a11y",
         "//src/cdk/keycodes",
+        "//src/cdk/table",
         "//src/material/core",
     ],
 )
 
-ts_project(
+ng_project(
     name = "unit_test_sources",
     testonly = True,
     srcs = glob(

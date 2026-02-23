@@ -12,12 +12,9 @@ import {
 describe('GlobalPositonStrategy', () => {
   let overlayRef: OverlayRef;
   let injector: Injector;
+  let portal: ComponentPortal<BlankPortal>;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [OverlayModule, PortalModule, BlankPortal],
-    });
-
     injector = TestBed.inject(Injector);
   });
 
@@ -29,7 +26,7 @@ describe('GlobalPositonStrategy', () => {
   });
 
   function attachOverlay(config: OverlayConfig): OverlayRef {
-    const portal = new ComponentPortal(BlankPortal);
+    portal = new ComponentPortal(BlankPortal);
     overlayRef = createOverlayRef(injector, config);
     overlayRef.attach(portal);
     TestBed.inject(ApplicationRef).tick();

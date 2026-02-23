@@ -1,12 +1,13 @@
 import {Location} from '@angular/common';
 import {SpyLocation} from '@angular/common/testing';
 import {
+  ANIMATION_MODULE_TYPE,
   Component,
   ErrorHandler,
   EventEmitter,
   Injectable,
   Injector,
-  Type,
+  Provider,
   ViewChild,
   ViewContainerRef,
   WritableSignal,
@@ -21,7 +22,6 @@ import {
   tick,
   waitForAsync,
 } from '@angular/core/testing';
-import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import {Direction, Directionality} from '../bidi';
 import {CdkPortal, ComponentPortal, TemplatePortal} from '../portal';
 import {dispatchFakeEvent} from '../testing/private';
@@ -47,16 +47,16 @@ describe('Overlay', () => {
   let dir: WritableSignal<Direction>;
   let mockLocation: SpyLocation;
 
-  function setup(imports: Type<unknown>[] = []) {
+  function setup(providers: Provider[] = []) {
     dir = signal<Direction>('ltr');
     TestBed.configureTestingModule({
-      imports: [OverlayModule, ...imports],
       providers: [
         provideFakeDirectionality(dir),
         {
           provide: Location,
           useClass: SpyLocation,
         },
+        ...providers,
       ],
     });
 
@@ -141,9 +141,9 @@ describe('Overlay', () => {
     expect(overlayContainerElement.textContent).toBe('');
   });
 
-  it('should ensure that the most-recently-attached overlay is on top', () => {
-    let pizzaOverlayRef = createOverlayRef(injector);
-    let cakeOverlayRef = createOverlayRef(injector);
+  it('should ensure that the most-recently-attached overlay is on top when popovers are disabled', () => {
+    let pizzaOverlayRef = createOverlayRef(injector, {usePopover: false});
+    let cakeOverlayRef = createOverlayRef(injector, {usePopover: false});
 
     pizzaOverlayRef.attach(componentPortal);
     cakeOverlayRef.attach(templatePortal);
@@ -494,6 +494,13 @@ describe('Overlay', () => {
 
     expect(paneElement.childNodes.length).toBe(0);
   }));
+
+  it('should do nothing when trying to attach a disposed overlay', () => {
+    const overlayRef = createOverlayRef(injector);
+    overlayRef.dispose();
+    overlayRef.attach(componentPortal);
+    expect(document.querySelector('.cdk-overlay-pane')).toBeFalsy();
+  });
 
   describe('positioning', () => {
     let config: OverlayConfig;
@@ -850,7 +857,7 @@ describe('Overlay', () => {
     });
 
     it('should insert the backdrop before the overlay host in the DOM order', () => {
-      const overlayRef = createOverlayRef(injector, config);
+      const overlayRef = createOverlayRef(injector, {...config, usePopover: false});
 
       overlayRef.attach(componentPortal);
       viewContainerFixture.detectChanges();
@@ -892,7 +899,12 @@ describe('Overlay', () => {
     it('should set a class on the backdrop when animations are disabled', () => {
       cleanup();
       TestBed.resetTestingModule();
-      setup([NoopAnimationsModule]);
+      setup([
+        {
+          provide: ANIMATION_MODULE_TYPE,
+          useValue: 'NoopAnimations',
+        },
+      ]);
 
       let overlayRef = createOverlayRef(injector, config);
       overlayRef.attach(componentPortal);
@@ -1119,14 +1131,14 @@ class PizzaMsg {}
 class TestComponentWithTemplatePortals {
   viewContainerRef = inject(ViewContainerRef);
 
-  @ViewChild(CdkPortal) templatePortal: CdkPortal;
+  @ViewChild(CdkPortal) templatePortal!: CdkPortal;
 }
 
 class FakePositionStrategy implements PositionStrategy {
-  element: HTMLElement;
+  element: HTMLElement | undefined;
 
   apply(): void {
-    this.element.classList.add('fake-positioned');
+    this.element?.classList.add('fake-positioned');
   }
 
   attach(overlayRef: OverlayRef) {
@@ -1138,7 +1150,7 @@ class FakePositionStrategy implements PositionStrategy {
 
 class FakeScrollStrategy implements ScrollStrategy {
   isEnabled = false;
-  overlayRef: OverlayRef;
+  overlayRef: OverlayRef | undefined;
 
   attach(overlayRef: OverlayRef) {
     this.overlayRef = overlayRef;

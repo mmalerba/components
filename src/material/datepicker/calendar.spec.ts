@@ -354,13 +354,17 @@ describe('MatCalendar', () => {
         '.mat-calendar-previous-button',
       ) as HTMLButtonElement;
 
-      expect(prevButton.disabled).withContext('previous button should not be disabled').toBe(false);
+      expect(prevButton.hasAttribute('aria-disabled'))
+        .withContext('previous button should not be disabled')
+        .toBe(false);
       expect(calendarInstance.activeDate).toEqual(new Date(2016, FEB, 1));
 
       prevButton.click();
       fixture.detectChanges();
 
-      expect(prevButton.disabled).withContext('previous button should be disabled').toBe(true);
+      expect(prevButton.getAttribute('aria-disabled'))
+        .withContext('previous button should be disabled')
+        .toBe('true');
       expect(calendarInstance.activeDate).toEqual(new Date(2016, JAN, 1));
 
       prevButton.click();
@@ -378,13 +382,17 @@ describe('MatCalendar', () => {
         '.mat-calendar-next-button',
       ) as HTMLButtonElement;
 
-      expect(nextButton.disabled).withContext('next button should not be disabled').toBe(false);
+      expect(nextButton.hasAttribute('aria-disabled'))
+        .withContext('next button should not be disabled')
+        .toBe(false);
       expect(calendarInstance.activeDate).toEqual(new Date(2017, DEC, 1));
 
       nextButton.click();
       fixture.detectChanges();
 
-      expect(nextButton.disabled).withContext('next button should be disabled').toBe(true);
+      expect(nextButton.getAttribute('aria-disabled'))
+        .withContext('next button should be disabled')
+        .toBe('true');
       expect(calendarInstance.activeDate).toEqual(new Date(2018, JAN, 1));
 
       nextButton.click();
@@ -631,6 +639,28 @@ describe('MatCalendar', () => {
       });
     });
   });
+
+  it("should not throw when updating today's date too early", () => {
+    const fixture = TestBed.createComponent(StandardCalendar);
+    const calendar = fixture.debugElement.query(By.directive(MatCalendar))
+      .componentInstance as MatCalendar<Date>;
+
+    expect(() => {
+      calendar.updateTodaysDate();
+      fixture.detectChanges();
+    }).not.toThrow();
+  });
+
+  it('should not throw when focusing the active cell too early', () => {
+    const fixture = TestBed.createComponent(StandardCalendar);
+    const calendar = fixture.debugElement.query(By.directive(MatCalendar))
+      .componentInstance as MatCalendar<Date>;
+
+    expect(() => {
+      calendar.focusActiveCell();
+      fixture.detectChanges();
+    }).not.toThrow();
+  });
 });
 
 @Component({
@@ -644,9 +674,9 @@ describe('MatCalendar', () => {
   imports: [MatCalendar],
 })
 class StandardCalendar {
-  selected: Date;
-  selectedYear: Date;
-  selectedMonth: Date;
+  selected!: Date;
+  selectedYear!: Date;
+  selectedMonth!: Date;
   startDate = new Date(2017, JAN, 31);
 }
 
@@ -657,7 +687,7 @@ class StandardCalendar {
   imports: [MatCalendar],
 })
 class CalendarWithMinMax {
-  startAt: Date;
+  startAt!: Date;
   minDate = new Date(2016, JAN, 1);
   maxDate = new Date(2018, JAN, 1);
 }
@@ -670,7 +700,7 @@ class CalendarWithMinMax {
   imports: [MatCalendar],
 })
 class CalendarWithDateFilter {
-  selected: Date;
+  selected!: Date;
   startDate = new Date(2017, JAN, 1);
 
   dateFilter(date: Date) {
@@ -691,8 +721,8 @@ class CalendarWithDateFilter {
 })
 class CalendarWithSelectableMinDate {
   startAt = new Date(2018, JUL, 0);
-  selected: Date;
-  minDate: Date;
+  selected!: Date;
+  minDate!: Date;
 
   constructor() {
     this.select(new Date(2018, JUL, 10));

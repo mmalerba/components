@@ -102,19 +102,9 @@ export class TreeKeyManager<T extends TreeKeyManagerItem> implements TreeKeyMana
     // items aren't being collected via `ViewChildren` or `ContentChildren`).
     if (items instanceof QueryList) {
       this._items = items.toArray();
-      items.changes.subscribe((newItems: QueryList<T>) => {
-        this._items = newItems.toArray();
-        this._typeahead?.setItems(this._items);
-        this._updateActiveItemIndex(this._items);
-        this._initializeFocus();
-      });
+      items.changes.subscribe((newItems: QueryList<T>) => this._itemsChanged(newItems.toArray()));
     } else if (isObservable(items)) {
-      items.subscribe(newItems => {
-        this._items = newItems;
-        this._typeahead?.setItems(newItems);
-        this._updateActiveItemIndex(newItems);
-        this._initializeFocus();
-      });
+      items.subscribe(newItems => this._itemsChanged(newItems));
     } else {
       this._items = items;
       this._initializeFocus();
@@ -217,6 +207,19 @@ export class TreeKeyManager<T extends TreeKeyManagerItem> implements TreeKeyMana
   /** The currently active item. */
   getActiveItem(): T | null {
     return this._activeItem;
+  }
+
+  /** Called when the list of items has changed. */
+  private _itemsChanged(newItems: T[]) {
+    if (this._hasInitialFocused && this._activeItem && !newItems.includes(this._activeItem)) {
+      this._activeItem = null;
+      this._hasInitialFocused = false;
+    }
+
+    this._items = newItems;
+    this._typeahead?.setItems(this._items);
+    this._updateActiveItemIndex(this._items);
+    this._initializeFocus();
   }
 
   /** Focus the first available item. */
@@ -411,27 +414,8 @@ export class TreeKeyManager<T extends TreeKeyManagerItem> implements TreeKeyMana
   }
 }
 
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function TREE_KEY_MANAGER_FACTORY<T extends TreeKeyManagerItem>(): TreeKeyManagerFactory<T> {
-  return (items, options) => new TreeKeyManager(items, options);
-}
-
 /** Injection token that determines the key manager to use. */
 export const TREE_KEY_MANAGER = new InjectionToken<TreeKeyManagerFactory<any>>('tree-key-manager', {
   providedIn: 'root',
-  factory: TREE_KEY_MANAGER_FACTORY,
+  factory: () => (items, options) => new TreeKeyManager(items, options),
 });
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export const TREE_KEY_MANAGER_FACTORY_PROVIDER = {
-  provide: TREE_KEY_MANAGER,
-  useFactory: TREE_KEY_MANAGER_FACTORY,
-};

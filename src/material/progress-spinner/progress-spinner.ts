@@ -17,7 +17,7 @@ import {
   numberAttribute,
   inject,
 } from '@angular/core';
-import {_animationsDisabled, ThemePalette} from '../core';
+import {_getAnimationsState, ThemePalette} from '../core';
 import {NgTemplateOutlet} from '@angular/common';
 
 /** Possible mode for a progress spinner. */
@@ -38,8 +38,8 @@ export interface MatProgressSpinnerDefaultOptions {
   /** Width of the spinner's stroke. */
   strokeWidth?: number;
   /**
-   * Whether the animations should be force to be enabled, ignoring if the current environment is
-   * using NoopAnimationsModule.
+   * Whether the animations should be force to be enabled, ignoring if the current environment
+   * disables them.
    */
   _forceAnimations?: boolean;
 }
@@ -48,17 +48,8 @@ export interface MatProgressSpinnerDefaultOptions {
 export const MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS =
   new InjectionToken<MatProgressSpinnerDefaultOptions>('mat-progress-spinner-default-options', {
     providedIn: 'root',
-    factory: MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS_FACTORY,
+    factory: () => ({diameter: BASE_SIZE}),
   });
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS_FACTORY(): MatProgressSpinnerDefaultOptions {
-  return {diameter: BASE_SIZE};
-}
 
 /**
  * Base reference size of the spinner.
@@ -122,18 +113,22 @@ export class MatProgressSpinner {
   private _defaultColor: ThemePalette = 'primary';
 
   /** The element of the determinate spinner. */
-  @ViewChild('determinateSpinner') _determinateCircle: ElementRef<HTMLElement>;
+  @ViewChild('determinateSpinner') _determinateCircle!: ElementRef<HTMLElement>;
 
   constructor(...args: unknown[]);
 
   constructor() {
     const defaults = inject<MatProgressSpinnerDefaultOptions>(MAT_PROGRESS_SPINNER_DEFAULT_OPTIONS);
+    const animationsState = _getAnimationsState();
+    const element = this._elementRef.nativeElement;
 
-    this._noopAnimations = _animationsDisabled() && !!defaults && !defaults._forceAnimations;
-    this.mode =
-      this._elementRef.nativeElement.nodeName.toLowerCase() === 'mat-spinner'
-        ? 'indeterminate'
-        : 'determinate';
+    this._noopAnimations =
+      animationsState === 'di-disabled' && !!defaults && !defaults._forceAnimations;
+    this.mode = element.nodeName.toLowerCase() === 'mat-spinner' ? 'indeterminate' : 'determinate';
+
+    if (!this._noopAnimations && animationsState === 'reduced-motion') {
+      element.classList.add('mat-progress-spinner-reduced-motion');
+    }
 
     if (defaults) {
       if (defaults.color) {
@@ -187,7 +182,7 @@ export class MatProgressSpinner {
   set strokeWidth(value: number) {
     this._strokeWidth = value || 0;
   }
-  private _strokeWidth: number;
+  private _strokeWidth!: number;
 
   /** The radius of the spinner, adjusted for stroke width. */
   _circleRadius(): number {

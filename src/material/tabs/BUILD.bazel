@@ -6,7 +6,6 @@ load(
     "ng_web_test_suite",
     "sass_binary",
     "sass_library",
-    "ts_project",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -111,7 +110,6 @@ ng_project(
     srcs = [
         "index.ts",
         "ink-bar.ts",
-        "module.ts",
         "paginated-tab-header.ts",
         "public-api.ts",
         "tab.ts",
@@ -123,7 +121,7 @@ ng_project(
         "tab-label.ts",
         "tab-label-wrapper.ts",
         "tab-nav-bar/tab-nav-bar.ts",
-        "tabs-animations.ts",
+        "tabs-module.ts",
     ],
     assets = [
         "tab-body.html",
@@ -156,7 +154,7 @@ ng_project(
     ],
 )
 
-ts_project(
+ng_project(
     name = "tabs_tests_lib",
     testonly = True,
     srcs = glob(

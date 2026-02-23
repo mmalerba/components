@@ -7,6 +7,16 @@
 @function get-tokens($theme) {
   $system: m2-utils.get-system($theme);
   $density-scale: theming.clamp-density(map.get($system, density-scale), -5);
+  $touch-target-display: block;
+  $form-field-density-scale: $density-scale;
+
+  @if ($form-field-density-scale > -4) {
+    $form-field-density-scale: -4;
+  }
+
+  @if ($density-scale < -2) {
+    $touch-target-display: none;
+  }
 
   $form-field-height: map.get((
     0: 56px,
@@ -15,10 +25,13 @@
     -3: 44px,
     -4: 40px,
     -5: 36px,
-  ), if($density-scale > -4, -4, $density-scale));
+  ), $form-field-density-scale);
 
   @return (
-    base: (),
+    base: (
+      paginator-page-size-select-width: 84px,
+      paginator-page-size-select-touch-target-height: 48px,
+    ),
     color: (
       paginator-container-text-color: map.get($system, on-surface),
       paginator-container-background-color: map.get($system, surface),
@@ -50,7 +63,7 @@
       // padding that is provided by the Material Design specification.
       paginator-form-field-container-vertical-padding:
           16px - math.div(56px - $form-field-height, 2),
-      paginator-touch-target-display: if($density-scale < -2, none, block),
+      paginator-touch-target-display: $touch-target-display,
     ),
   );
 }

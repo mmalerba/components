@@ -3,7 +3,6 @@
 // used by Bazel to build the sources for an entry-point.
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "declaration": true,
     "stripInternal": false,
     "experimentalDecorators": true,
@@ -11,6 +10,7 @@
     "noUnusedParameters": false,
     "noUnusedLocals": false,
     "strictNullChecks": true,
+    "strictPropertyInitialization": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "strictFunctionTypes": true,
@@ -34,6 +34,7 @@
     "types": [],
     "skipLibCheck": true,
     "paths": {
+      "@angular/aria/*": ["./aria/*"],
       "@angular/cdk-experimental/*": ["./cdk-experimental/*"],
       "@angular/cdk/*": ["./cdk/*"],
       "@angular/components-examples": ["./components-examples"],
@@ -51,6 +52,10 @@
   "angularCompilerOptions": {
     "strictTemplates": true,
     "typeCheckHostBindings": true,
+    "strictInputAccessModifiers": true,
+    "strictInputTypes": true,
+    "strictOutputEventTypes": true,
+    "strictDomEventTypes": true,
     "extendedDiagnostics": {
       "defaultCategory": "error"
     }

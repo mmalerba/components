@@ -12,6 +12,9 @@ export type HorizontalConnectionPos = 'start' | 'center' | 'end';
 /** Vertical dimension of a connection point on the perimeter of the origin or overlay element. */
 export type VerticalConnectionPos = 'top' | 'center' | 'bottom';
 
+/** The distance between the overlay element and the viewport. */
+export type ViewportMargin = number | {top?: number; bottom?: number; start?: number; end?: number};
+
 /** A connection point on the origin element. */
 export interface OriginConnectionPosition {
   originX: HorizontalConnectionPos;
@@ -78,10 +81,10 @@ export class ConnectionPositionPair {
  *  @docs-private
  */
 export class ScrollingVisibility {
-  isOriginClipped: boolean;
-  isOriginOutsideView: boolean;
-  isOverlayClipped: boolean;
-  isOverlayOutsideView: boolean;
+  isOriginClipped: boolean = false;
+  isOriginOutsideView: boolean = false;
+  isOverlayClipped: boolean = false;
+  isOverlayOutsideView: boolean = false;
 }
 
 /** The change event emitted by the strategy when a fallback position is used. */

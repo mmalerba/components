@@ -1,4 +1,4 @@
-load("//tools:defaults.bzl", "ng_project", "ng_web_test_suite", "ts_project")
+load("//tools:defaults.bzl", "ng_project", "ng_web_test_suite")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -8,10 +8,7 @@ ng_project(
         ["**/*.ts"],
         exclude = ["**/*.spec.ts"],
     ),
-    assets = glob([
-        "**/*.html",
-        "**/*.css",
-    ]),
+    assets = glob(["**/*.html"]),
     deps = [
         "//:node_modules/@angular/core",
         "//:node_modules/@angular/platform-browser",
@@ -30,12 +27,11 @@ filegroup(
     name = "source-files",
     srcs = glob([
         "**/*.html",
-        "**/*.css",
         "**/*.ts",
     ]),
 )
 
-ts_project(
+ng_project(
     name = "unit_tests_lib",
     testonly = True,
     srcs = glob(["**/*.spec.ts"]),

@@ -6,7 +6,6 @@ load(
     "ng_web_test_suite",
     "sass_binary",
     "sass_library",
-    "ts_project",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -70,15 +69,14 @@ ng_project(
         "context-menu-trigger.ts",
         "index.ts",
         "menu.ts",
-        "menu-animations.ts",
         "menu-content.ts",
         "menu-errors.ts",
         "menu-item.ts",
+        "menu-module.ts",
         "menu-panel.ts",
         "menu-positions.ts",
         "menu-trigger.ts",
         "menu-trigger-base.ts",
-        "module.ts",
         "public-api.ts",
     ],
     assets = [
@@ -96,7 +94,7 @@ ng_project(
     ],
 )
 
-ts_project(
+ng_project(
     name = "menu_tests_lib",
     testonly = True,
     srcs = glob(
@@ -113,6 +111,7 @@ ts_project(
         "//src/cdk/overlay",
         "//src/cdk/scrolling",
         "//src/cdk/testing/private",
+        "//src/material/button",
         "//src/material/core",
     ],
 )

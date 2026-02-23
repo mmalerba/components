@@ -337,25 +337,10 @@ describe('Option Chips', () => {
 
         expect(optionElement.getAttribute('aria-label')).toMatch(/option name/i);
 
-        const optionElementDescribedBy = optionElement!.getAttribute('aria-describedby');
-        expect(optionElementDescribedBy)
-          .withContext('expected primary grid cell to have a non-empty aria-describedby attribute')
+        const optionElementDescription = optionElement!.getAttribute('aria-description');
+        expect(optionElementDescription)
+          .withContext('expected primary grid cell to have a non-empty aria-description attribute')
           .toBeTruthy();
-
-        const optionElementDescriptions = Array.from(
-          (fixture.nativeElement as HTMLElement).querySelectorAll(
-            optionElementDescribedBy!
-              .split(/\s+/g)
-              .map(x => `#${x}`)
-              .join(','),
-          ),
-        );
-
-        const optionElementDescription = optionElementDescriptions
-          .map(x => x.textContent?.trim())
-          .join(' ')
-          .trim();
-
         expect(optionElementDescription).toMatch(/option description/i);
       });
 
@@ -420,7 +405,7 @@ describe('Option Chips', () => {
   imports: [MatChipListbox, MatChipOption, MatChipAvatar],
 })
 class SingleChip {
-  @ViewChild(MatChipListbox) chipList: MatChipListbox;
+  @ViewChild(MatChipListbox) chipList!: MatChipListbox;
   disabled: boolean = false;
   name: string = 'Test';
   color: string = 'primary';

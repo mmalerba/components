@@ -114,25 +114,20 @@ describe('MatStepper', () => {
       expect(stepper.selected instanceof MatStep).toBe(true);
     });
 
-    it('should set the "tablist" role on stepper', () => {
-      const stepperEl = fixture.debugElement.query(By.css('mat-stepper'))!.nativeElement;
-      expect(stepperEl.getAttribute('role')).toBe('tablist');
-    });
-
     it('should display the correct label', () => {
-      let selectedLabel = fixture.nativeElement.querySelector('[aria-selected="true"]');
+      let selectedLabel = fixture.nativeElement.querySelector('[aria-current="step"]');
       expect(selectedLabel.textContent).toMatch('Step 1');
 
       fixture.componentInstance.stepper.selectedIndex = 2;
       fixture.detectChanges();
 
-      selectedLabel = fixture.nativeElement.querySelector('[aria-selected="true"]');
+      selectedLabel = fixture.nativeElement.querySelector('[aria-current="step"]');
       expect(selectedLabel.textContent).toMatch('Step 3');
 
       fixture.componentInstance.inputLabel.set('New Label');
       fixture.detectChanges();
 
-      selectedLabel = fixture.nativeElement.querySelector('[aria-selected="true"]');
+      selectedLabel = fixture.nativeElement.querySelector('[aria-current="step"]');
       expect(selectedLabel.textContent).toMatch('New Label');
     });
 
@@ -340,15 +335,6 @@ describe('MatStepper', () => {
 
       selectionChangeSubscription.unsubscribe();
       animationDoneSubscription.unsubscribe();
-    });
-
-    it('should set the correct aria-posinset and aria-setsize', () => {
-      const headers = Array.from<HTMLElement>(
-        fixture.nativeElement.querySelectorAll('.mat-step-header'),
-      );
-
-      expect(headers.map(header => header.getAttribute('aria-posinset'))).toEqual(['1', '2', '3']);
-      expect(headers.every(header => header.getAttribute('aria-setsize') === '3')).toBe(true);
     });
 
     it('should adjust the index when removing a step before the current one', () => {
@@ -937,14 +923,6 @@ describe('MatStepper', () => {
   });
 
   describe('vertical stepper', () => {
-    it('should set the aria-orientation to "vertical"', () => {
-      const fixture = createComponent(SimpleMatVerticalStepperApp);
-      fixture.detectChanges();
-
-      const stepperEl = fixture.debugElement.query(By.css('mat-stepper'))!.nativeElement;
-      expect(stepperEl.getAttribute('aria-orientation')).toBe('vertical');
-    });
-
     it('should support using the left/right arrows to move focus', () => {
       const fixture = createComponent(SimpleMatVerticalStepperApp);
       fixture.detectChanges();
@@ -1045,7 +1023,7 @@ describe('MatStepper', () => {
       const fixture = createComponent(SimpleMatHorizontalStepperApp);
       fixture.detectChanges();
 
-      const stepperEl = fixture.debugElement.query(By.css('mat-stepper'))!.nativeElement;
+      const stepperEl = fixture.debugElement.query(By.css('[role="tablist"]'))!.nativeElement;
       expect(stepperEl.getAttribute('aria-orientation')).toBe('horizontal');
     });
 
@@ -1064,6 +1042,18 @@ describe('MatStepper', () => {
 
       const stepHeaders = fixture.debugElement.queryAll(By.css('.mat-horizontal-stepper-header'));
       assertArrowKeyInteractionInRtl(fixture, stepHeaders);
+    });
+
+    it('should set the correct aria-posinset and aria-setsize', () => {
+      const fixture = createComponent(SimpleMatHorizontalStepperApp);
+      fixture.detectChanges();
+
+      const headers = Array.from<HTMLElement>(
+        fixture.nativeElement.querySelectorAll('.mat-step-header'),
+      );
+
+      expect(headers.map(header => header.getAttribute('aria-posinset'))).toEqual(['1', '2', '3']);
+      expect(headers.every(header => header.getAttribute('aria-setsize') === '3')).toBe(true);
     });
 
     it('should maintain the correct navigation order when a step is added later on', () => {
@@ -1571,6 +1561,44 @@ describe('MatStepper', () => {
       expect(fixture.componentInstance.index).toBe(0);
     });
   });
+
+  describe('stepper with header prefix', () => {
+    it('should render the horizontal prefix content before the header', () => {
+      const fixture = createComponent(HorizontalStepperWithHeaderPrefix);
+      fixture.detectChanges();
+
+      const stepperHeaderWrapper = fixture.nativeElement.querySelector(
+        '.mat-horizontal-stepper-header-wrapper',
+      );
+
+      expect(stepperHeaderWrapper.children.length).toBe(2);
+
+      const stepperHeaderWrapperChildrenTags = Array.from(
+        stepperHeaderWrapper.children as HTMLElement[],
+      ).map((child: HTMLElement) => child.tagName);
+      const stepperHeaderPrefix = stepperHeaderWrapper.children[0];
+
+      expect(stepperHeaderWrapperChildrenTags).toEqual(['H2', 'DIV']);
+      expect(stepperHeaderPrefix.textContent).toContain('This is a header prefix');
+    });
+
+    it('should render the vertical prefix content before the first step', () => {
+      const fixture = createComponent(VerticalStepperWithHeaderPrefix);
+      fixture.detectChanges();
+
+      const stepperWrapper = fixture.nativeElement.querySelector('.mat-vertical-stepper-wrapper');
+
+      expect(stepperWrapper.children.length).toBe(4);
+
+      const stepperHeaderWrapperChildrenTags = Array.from(
+        stepperWrapper.children as HTMLElement[],
+      ).map((child: HTMLElement) => child.tagName);
+      const stepperHeaderPrefix = stepperWrapper.children[0];
+
+      expect(stepperHeaderWrapperChildrenTags).toEqual(['H2', 'DIV', 'DIV', 'DIV']);
+      expect(stepperHeaderPrefix.textContent).toContain('This is a header prefix');
+    });
+  });
 });
 
 /** Asserts that keyboard interaction works correctly. */
@@ -1780,7 +1808,7 @@ function createComponent<T>(
   <form [formGroup]="formGroup">
     <mat-stepper>
       <mat-step errorMessage="This field is required"
-        [stepControl]="formGroup.get('firstNameCtrl')">
+        [stepControl]="formGroup.get('firstNameCtrl')!">
         <ng-template matStepLabel>Step 1</ng-template>
         <mat-form-field>
           <mat-label>First name</mat-label>
@@ -1848,12 +1876,12 @@ class MatHorizontalStepperWithErrorsApp {
   imports: [MatStepperModule],
 })
 class SimpleMatHorizontalStepperApp {
-  @ViewChild(MatStepper) stepper: MatStepper;
+  @ViewChild(MatStepper) stepper!: MatStepper;
   inputLabel = 'Step 3';
   disableRipple = signal(false);
   stepperTheme = signal<ThemePalette>(undefined);
   secondStepTheme = signal<ThemePalette>(undefined);
-  headerPosition = signal('');
+  headerPosition = signal<'top' | 'bottom'>('top');
 }
 
 @Component({
@@ -1889,7 +1917,7 @@ class SimpleMatHorizontalStepperApp {
   imports: [MatStepperModule],
 })
 class SimpleMatVerticalStepperApp {
-  @ViewChild(MatStepper) stepper: MatStepper;
+  @ViewChild(MatStepper) stepper!: MatStepper;
   inputLabel = signal('Step 3');
   showStepTwo = signal(true);
   disableRipple = signal(false);
@@ -1961,7 +1989,7 @@ class LinearMatVerticalStepperApp {
   imports: [MatStepperModule],
 })
 class SimplePreselectedMatHorizontalStepperApp {
-  @ViewChild(MatStepper) stepper: MatStepper;
+  @ViewChild(MatStepper) stepper!: MatStepper;
   index = 0;
 }
 
@@ -2006,7 +2034,7 @@ class SimplePreselectedMatHorizontalStepperApp {
   imports: [ReactiveFormsModule, MatStepperModule],
 })
 class LinearMatVerticalStepperAppForAlreadyFilledForm {
-  @ViewChild(MatStepper) stepper: MatStepper;
+  @ViewChild(MatStepper) stepper!: MatStepper;
   selectedIndex = signal(2);
 
   oneGroup = new FormGroup({
@@ -2031,7 +2059,7 @@ class LinearMatVerticalStepperAppForAlreadyFilledForm {
   imports: [MatStepperModule],
 })
 class SimpleStepperWithoutStepControl {
-  @ViewChild(MatStepper) stepper: MatStepper;
+  @ViewChild(MatStepper) stepper!: MatStepper;
   steps = [
     {label: 'One', completed: false},
     {label: 'Two', completed: false},
@@ -2053,7 +2081,7 @@ class SimpleStepperWithoutStepControl {
   imports: [MatStepperModule],
 })
 class SimpleStepperWithStepControlAndCompletedBinding {
-  @ViewChild(MatStepper) stepper: MatStepper;
+  @ViewChild(MatStepper) stepper!: MatStepper;
 
   steps = [
     {label: 'One', completed: false, control: new FormControl('')},
@@ -2079,7 +2107,7 @@ class SimpleStepperWithStepControlAndCompletedBinding {
   imports: [MatStepperModule],
 })
 class IconOverridesStepper {
-  @ViewChild(MatStepper) stepper: MatStepper;
+  @ViewChild(MatStepper) stepper!: MatStepper;
 
   getRomanNumeral(value: number) {
     const numberMap: {[key: number]: string} = {
@@ -2159,7 +2187,7 @@ class StepperWithAriaInputs {
   imports: [MatStepperModule],
 })
 class StepperWithIndirectDescendantSteps {
-  @ViewChild(MatStepper) stepper: MatStepper;
+  @ViewChild(MatStepper) stepper!: MatStepper;
 }
 
 @Component({
@@ -2198,7 +2226,7 @@ class StepperWithNgIf {
   imports: [MatStepperModule],
 })
 class NestedSteppers {
-  @ViewChildren(MatStepper) steppers: QueryList<MatStepper>;
+  @ViewChildren(MatStepper) steppers!: QueryList<MatStepper>;
 }
 
 @Component({
@@ -2212,7 +2240,7 @@ class NestedSteppers {
   imports: [MatStepperModule],
 })
 class StepperWithStaticOutOfBoundsIndex {
-  @ViewChild(MatStepper) stepper: MatStepper;
+  @ViewChild(MatStepper) stepper!: MatStepper;
 }
 
 @Component({
@@ -2251,7 +2279,7 @@ class StepperWithLazyContent {
   imports: [MatStepperModule],
 })
 class HorizontalStepperWithDelayedStep {
-  @ViewChild(MatStepper) stepper: MatStepper;
+  @ViewChild(MatStepper) stepper!: MatStepper;
   renderSecondStep = signal(false);
 }
 
@@ -2267,4 +2295,40 @@ class HorizontalStepperWithDelayedStep {
 })
 class StepperWithTwoWayBindingOnSelectedIndex {
   index: number = 0;
+}
+
+@Component({
+  template: `
+    <mat-stepper [headerPrefix]="stepHeaderPrefix" linear>
+      <mat-step label="One"></mat-step>
+      <mat-step label="Two"></mat-step>
+      <mat-step label="Three"></mat-step>
+    </mat-stepper>
+
+    <ng-template #stepHeaderPrefix>
+      <h2>This is a header prefix</h2>
+    </ng-template>
+  `,
+  imports: [MatStepperModule],
+})
+class HorizontalStepperWithHeaderPrefix {
+  @ViewChild(MatStepper) stepper!: MatStepper;
+}
+
+@Component({
+  template: `
+    <mat-stepper [headerPrefix]="stepHeaderPrefix" orientation="vertical" linear>
+      <mat-step label="One"></mat-step>
+      <mat-step label="Two"></mat-step>
+      <mat-step label="Three"></mat-step>
+    </mat-stepper>
+
+    <ng-template #stepHeaderPrefix>
+      <h2>This is a header prefix</h2>
+    </ng-template>
+  `,
+  imports: [MatStepperModule],
+})
+class VerticalStepperWithHeaderPrefix {
+  @ViewChild(MatStepper) stepper!: MatStepper;
 }

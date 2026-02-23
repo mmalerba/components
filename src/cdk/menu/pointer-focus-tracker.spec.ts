@@ -7,7 +7,7 @@ import {
   inject,
   Renderer2,
 } from '@angular/core';
-import {waitForAsync, ComponentFixture, TestBed} from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {createMouseEvent, dispatchEvent} from '../../cdk/testing/private';
 import {Observable} from 'rxjs';
 import {FocusableElement, PointerFocusTracker} from './pointer-focus-tracker';
@@ -24,12 +24,6 @@ describe('FocusMouseManger', () => {
     exited = fixture.componentInstance.focusTracker.exited;
     mockElements = fixture.componentInstance._allItems.toArray();
   }
-
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [MultiElementWithConditionalComponent, MockWrapper],
-    });
-  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(MultiElementWithConditionalComponent);
@@ -131,10 +125,10 @@ class MultiElementWithConditionalComponent implements AfterViewInit {
   showThird = false;
 
   /** All mock elements. */
-  @ViewChildren(MockWrapper) readonly _allItems: QueryList<MockWrapper>;
+  @ViewChildren(MockWrapper) readonly _allItems!: QueryList<MockWrapper>;
 
   /** Manages elements under mouse focus. */
-  focusTracker: PointerFocusTracker<MockWrapper>;
+  focusTracker!: PointerFocusTracker<MockWrapper>;
 
   ngAfterViewInit() {
     this.focusTracker = new PointerFocusTracker(this._renderer, this._allItems);

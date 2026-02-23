@@ -20,6 +20,7 @@ import {
   RendererFactory2,
   DOCUMENT,
   Renderer2,
+  InjectionToken,
 } from '@angular/core';
 import {_IdGenerator} from '../a11y';
 import {_CdkPrivateStyleLoader} from '../private';
@@ -27,9 +28,19 @@ import {OverlayKeyboardDispatcher} from './dispatchers/overlay-keyboard-dispatch
 import {OverlayOutsideClickDispatcher} from './dispatchers/overlay-outside-click-dispatcher';
 import {OverlayConfig} from './overlay-config';
 import {_CdkOverlayStyleLoader, OverlayContainer} from './overlay-container';
-import {OverlayRef} from './overlay-ref';
+import {isElement, OverlayRef} from './overlay-ref';
 import {OverlayPositionBuilder} from './position/overlay-position-builder';
 import {ScrollStrategyOptions} from './scroll/index';
+
+/** Object used to configure the default options for overlays. */
+export interface OverlayDefaultConfig {
+  usePopover?: boolean;
+}
+
+/** Injection token used to configure the default options for CDK overlays. */
+export const OVERLAY_DEFAULT_CONFIG = new InjectionToken<OverlayDefaultConfig>(
+  'OVERLAY_DEFAULT_CONFIG',
+);
 
 /**
  * Creates an overlay.
@@ -47,25 +58,47 @@ export function createOverlayRef(injector: Injector, config?: OverlayConfig): Ov
   const idGenerator = injector.get(_IdGenerator);
   const appRef = injector.get(ApplicationRef);
   const directionality = injector.get(Directionality);
-
-  const host = doc.createElement('div');
-  const pane = doc.createElement('div');
-
-  pane.id = idGenerator.getId('cdk-overlay-');
-  pane.classList.add('cdk-overlay-pane');
-  host.appendChild(pane);
-  overlayContainer.getContainerElement().appendChild(host);
-
-  const portalOutlet = new DomPortalOutlet(pane, appRef, injector);
-  const overlayConfig = new OverlayConfig(config);
   const renderer =
     injector.get(Renderer2, null, {optional: true}) ||
     injector.get(RendererFactory2).createRenderer(null, null);
 
+  const overlayConfig = new OverlayConfig(config);
+  const defaultUsePopover =
+    injector.get(OVERLAY_DEFAULT_CONFIG, null, {optional: true})?.usePopover ?? true;
+
   overlayConfig.direction = overlayConfig.direction || directionality.value;
 
+  if (!('showPopover' in doc.body)) {
+    overlayConfig.usePopover = false;
+  } else {
+    overlayConfig.usePopover = config?.usePopover ?? defaultUsePopover;
+  }
+
+  const pane = doc.createElement('div');
+  const host = doc.createElement('div');
+  pane.id = idGenerator.getId('cdk-overlay-');
+  pane.classList.add('cdk-overlay-pane');
+  host.appendChild(pane);
+
+  if (overlayConfig.usePopover) {
+    host.setAttribute('popover', 'manual');
+    host.classList.add('cdk-overlay-popover');
+  }
+
+  const customInsertionPoint = overlayConfig.usePopover
+    ? overlayConfig.positionStrategy?.getPopoverInsertionPoint?.()
+    : null;
+
+  if (isElement(customInsertionPoint)) {
+    customInsertionPoint.after(host);
+  } else if (customInsertionPoint?.type === 'parent') {
+    customInsertionPoint.element.appendChild(host);
+  } else {
+    overlayContainer.getContainerElement().appendChild(host);
+  }
+
   return new OverlayRef(
-    portalOutlet,
+    new DomPortalOutlet(pane, appRef, injector),
     host,
     pane,
     overlayConfig,

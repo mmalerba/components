@@ -18,6 +18,7 @@ import { OnChanges } from '@angular/core';
 import { OnDestroy } from '@angular/core';
 import { Provider } from '@angular/core';
 import { QueryList } from '@angular/core';
+import { SafeHtml } from '@angular/platform-browser';
 import { Signal } from '@angular/core';
 import { SimpleChanges } from '@angular/core';
 import { Subject } from 'rxjs';
@@ -295,7 +296,7 @@ export interface Highlightable extends ListKeyManagerOption {
 
 // @public
 export class _IdGenerator {
-    getId(prefix: string): string;
+    getId(prefix: string, randomize?: boolean): string;
     // (undocumented)
     static ɵfac: i0.ɵɵFactoryDeclaration<_IdGenerator, never>;
     // (undocumented)
@@ -401,16 +402,13 @@ export const LIVE_ANNOUNCER_DEFAULT_OPTIONS: InjectionToken<LiveAnnouncerDefault
 // @public (undocumented)
 export const LIVE_ANNOUNCER_ELEMENT_TOKEN: InjectionToken<HTMLElement | null>;
 
-// @public @deprecated
-export function LIVE_ANNOUNCER_ELEMENT_TOKEN_FACTORY(): null;
-
 // @public (undocumented)
 export class LiveAnnouncer implements OnDestroy {
     constructor(...args: unknown[]);
-    announce(message: string): Promise<void>;
-    announce(message: string, politeness?: AriaLivePoliteness): Promise<void>;
-    announce(message: string, duration?: number): Promise<void>;
-    announce(message: string, politeness?: AriaLivePoliteness, duration?: number): Promise<void>;
+    announce(message: LiveAnnouncerMessage): Promise<void>;
+    announce(message: LiveAnnouncerMessage, politeness?: AriaLivePoliteness): Promise<void>;
+    announce(message: LiveAnnouncerMessage, duration?: number): Promise<void>;
+    announce(message: LiveAnnouncerMessage, politeness?: AriaLivePoliteness, duration?: number): Promise<void>;
     clear(): void;
     // (undocumented)
     ngOnDestroy(): void;
@@ -426,11 +424,11 @@ export interface LiveAnnouncerDefaultOptions {
     politeness?: AriaLivePoliteness;
 }
 
-// @public @deprecated
-export const MESSAGES_CONTAINER_ID = "cdk-describedby-message-container";
+// @public
+export type LiveAnnouncerMessage = string | SafeHtml;
 
 // @public @deprecated
-export function NOOP_TREE_KEY_MANAGER_FACTORY<T extends TreeKeyManagerItem>(): TreeKeyManagerFactory<T>;
+export const MESSAGES_CONTAINER_ID = "cdk-describedby-message-container";
 
 // @public @deprecated
 export const NOOP_TREE_KEY_MANAGER_FACTORY_PROVIDER: Provider;
@@ -464,15 +462,6 @@ export function removeAriaReferencedId(el: Element, attr: `aria-${string}`, id: 
 
 // @public
 export const TREE_KEY_MANAGER: InjectionToken<TreeKeyManagerFactory<any>>;
-
-// @public @deprecated
-export function TREE_KEY_MANAGER_FACTORY<T extends TreeKeyManagerItem>(): TreeKeyManagerFactory<T>;
-
-// @public @deprecated
-export const TREE_KEY_MANAGER_FACTORY_PROVIDER: {
-    provide: InjectionToken<TreeKeyManagerFactory<any>>;
-    useFactory: typeof TREE_KEY_MANAGER_FACTORY;
-};
 
 // @public
 export class TreeKeyManager<T extends TreeKeyManagerItem> implements TreeKeyManagerStrategy<T> {

@@ -43,8 +43,8 @@ import {
   _animationsDisabled,
 } from '../core';
 import {
+  checkboxDefaults,
   MAT_CHECKBOX_DEFAULT_OPTIONS,
-  MAT_CHECKBOX_DEFAULT_OPTIONS_FACTORY,
   MatCheckboxDefaultOptions,
 } from './checkbox-config';
 import {_CdkPrivateStyleLoader} from '@angular/cdk/private';
@@ -67,13 +67,10 @@ export enum TransitionCheckState {
 /** Change event object emitted by checkbox. */
 export class MatCheckboxChange {
   /** The source checkbox of the event. */
-  source: MatCheckbox;
+  source!: MatCheckbox;
   /** The new `checked` value of the checkbox. */
-  checked: boolean;
+  checked!: boolean;
 }
-
-// Default checkbox configuration.
-const defaults = MAT_CHECKBOX_DEFAULT_OPTIONS_FACTORY();
 
 @Component({
   selector: 'mat-checkbox',
@@ -161,20 +158,20 @@ export class MatCheckbox
   @Input('aria-labelledby') ariaLabelledby: string | null = null;
 
   /** The 'aria-describedby' attribute is read after the element's label and field type. */
-  @Input('aria-describedby') ariaDescribedby: string;
+  @Input('aria-describedby') ariaDescribedby!: string;
 
   /**
    * Users can specify the `aria-expanded` attribute which will be forwarded to the input element
    */
-  @Input({alias: 'aria-expanded', transform: booleanAttribute}) ariaExpanded: boolean;
+  @Input({alias: 'aria-expanded', transform: booleanAttribute}) ariaExpanded!: boolean;
 
   /**
    * Users can specify the `aria-controls` attribute which will be forwarded to the input element
    */
-  @Input('aria-controls') ariaControls: string;
+  @Input('aria-controls') ariaControls!: string;
 
   /** Users can specify the `aria-owns` attribute which will be forwarded to the input element */
-  @Input('aria-owns') ariaOwns: string;
+  @Input('aria-owns') ariaOwns!: string;
 
   private _uniqueId: string;
 
@@ -187,7 +184,7 @@ export class MatCheckbox
   }
 
   /** Whether the checkbox is required. */
-  @Input({transform: booleanAttribute}) required: boolean;
+  @Input({transform: booleanAttribute}) required: boolean = false;
 
   /** Whether the label should appear after or before the checkbox. Defaults to 'after' */
   @Input() labelPosition: 'before' | 'after' = 'after';
@@ -202,16 +199,16 @@ export class MatCheckbox
   @Output() readonly indeterminateChange: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   /** The value attribute of the native input element */
-  @Input() value: string;
+  @Input() value!: string;
 
   /** Whether the checkbox has a ripple. */
-  @Input({transform: booleanAttribute}) disableRipple: boolean;
+  @Input({transform: booleanAttribute}) disableRipple: boolean = false;
 
   /** The native `<input type="checkbox">` element */
-  @ViewChild('input') _inputElement: ElementRef<HTMLInputElement>;
+  @ViewChild('input') _inputElement!: ElementRef<HTMLInputElement>;
 
   /** The native `<label>` element */
-  @ViewChild('label') _labelElement: ElementRef<HTMLInputElement>;
+  @ViewChild('label') _labelElement!: ElementRef<HTMLInputElement>;
 
   /** Tabindex for the checkbox. */
   @Input({transform: (value: unknown) => (value == null ? undefined : numberAttribute(value))})
@@ -248,8 +245,8 @@ export class MatCheckbox
   constructor() {
     inject(_CdkPrivateStyleLoader).load(_StructuralStylesLoader);
     const tabIndex = inject(new HostAttributeToken('tabindex'), {optional: true});
-    this._options = this._options || defaults;
-    this.color = this._options.color || defaults.color;
+    this._options = this._options || checkboxDefaults;
+    this.color = this._options.color || checkboxDefaults.color;
     this.tabIndex = tabIndex == null ? 0 : parseInt(tabIndex) || 0;
     this.id = this._uniqueId = inject(_IdGenerator).getId('mat-mdc-checkbox-');
     this.disabledInteractive = this._options?.disabledInteractive ?? false;

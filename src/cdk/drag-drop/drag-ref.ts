@@ -12,10 +12,13 @@ import {coerceElement} from '../coercion';
 import {_getEventTarget, _getShadowRoot} from '../platform';
 import {ViewportRuler} from '../scrolling';
 import {
+  DOCUMENT,
   ElementRef,
   EmbeddedViewRef,
+  Injector,
   NgZone,
   Renderer2,
+  RendererFactory2,
   TemplateRef,
   ViewContainerRef,
   signal,
@@ -125,6 +128,35 @@ const dragImportantProperties = new Set([
 export type PreviewContainer = 'global' | 'parent' | ElementRef<HTMLElement> | HTMLElement;
 
 /**
+ * Creates a `DragRef` for an element, turning it into a draggable item.
+ * @param injector Injector used to resolve dependencies.
+ * @param element Element to which to attach the dragging functionality.
+ * @param config Object used to configure the dragging behavior.
+ */
+export function createDragRef<T = unknown>(
+  injector: Injector,
+  element: ElementRef<HTMLElement> | HTMLElement,
+  config: DragRefConfig = {
+    dragStartThreshold: 5,
+    pointerDirectionChangeThreshold: 5,
+  },
+): DragRef<T> {
+  const renderer =
+    injector.get(Renderer2, null, {optional: true}) ||
+    injector.get(RendererFactory2).createRenderer(null, null);
+
+  return new DragRef(
+    element,
+    config,
+    injector.get(DOCUMENT),
+    injector.get(NgZone),
+    injector.get(ViewportRuler),
+    injector.get(DragDropRegistry),
+    renderer,
+  );
+}
+
+/**
  * Reference to a draggable item. Used to manipulate or dispose of the item.
  */
 export class DragRef<T = any> {
@@ -132,28 +164,28 @@ export class DragRef<T = any> {
   private _cleanupShadowRootSelectStart: (() => void) | undefined;
 
   /** Element displayed next to the user's pointer while the element is dragged. */
-  private _preview: PreviewRef | null;
+  private _preview: PreviewRef | null = null;
 
   /** Container into which to insert the preview. */
   private _previewContainer: PreviewContainer | undefined;
 
   /** Reference to the view of the placeholder element. */
-  private _placeholderRef: EmbeddedViewRef<any> | null;
+  private _placeholderRef: EmbeddedViewRef<any> | null = null;
 
   /** Element that is rendered instead of the draggable item while it is being sorted. */
-  private _placeholder: HTMLElement;
+  private _placeholder!: HTMLElement;
 
   /** Coordinates within the element at which the user picked up the element. */
-  private _pickupPositionInElement: Point;
+  private _pickupPositionInElement!: Point;
 
   /** Coordinates on the page at which the user picked up the element. */
-  private _pickupPositionOnPage: Point;
+  private _pickupPositionOnPage!: Point;
 
   /**
    * Marker node used to save the place in the DOM where the element was
    * picked up so that it can be restored at the end of the drag sequence.
    */
-  private _marker: Comment;
+  private _marker!: Comment;
 
   /**
    * Element indicating the position from which the item was picked up initially.
@@ -181,13 +213,13 @@ export class DragRef<T = any> {
   private _hasStartedDragging = signal(false);
 
   /** Whether the element has moved since the user started dragging it. */
-  private _hasMoved: boolean;
+  private _hasMoved = false;
 
   /** Drop container in which the DragRef resided when dragging began. */
-  private _initialContainer: DropListRef;
+  private _initialContainer!: DropListRef;
 
   /** Index at which the item started in its initial container. */
-  private _initialIndex: number;
+  private _initialIndex!: number;
 
   /** Cached positions of scrollable parent elements. */
   private _parentPositions: ParentPositionTracker;
@@ -202,30 +234,30 @@ export class DragRef<T = any> {
   }>();
 
   /** Keeps track of the direction in which the user is dragging along each axis. */
-  private _pointerDirectionDelta: {x: -1 | 0 | 1; y: -1 | 0 | 1};
+  private _pointerDirectionDelta!: {x: -1 | 0 | 1; y: -1 | 0 | 1};
 
   /** Pointer position at which the last change in the delta occurred. */
-  private _pointerPositionAtLastDirectionChange: Point;
+  private _pointerPositionAtLastDirectionChange!: Point;
 
   /** Position of the pointer at the last pointer event. */
-  private _lastKnownPointerPosition: Point;
+  private _lastKnownPointerPosition!: Point;
 
   /**
    * Root DOM node of the drag instance. This is the element that will
    * be moved around as the user is dragging.
    */
-  private _rootElement: HTMLElement;
+  private _rootElement!: HTMLElement;
 
   /**
    * Nearest ancestor SVG, relative to which coordinates are calculated if dragging SVGElement
    */
-  private _ownerSVGElement: SVGSVGElement | null;
+  private _ownerSVGElement: SVGSVGElement | null = null;
 
   /**
    * Inline style value of `-webkit-tap-highlight-color` at the time the
    * dragging was started. Used to restore the value once we're done dragging.
    */
-  private _rootElementTapHighlight: string;
+  private _rootElementTapHighlight!: string;
 
   /** Subscription to pointer movement events. */
   private _pointerMoveSubscription = Subscription.EMPTY;
@@ -244,10 +276,10 @@ export class DragRef<T = any> {
    * events multiple times on touch devices where the browser will fire a fake
    * mouse event for each touch event, after a certain time.
    */
-  private _lastTouchEventTime: number;
+  private _lastTouchEventTime!: number;
 
   /** Time at which the last dragging sequence was started. */
-  private _dragStartTime: number;
+  private _dragStartTime!: number;
 
   /** Cached reference to the boundary element. */
   private _boundaryElement: HTMLElement | null = null;
@@ -283,7 +315,7 @@ export class DragRef<T = any> {
   private _direction: Direction = 'ltr';
 
   /** Ref that the current drag item is nested in. */
-  private _parentDragRef: DragRef<unknown> | null;
+  private _parentDragRef: DragRef<unknown> | null = null;
 
   /**
    * Cached shadow root that the element is placed in. `null` means that the element isn't in
@@ -293,7 +325,7 @@ export class DragRef<T = any> {
   private _cachedShadowRoot: ShadowRoot | null | undefined;
 
   /** Axis along which dragging is locked. */
-  lockAxis: 'x' | 'y';
+  lockAxis: 'x' | 'y' | null = null;
 
   /**
    * Amount of milliseconds to wait after the user has put their
@@ -372,7 +404,7 @@ export class DragRef<T = any> {
   }> = this._moveEvents;
 
   /** Arbitrary data that can be attached to the drag item. */
-  data: T;
+  data!: T;
 
   /**
    * Function that can be used to customize the logic of how the position of the drag item

@@ -21,8 +21,8 @@ import {
   OnInit,
   Renderer2,
   ViewEncapsulation,
-  HOST_TAG_NAME,
   DOCUMENT,
+  AfterViewInit,
 } from '@angular/core';
 import {_animationsDisabled, ThemePalette} from '../core';
 import {_CdkPrivateStyleLoader, _VisuallyHiddenLoader} from '@angular/cdk/private';
@@ -72,7 +72,7 @@ export class _MatBadgeStyleLoader {}
     '[class.mat-badge-disabled]': 'disabled',
   },
 })
-export class MatBadge implements OnInit, OnDestroy {
+export class MatBadge implements OnInit, AfterViewInit, OnDestroy {
   private _ngZone = inject(NgZone);
   private _elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private _ariaDescriber = inject(AriaDescriber);
@@ -101,7 +101,7 @@ export class MatBadge implements OnInit, OnDestroy {
   @Input({alias: 'matBadgeOverlap', transform: booleanAttribute}) overlap: boolean = true;
 
   /** Whether the badge is disabled. */
-  @Input({alias: 'matBadgeDisabled', transform: booleanAttribute}) disabled: boolean;
+  @Input({alias: 'matBadgeDisabled', transform: booleanAttribute}) disabled: boolean = false;
 
   /**
    * Position the badge should reside.
@@ -127,13 +127,13 @@ export class MatBadge implements OnInit, OnDestroy {
   set description(newDescription: string) {
     this._updateDescription(newDescription);
   }
-  private _description: string;
+  private _description!: string;
 
   /** Size of the badge. Can be 'small', 'medium', or 'large'. */
   @Input('matBadgeSize') size: MatBadgeSize = 'medium';
 
   /** Whether the badge is hidden. */
-  @Input({alias: 'matBadgeHidden', transform: booleanAttribute}) hidden: boolean;
+  @Input({alias: 'matBadgeHidden', transform: booleanAttribute}) hidden: boolean = false;
 
   /** Visible badge element. */
   private _badgeElement: HTMLElement | undefined;
@@ -161,22 +161,6 @@ export class MatBadge implements OnInit, OnDestroy {
 
       if (nativeElement.nodeType !== nativeElement.ELEMENT_NODE) {
         throw Error('matBadge must be attached to an element node.');
-      }
-
-      const tagName = inject(HOST_TAG_NAME);
-
-      // Heads-up for developers to avoid putting matBadge on <mat-icon>
-      // as it is aria-hidden by default docs mention this at:
-      // https://material.angular.dev/components/badge/overview#accessibility
-      if (
-        tagName.toLowerCase() === 'mat-icon' &&
-        nativeElement.getAttribute('aria-hidden') === 'true'
-      ) {
-        console.warn(
-          `Detected a matBadge on an "aria-hidden" "<mat-icon>". ` +
-            `Consider setting aria-hidden="false" in order to surface the information assistive technology.` +
-            `\n${nativeElement.outerHTML}`,
-        );
       }
     }
   }
@@ -211,6 +195,26 @@ export class MatBadge implements OnInit, OnDestroy {
     }
 
     this._isInitialized = true;
+  }
+
+  ngAfterViewInit() {
+    if (typeof ngDevMode === 'undefined' || ngDevMode) {
+      const nativeElement = this._elementRef.nativeElement;
+
+      // Heads-up for developers to avoid putting matBadge on <mat-icon>
+      // as it is aria-hidden by default docs mention this at:
+      // https://material.angular.dev/components/badge/overview#accessibility
+      if (
+        nativeElement.tagName.toLowerCase() === 'mat-icon' &&
+        nativeElement.getAttribute('aria-hidden') === 'true'
+      ) {
+        console.warn(
+          `Detected a matBadge on an "aria-hidden" "<mat-icon>". ` +
+            `Consider setting aria-hidden="false" in order to surface the information assistive technology.` +
+            `\n${nativeElement.outerHTML}`,
+        );
+      }
+    }
   }
 
   ngOnDestroy() {

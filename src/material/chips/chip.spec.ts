@@ -12,13 +12,6 @@ describe('MatChip', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        MatChipsModule,
-        BasicChip,
-        SingleChip,
-        BasicChipWithStaticTabindex,
-        BasicChipWithBoundTabindex,
-      ],
       providers: [provideFakeDirectionality('ltr')],
     });
   }));
@@ -53,6 +46,17 @@ describe('MatChip', () => {
       fixture.detectChanges();
 
       expect(chip.getAttribute('tabindex')).toBe('15');
+    });
+
+    it('should disable the ripple if there are no interactive actions', () => {
+      fixture = TestBed.createComponent(BasicChip);
+      fixture.detectChanges();
+
+      chipDebugElement = fixture.debugElement.query(By.directive(MatChip))!;
+      chipInstance = chipDebugElement.injector.get<MatChip>(MatChip);
+
+      expect(chipInstance._hasInteractiveActions()).toBe(false);
+      expect(chipInstance._isRippleDisabled()).toBe(true);
     });
   });
 
@@ -156,7 +160,7 @@ describe('MatChip', () => {
   imports: [MatChipsModule],
 })
 class SingleChip {
-  @ViewChild(MatChipSet) chipList: MatChipSet;
+  @ViewChild(MatChipSet) chipList!: MatChipSet;
   disabled: boolean = false;
   name: string = 'Test';
   color: string = 'primary';

@@ -19,10 +19,10 @@ import type {DragRef} from '../drag-ref';
  */
 export class MixedSortStrategy implements DropListSortStrategy {
   /** Root element container of the drop list. */
-  private _element: HTMLElement;
+  private _element!: HTMLElement;
 
   /** Function used to determine if an item can be sorted into a specific index. */
-  private _sortPredicate: SortPredicate<DragRef>;
+  private _sortPredicate!: SortPredicate<DragRef>;
 
   /** Lazily-resolved root node containing the list. Use `_getRootNode` to read this. */
   private _rootNode: DocumentOrShadowRoot | undefined;
@@ -32,7 +32,7 @@ export class MixedSortStrategy implements DropListSortStrategy {
    * that were there at the start of the sequence, as well as any items that have been dragged
    * in, but haven't been dropped yet.
    */
-  private _activeItems: DragRef[];
+  private _activeItems!: DragRef[];
 
   /**
    * Keeps track of the item that was last swapped with the dragged item, as well as what direction
@@ -141,6 +141,14 @@ export class MixedSortStrategy implements DropListSortStrategy {
    *   out automatically.
    */
   enter(item: DragRef, pointerX: number, pointerY: number, index?: number): void {
+    // Remove the item from current set of items first so that it doesn't throw off the indexes
+    // further down in this method. See https://github.com/angular/components/issues/31505
+    const currentIndex = this._activeItems.indexOf(item);
+
+    if (currentIndex > -1) {
+      this._activeItems.splice(currentIndex, 1);
+    }
+
     let enterIndex =
       index == null || index < 0
         ? this._getItemIndexFromPointerPosition(item, pointerX, pointerY)
@@ -154,11 +162,6 @@ export class MixedSortStrategy implements DropListSortStrategy {
     }
 
     const targetItem = this._activeItems[enterIndex] as DragRef | undefined;
-    const currentIndex = this._activeItems.indexOf(item);
-
-    if (currentIndex > -1) {
-      this._activeItems.splice(currentIndex, 1);
-    }
 
     if (targetItem && !this._dragDropRegistry.isDragging(targetItem)) {
       this._activeItems.splice(enterIndex, 0, item);

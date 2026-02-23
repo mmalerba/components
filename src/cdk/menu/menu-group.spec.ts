@@ -12,10 +12,6 @@ describe('MenuGroup', () => {
     let menuItems: CdkMenuItemCheckbox[];
 
     beforeEach(waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [CdkMenuModule, CheckboxMenu],
-      });
-
       fixture = TestBed.createComponent(CheckboxMenu);
       fixture.detectChanges();
 
@@ -39,10 +35,6 @@ describe('MenuGroup', () => {
     let menuItems: CdkMenuItemRadio[];
 
     beforeEach(waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [CdkMenuModule, MenuWithMultipleRadioGroups],
-      });
-
       fixture = TestBed.createComponent(MenuWithMultipleRadioGroups);
       fixture.detectChanges();
 
@@ -106,7 +98,7 @@ describe('MenuGroup', () => {
   imports: [CdkMenuModule],
 })
 class CheckboxMenu {
-  @ViewChild(CdkMenuItem) readonly trigger: CdkMenuItem;
+  @ViewChild(CdkMenuItem) readonly trigger!: CdkMenuItem;
 }
 
 @Component({
@@ -150,5 +142,5 @@ class CheckboxMenu {
   imports: [CdkMenuModule],
 })
 class MenuWithMultipleRadioGroups {
-  @ViewChild(CdkMenuItem) readonly trigger: CdkMenuItem;
+  @ViewChild(CdkMenuItem) readonly trigger!: CdkMenuItem;
 }

@@ -13,12 +13,16 @@ import {SpyLocation} from '@angular/common/testing';
 import {
   Component,
   ComponentRef,
+  createNgModuleRef,
   Directive,
+  Injectable,
   Injector,
+  NgModule,
   TemplateRef,
   ViewChild,
   ViewContainerRef,
   ViewEncapsulation,
+  forwardRef,
   inject,
 } from '@angular/core';
 import {
@@ -48,17 +52,6 @@ describe('MatBottomSheet', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        MatBottomSheetModule,
-        ComponentWithChildViewContainer,
-        ComponentWithTemplateRef,
-        ContentElementDialog,
-        PizzaMsg,
-        TacoMsg,
-        DirectiveWithViewContainer,
-        BottomSheetWithInjectedData,
-        ShadowDomComponent,
-      ],
       providers: [
         {provide: Location, useClass: SpyLocation},
         {provide: MATERIAL_ANIMATIONS, useValue: {animationsDisabled: true}},
@@ -873,7 +866,6 @@ describe('MatBottomSheet with parent MatBottomSheet', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      imports: [MatBottomSheetModule, ComponentThatProvidesMatBottomSheet],
       providers: [{provide: MATERIAL_ANIMATIONS, useValue: {animationsDisabled: true}}],
     });
 
@@ -954,7 +946,6 @@ describe('MatBottomSheet with default options', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [MatBottomSheetModule, ComponentWithChildViewContainer, DirectiveWithViewContainer],
       providers: [
         {provide: MAT_BOTTOM_SHEET_DEFAULT_OPTIONS, useValue: defaultConfig},
         {provide: MATERIAL_ANIMATIONS, useValue: {animationsDisabled: true}},
@@ -1000,6 +991,25 @@ describe('MatBottomSheet with default options', () => {
   }));
 });
 
+describe('MatBottomSheet with explicit injector provided', () => {
+  let overlayContainerElement: HTMLElement;
+  let fixture: ComponentFixture<ModuleBoundBottomSheetParentComponent>;
+
+  beforeEach(fakeAsync(() => {
+    overlayContainerElement = TestBed.inject(OverlayContainer).getContainerElement();
+    fixture = TestBed.createComponent(ModuleBoundBottomSheetParentComponent);
+  }));
+
+  it('should use the standalone injector and render the bottom sheet successfully', () => {
+    fixture.componentInstance.openBottomSheet();
+    fixture.detectChanges();
+
+    expect(
+      overlayContainerElement.querySelector('module-bound-bottom-sheet-child-component')!.innerHTML,
+    ).toEqual('<p>Pasta</p>');
+  });
+});
+
 @Directive({
   selector: 'dir-with-view-container',
 })
@@ -1012,7 +1022,7 @@ class DirectiveWithViewContainer {
   imports: [DirectiveWithViewContainer],
 })
 class ComponentWithChildViewContainer {
-  @ViewChild(DirectiveWithViewContainer) childWithViewContainer: DirectiveWithViewContainer;
+  @ViewChild(DirectiveWithViewContainer) childWithViewContainer!: DirectiveWithViewContainer;
 
   get childViewContainer() {
     return this.childWithViewContainer.viewContainerRef;
@@ -1025,10 +1035,10 @@ class ComponentWithChildViewContainer {
       Cheese {{localValue}} {{data?.value}}{{setRef(bottomSheetRef)}}</ng-template>`,
 })
 class ComponentWithTemplateRef {
-  localValue: string;
-  bottomSheetRef: MatBottomSheetRef<any>;
+  localValue!: string;
+  bottomSheetRef!: MatBottomSheetRef<any>;
 
-  @ViewChild(TemplateRef) templateRef: TemplateRef<any>;
+  @ViewChild(TemplateRef) templateRef!: TemplateRef<any>;
 
   setRef(bottomSheetRef: MatBottomSheetRef<any>): string {
     this.bottomSheetRef = bottomSheetRef;
@@ -1079,3 +1089,46 @@ class BottomSheetWithInjectedData {
   encapsulation: ViewEncapsulation.ShadowDom,
 })
 class ShadowDomComponent {}
+
+@Component({
+  template: '',
+})
+class ModuleBoundBottomSheetParentComponent {
+  private _injector = inject(Injector);
+  private _bottomSheet = inject(MatBottomSheet);
+
+  openBottomSheet(): void {
+    const ngModuleRef = createNgModuleRef(
+      ModuleBoundBottomSheetModule,
+      /* parentInjector */ this._injector,
+    );
+
+    this._bottomSheet.open(ModuleBoundBottomSheetComponent, {injector: ngModuleRef.injector});
+  }
+}
+
+@Injectable()
+class ModuleBoundBottomSheetService {
+  name = 'Pasta';
+}
+
+@Component({
+  template:
+    '<module-bound-bottom-sheet-child-component></module-bound-bottom-sheet-child-component>',
+  imports: [forwardRef(() => ModuleBoundBottomSheetChildComponent)],
+})
+class ModuleBoundBottomSheetComponent {}
+
+@Component({
+  selector: 'module-bound-bottom-sheet-child-component',
+  template: '<p>{{service.name}}</p>',
+})
+class ModuleBoundBottomSheetChildComponent {
+  service = inject(ModuleBoundBottomSheetService);
+}
+
+@NgModule({
+  imports: [ModuleBoundBottomSheetComponent, ModuleBoundBottomSheetChildComponent],
+  providers: [ModuleBoundBottomSheetService],
+})
+class ModuleBoundBottomSheetModule {}

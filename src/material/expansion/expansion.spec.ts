@@ -25,17 +25,6 @@ import {MATERIAL_ANIMATIONS} from '../core';
 describe('MatExpansionPanel', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        MatExpansionModule,
-        PanelWithContent,
-        PanelWithContentInNgIf,
-        PanelWithCustomMargin,
-        LazyPanelWithContent,
-        LazyPanelOpenOnLoad,
-        PanelWithTwoWayBinding,
-        PanelWithHeaderTabindex,
-        NestedLazyPanelWithContent,
-      ],
       providers: [
         {
           provide: MATERIAL_ANIMATIONS,
@@ -574,7 +563,7 @@ class PanelWithContent {
   disabled = false;
   openCallback = jasmine.createSpy('openCallback');
   closeCallback = jasmine.createSpy('closeCallback');
-  @ViewChild(MatExpansionPanel) panel: MatExpansionPanel;
+  @ViewChild(MatExpansionPanel) panel!: MatExpansionPanel;
 }
 
 @Component({
@@ -591,7 +580,7 @@ class PanelWithContent {
 })
 class PanelWithContentInNgIf {
   expansionShown = true;
-  @ViewChild(MatExpansionPanel) panel: MatExpansionPanel;
+  @ViewChild(MatExpansionPanel) panel!: MatExpansionPanel;
 }
 
 @Component({

@@ -10,30 +10,9 @@ import {
   MatRadioGroup,
   MatRadioModule,
 } from './index';
+import {ThemePalette} from '../core';
 
 describe('MatRadio', () => {
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatRadioModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DisableableRadioButton,
-        FocusableRadioButton,
-        RadiosInsideRadioGroup,
-        RadioGroupWithNgModel,
-        RadioGroupWithFormControl,
-        StandaloneRadioButtons,
-        InterleavedRadioGroup,
-        TranscludingWrapper,
-        RadioButtonWithPredefinedTabindex,
-        RadioButtonWithPredefinedAriaAttributes,
-        RadiosInsidePreCheckedRadioGroup,
-        PreselectedRadioWithStaticValueAndNgIf,
-      ],
-    });
-  }));
-
   describe('inside of a group', () => {
     let fixture: ComponentFixture<RadiosInsideRadioGroup>;
     let groupDebugElement: DebugElement;
@@ -432,7 +411,7 @@ describe('MatRadio', () => {
         .withContext('Expected every radio element to use the primary color from the binding.')
         .toBe(true);
 
-      testComponent.color = null;
+      testComponent.color = null!;
       fixture.changeDetectorRef.markForCheck();
       fixture.detectChanges();
 
@@ -837,8 +816,12 @@ describe('MatRadio', () => {
       testComponent.ariaLabel = 'Pineapple';
       fixture.changeDetectorRef.markForCheck();
       fixture.detectChanges();
-
       expect(fruitRadioNativeInputs[0].getAttribute('aria-label')).toBe('Pineapple');
+
+      testComponent.ariaLabel = null;
+      fixture.changeDetectorRef.markForCheck();
+      fixture.detectChanges();
+      expect(fruitRadioNativeInputs[0].hasAttribute('aria-label')).toBe(false);
     });
 
     it('should add aria-labelledby attribute to the underlying input element if defined', () => {
@@ -855,8 +838,12 @@ describe('MatRadio', () => {
       testComponent.ariaLabelledby = 'uvw';
       fixture.changeDetectorRef.markForCheck();
       fixture.detectChanges();
-
       expect(fruitRadioNativeInputs[0].getAttribute('aria-labelledby')).toBe('uvw');
+
+      testComponent.ariaLabelledby = null;
+      fixture.changeDetectorRef.markForCheck();
+      fixture.detectChanges();
+      expect(fruitRadioNativeInputs[0].hasAttribute('aria-labelledby')).toBe(false);
     });
 
     it('should add aria-describedby attribute to the underlying input element if defined', () => {
@@ -873,8 +860,12 @@ describe('MatRadio', () => {
       testComponent.ariaDescribedby = 'uvw';
       fixture.changeDetectorRef.markForCheck();
       fixture.detectChanges();
-
       expect(fruitRadioNativeInputs[0].getAttribute('aria-describedby')).toBe('uvw');
+
+      testComponent.ariaDescribedby = null;
+      fixture.changeDetectorRef.markForCheck();
+      fixture.detectChanges();
+      expect(fruitRadioNativeInputs[0].hasAttribute('aria-describedby')).toBe(false);
     });
 
     it('should focus on underlying input element when focus() is called', () => {
@@ -1034,7 +1025,6 @@ describe('MatRadioDefaultOverrides', () => {
   describe('when MAT_RADIO_DEFAULT_OPTIONS overridden', () => {
     beforeEach(waitForAsync(() => {
       TestBed.configureTestingModule({
-        imports: [MatRadioModule, FormsModule, DefaultRadioButton, RadioButtonWithColorBinding],
         providers: [
           {
             provide: MAT_RADIO_DEFAULT_OPTIONS,
@@ -1092,14 +1082,14 @@ describe('MatRadioDefaultOverrides', () => {
   imports: [MatRadioModule, FormsModule, ReactiveFormsModule],
 })
 class RadiosInsideRadioGroup {
-  labelPos: 'before' | 'after';
+  labelPos!: 'before' | 'after';
   isFirstDisabled = false;
   isGroupDisabled = false;
   isGroupRequired = false;
   isGroupDisabledInteractive = false;
   groupValue: string | null = null;
   disableRipple = false;
-  color: string | null;
+  color!: ThemePalette;
   isFirstShown = true;
 }
 
@@ -1139,9 +1129,9 @@ class RadiosInsidePreCheckedRadioGroup {}
   imports: [MatRadioModule, FormsModule, ReactiveFormsModule],
 })
 class StandaloneRadioButtons {
-  ariaLabel: string = 'Banana';
-  ariaLabelledby: string = 'xyz';
-  ariaDescribedby: string = 'abc';
+  ariaLabel: string | null = 'Banana';
+  ariaLabelledby: string | null = 'xyz';
+  ariaDescribedby: string | null = 'abc';
 }
 
 @Component({
@@ -1155,14 +1145,14 @@ class StandaloneRadioButtons {
   imports: [MatRadioModule, FormsModule, ReactiveFormsModule],
 })
 class RadioGroupWithNgModel {
-  modelValue: string;
+  modelValue!: string;
   groupName = 'radio-group';
   options = [
     {label: 'Vanilla', value: 'vanilla'},
     {label: 'Chocolate', value: 'chocolate'},
     {label: 'Strawberry', value: 'strawberry'},
   ];
-  lastEvent: MatRadioChange;
+  lastEvent!: MatRadioChange;
 }
 
 @Component({
@@ -1176,7 +1166,7 @@ class DisableableRadioButton {
   disabled = false;
   disabledInteractive = false;
 
-  @ViewChild(MatRadioButton) matRadioButton: MatRadioButton;
+  @ViewChild(MatRadioButton) matRadioButton!: MatRadioButton;
 }
 
 @Component({
@@ -1189,7 +1179,7 @@ class DisableableRadioButton {
   imports: [MatRadioModule, FormsModule, ReactiveFormsModule],
 })
 class RadioGroupWithFormControl {
-  @ViewChild(MatRadioGroup) group: MatRadioGroup;
+  @ViewChild(MatRadioGroup) group!: MatRadioGroup;
   formControl = new FormControl('');
 }
 
@@ -1198,7 +1188,7 @@ class RadioGroupWithFormControl {
   imports: [MatRadioModule, FormsModule, ReactiveFormsModule],
 })
 class FocusableRadioButton {
-  tabIndex: number;
+  tabIndex!: number;
   disabled = false;
 }
 
@@ -1279,8 +1269,8 @@ class RadioButtonWithPredefinedAriaAttributes {}
   imports: [MatRadioModule, FormsModule, ReactiveFormsModule],
 })
 class PreselectedRadioWithStaticValueAndNgIf {
-  @ViewChild('preselectedGroup', {read: MatRadioGroup}) preselectedGroup: MatRadioGroup;
-  @ViewChild('preselectedRadio', {read: MatRadioButton}) preselectedRadio: MatRadioButton;
+  @ViewChild('preselectedGroup', {read: MatRadioGroup}) preselectedGroup!: MatRadioGroup;
+  @ViewChild('preselectedRadio', {read: MatRadioButton}) preselectedRadio!: MatRadioButton;
 
   controls = {
     predecessor: new FormControl('predecessor'),

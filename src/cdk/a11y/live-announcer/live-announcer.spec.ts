@@ -2,10 +2,11 @@ import {MutationObserverFactory} from '../../observers';
 import {ComponentPortal} from '../../portal';
 import {Component, inject, Injector} from '@angular/core';
 import {ComponentFixture, TestBed, fakeAsync, flush, tick} from '@angular/core/testing';
-import {By} from '@angular/platform-browser';
+import {By, DomSanitizer} from '@angular/platform-browser';
 import {A11yModule} from '../index';
-import {LiveAnnouncer} from './live-announcer';
+import {LiveAnnouncer, LiveAnnouncerMessage} from './live-announcer';
 import {
+  AriaLivePoliteness,
   LIVE_ANNOUNCER_DEFAULT_OPTIONS,
   LIVE_ANNOUNCER_ELEMENT_TOKEN,
   LiveAnnouncerDefaultOptions,
@@ -18,12 +19,6 @@ describe('LiveAnnouncer', () => {
   let fixture: ComponentFixture<TestApp>;
 
   describe('with default element', () => {
-    beforeEach(() =>
-      TestBed.configureTestingModule({
-        imports: [A11yModule, TestApp, TestModal],
-      }),
-    );
-
     beforeEach(fakeAsync(() => {
       announcer = TestBed.inject(LiveAnnouncer);
       ariaLiveElement = getLiveElement();
@@ -123,10 +118,7 @@ describe('LiveAnnouncer', () => {
 
     it('should ensure that there is only one live element at a time', fakeAsync(() => {
       fixture.destroy();
-
-      TestBed.resetTestingModule().configureTestingModule({
-        imports: [A11yModule],
-      });
+      TestBed.resetTestingModule().configureTestingModule({});
 
       const extraElement = document.createElement('div');
       extraElement.classList.add('cdk-live-announcer-element');
@@ -210,6 +202,19 @@ describe('LiveAnnouncer', () => {
       tick(100);
       expect(modal.getAttribute('aria-owns')).toBe(`foo bar ${ariaLiveElement.id}`);
     }));
+
+    it('should be able to announce safe HTML', fakeAsync(() => {
+      const sanitizer = TestBed.inject(DomSanitizer);
+      const message = sanitizer.bypassSecurityTrustHtml(
+        '<span class="message" lang="fr">Bonjour</span>',
+      );
+      fixture.componentInstance.announce(message);
+
+      // This flushes our 100ms timeout for the screenreaders.
+      tick(100);
+
+      expect(ariaLiveElement.querySelector('.message')?.textContent).toBe('Bonjour');
+    }));
   });
 
   describe('with a custom element', () => {
@@ -219,7 +224,6 @@ describe('LiveAnnouncer', () => {
       customLiveElement = document.createElement('div');
 
       return TestBed.configureTestingModule({
-        imports: [A11yModule, TestApp],
         providers: [{provide: LIVE_ANNOUNCER_ELEMENT_TOKEN, useValue: customLiveElement}],
       });
     });
@@ -242,7 +246,6 @@ describe('LiveAnnouncer', () => {
   describe('with a default options', () => {
     beforeEach(() => {
       return TestBed.configureTestingModule({
-        imports: [A11yModule, TestApp],
         providers: [
           {
             provide: LIVE_ANNOUNCER_DEFAULT_OPTIONS,
@@ -290,7 +293,6 @@ describe('CdkAriaLive', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      imports: [A11yModule, DivWithCdkAriaLive],
       providers: [
         {
           provide: MutationObserverFactory,
@@ -389,13 +391,13 @@ function getLiveElement(): Element {
 }
 
 @Component({
-  template: `<button (click)="announceText('Test')">Announce</button>`,
+  template: `<button (click)="announce('Test')">Announce</button>`,
   imports: [A11yModule],
 })
 class TestApp {
   live = inject(LiveAnnouncer);
 
-  announceText(message: string) {
+  announce(message: LiveAnnouncerMessage) {
     this.live.announce(message);
   }
 }
@@ -412,12 +414,12 @@ class TestModal {
 @Component({
   template: `
     <div
-      [cdkAriaLive]="politeness ? politeness : null"
+      [cdkAriaLive]="politeness"
       [cdkAriaLiveDuration]="duration">{{content}}</div>`,
   imports: [A11yModule],
 })
 class DivWithCdkAriaLive {
-  politeness = 'polite';
+  politeness: AriaLivePoliteness = 'polite';
   content = 'Initial content';
-  duration: number;
+  duration!: number;
 }

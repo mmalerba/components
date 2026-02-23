@@ -6,7 +6,6 @@ load(
     "ng_web_test_suite",
     "sass_binary",
     "sass_library",
-    "ts_project",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -68,6 +67,7 @@ sass_binary(
     deps = [
         ":checkbox_common",
         ":m2",
+        "//src/cdk:sass_lib",
         "//src/material/core/style:layout_common",
         "//src/material/core/tokens:token_utils",
     ],
@@ -78,8 +78,8 @@ ng_project(
     srcs = [
         "checkbox.ts",
         "checkbox-config.ts",
+        "checkbox-module.ts",
         "index.ts",
-        "module.ts",
         "public-api.ts",
     ],
     assets = [
@@ -93,7 +93,7 @@ ng_project(
     ],
 )
 
-ts_project(
+ng_project(
     name = "checkbox_tests_lib",
     testonly = True,
     srcs = glob(

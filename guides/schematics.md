@@ -8,17 +8,15 @@ creating Material applications easier.
 Schematics are included with both `@angular/cdk` and `@angular/material`. Once you install the npm
 packages, they will be available through the Angular CLI.
 
-Using the command below will install Angular Material, the [Component Dev Kit](https://material.angular.dev/cdk) (CDK),
-and [Angular Animations](https://angular.dev/guide/animations) in your project. Then it will run the
-installation schematic.
+Using the command below will install Angular Material and the [Component Dev Kit](https://material.angular.dev/cdk) (CDK) in your project. Then it will run the installation schematic.
 
-```
+```bash
 ng add @angular/material
 ```
 
 In case you just want to install the `@angular/cdk`, there are also schematics for the [Component Dev Kit](https://material.angular.dev/cdk)
 
-```
+```bash
 ng add @angular/cdk
 ```
 
@@ -65,7 +63,7 @@ started with a Material Design form group consisting of:
 * Material Design radio controls
 * Material Design buttons
 
-```
+```bash
 ng generate @angular/material:address-form <component-name>
 ```
 
@@ -75,7 +73,7 @@ The `navigation` schematic will create a new component that includes
 a toolbar with the app name, and a responsive side nav based on Material
 breakpoints.
 
-```
+```bash
 ng generate @angular/material:navigation <component-name>
 ```
 
@@ -84,7 +82,7 @@ ng generate @angular/material:navigation <component-name>
 The table schematic will create a component that renders an Angular Material `<table>` which has
 been pre-configured with a datasource for sorting and pagination.
 
-```
+```bash
 ng generate @angular/material:table <component-name>
 ```
 
@@ -93,7 +91,7 @@ ng generate @angular/material:table <component-name>
 The `dashboard` schematic will create a new component that contains
 a dynamic grid list of Material Design cards.
 
-```
+```bash
 ng generate @angular/material:dashboard <component-name>
 ```
 
@@ -102,7 +100,7 @@ ng generate @angular/material:dashboard <component-name>
 The `tree` schematic can be used to quickly generate an Angular component that uses the Angular
 Material `<mat-tree>` component to visualize a nested folder structure.
 
-```
+```bash
 ng generate @angular/material:tree <component-name>
 ```
 
@@ -111,7 +109,7 @@ ng generate @angular/material:tree <component-name>
 The `drag-drop` schematic is provided by the `@angular/cdk` and can be used to generate a component
 that uses the CDK drag and drop directives.
 
-```
+```bash
 ng generate @angular/cdk:drag-drop <component-name>
 ```
 
@@ -121,7 +119,7 @@ The `theme-color` schematic will generate a file with Material 3 palettes from t
 that can be used in a theme file. It also generates high contrast color override mixins if
 specified.
 
-```
+```bash
 ng generate @angular/material:theme-color
 ```
 

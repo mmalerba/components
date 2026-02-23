@@ -25,6 +25,17 @@ ng_project(
         "//:node_modules/@angular/router",
         "//src/cdk/bidi",
         "//src/cdk/overlay",
+        "//src/dev-app/aria-accordion",
+        "//src/dev-app/aria-autocomplete",
+        "//src/dev-app/aria-combobox",
+        "//src/dev-app/aria-grid",
+        "//src/dev-app/aria-listbox",
+        "//src/dev-app/aria-menu",
+        "//src/dev-app/aria-menubar",
+        "//src/dev-app/aria-select",
+        "//src/dev-app/aria-tabs",
+        "//src/dev-app/aria-toolbar",
+        "//src/dev-app/aria-tree",
         "//src/dev-app/autocomplete",
         "//src/dev-app/badge",
         "//src/dev-app/baseline",
@@ -33,12 +44,6 @@ ng_project(
         "//src/dev-app/button-toggle",
         "//src/dev-app/card",
         "//src/dev-app/cdk-dialog",
-        "//src/dev-app/cdk-experimental-accordion",
-        "//src/dev-app/cdk-experimental-combobox",
-        "//src/dev-app/cdk-experimental-listbox",
-        "//src/dev-app/cdk-experimental-radio-group",
-        "//src/dev-app/cdk-experimental-tabs",
-        "//src/dev-app/cdk-experimental-tree",
         "//src/dev-app/cdk-listbox",
         "//src/dev-app/cdk-menu",
         "//src/dev-app/checkbox",
@@ -83,6 +88,8 @@ ng_project(
         "//src/dev-app/slider",
         "//src/dev-app/snack-bar",
         "//src/dev-app/stepper",
+        "//src/dev-app/system",
+        "//src/dev-app/system-classes-demo",
         "//src/dev-app/table",
         "//src/dev-app/table-scroll-container",
         "//src/dev-app/tabs",
@@ -139,14 +146,6 @@ sass_binary(
     ],
 )
 
-# Variables that are going to be inlined into the dev app index.html.
-filegroup(
-    name = "variables",
-    # Note that we need the * in the pattern, because there's a lint rule which
-    # doesn't allow single files in a `glob`. We have to use a glob, because the file is optional.
-    srcs = glob(["*variables.json"]),
-)
-
 # File group for all static files which are needed to serve the dev-app. These files are
 # used in the devserver as runfiles and will be copied into the static web package that can
 # be deployed on static hosting services (like firebase).
@@ -158,7 +157,6 @@ filegroup(
         "index.html",
         ":theme",
         ":theme_m3",
-        ":variables",
         "//:node_modules/moment",
         "//:node_modules/zone.js",
         "//src/dev-app/icon:icon_demo_assets",
@@ -169,7 +167,7 @@ http_server(
     name = "devserver",
     srcs = [":dev_app_static_files"],
     additional_root_paths = [
-        "angular_material/",
+        "_main/",
     ],
     enable_dev_ui = True,
     # List of environment variables that will be made available as `window.<NAME>` in the

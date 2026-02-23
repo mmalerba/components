@@ -10,7 +10,6 @@
     width: 100%;
   }
 
-
   // Styles specific only to the table inside markdown.
   .docs-markdown > table {
     font-size: 14px;
@@ -18,9 +17,9 @@
     // Code tends to wrap inside tables which doesn't look great with the background color.
     code {
       background: transparent;
+      padding: 0;
     }
   }
-
 
   .docs-api th,
   .docs-markdown > table th {
@@ -51,6 +50,38 @@
     border-bottom: 1px solid var(--mat-sys-outline-variant);
     height: 56px;
   }
+
+  .docs-api-method-card,
+  .docs-api-properties-card {
+    background-color: var(--mat-sys-surface-container-lowest);
+    border: solid 1px var(--mat-sys-outline-variant);
+    border-radius: 12px;
+    margin: 0 0 32px;
+  }
+
+  .docs-api-method-table,
+  .docs-api-properties-table {
+    margin: 0 !important;
+  }
+
+  .docs-api-method-table tr {
+    border-bottom: 0;
+
+    th.docs-api-method-name-cell .docs-api-method-parameter-name {
+      color: var(--mat-sys-on-surface);
+    }
+  }
+
+  .docs-api-properties-table {
+    .docs-api-properties-row:last-of-type {
+      border-bottom: 0;
+    }
+
+    .docs-api-property-type {
+      color: var(--mat-sys-primary);
+    }
+  }
+
 
   @media (max-width: constants.$small-breakpoint-width) {
     .docs-api table,

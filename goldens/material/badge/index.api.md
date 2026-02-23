@@ -4,14 +4,15 @@
 
 ```ts
 
+import { AfterViewInit } from '@angular/core';
 import * as i0 from '@angular/core';
 import * as i1 from '@angular/cdk/a11y';
-import * as i1_2 from '@angular/cdk/bidi';
+import * as i2 from '@angular/cdk/bidi';
 import { OnDestroy } from '@angular/core';
 import { OnInit } from '@angular/core';
 
 // @public
-export class MatBadge implements OnInit, OnDestroy {
+export class MatBadge implements OnInit, AfterViewInit, OnDestroy {
     constructor(...args: unknown[]);
     get color(): ThemePalette;
     set color(value: ThemePalette);
@@ -30,6 +31,8 @@ export class MatBadge implements OnInit, OnDestroy {
     static ngAcceptInputType_hidden: unknown;
     // (undocumented)
     static ngAcceptInputType_overlap: unknown;
+    // (undocumented)
+    ngAfterViewInit(): void;
     // (undocumented)
     ngOnDestroy(): void;
     // (undocumented)
@@ -50,7 +53,7 @@ export class MatBadgeModule {
     // (undocumented)
     static ɵinj: i0.ɵɵInjectorDeclaration<MatBadgeModule>;
     // (undocumented)
-    static ɵmod: i0.ɵɵNgModuleDeclaration<MatBadgeModule, never, [typeof i1.A11yModule, typeof MatCommonModule, typeof MatBadge, typeof _MatBadgeStyleLoader], [typeof MatBadge, typeof MatCommonModule]>;
+    static ɵmod: i0.ɵɵNgModuleDeclaration<MatBadgeModule, never, [typeof i1.A11yModule, typeof MatBadge, typeof _MatBadgeStyleLoader], [typeof MatBadge, typeof i2.BidiModule]>;
 }
 
 // @public

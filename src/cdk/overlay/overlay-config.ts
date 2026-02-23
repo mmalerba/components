@@ -61,6 +61,18 @@ export class OverlayConfig {
    */
   disposeOnNavigation?: boolean = false;
 
+  /**
+   * Whether the overlay should be rendered as a native popover element,
+   * rather than placing it inside of the overlay container.
+   */
+  usePopover?: boolean;
+
+  /**
+   * Function that determines if the overlay should receive a specific
+   * event or if the event should go to the next overlay in the stack.
+   */
+  eventPredicate?: (event: Event) => boolean;
+
   constructor(config?: OverlayConfig) {
     if (config) {
       // Use `Iterable` instead of `Array` because TypeScript, as of 3.6.3,

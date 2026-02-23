@@ -50,9 +50,6 @@ describe('SharedResizeObserver', () => {
   beforeEach(() => {
     originalResizeObserver = ResizeObserver;
     window.ResizeObserver = MockResizeObserver;
-    TestBed.configureTestingModule({
-      imports: [TestComponent],
-    });
     fixture = TestBed.createComponent(TestComponent);
     fixture.detectChanges();
     instance = fixture.componentInstance;
@@ -140,7 +137,7 @@ describe('SharedResizeObserver', () => {
   `,
 })
 export class TestComponent {
-  @ViewChild('el1') el1: ElementRef<Element>;
-  @ViewChild('el2') el2: ElementRef<Element>;
+  @ViewChild('el1') el1!: ElementRef<Element>;
+  @ViewChild('el2') el2!: ElementRef<Element>;
   resizeObserver = inject(SharedResizeObserver);
 }

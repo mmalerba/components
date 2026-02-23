@@ -9,15 +9,14 @@ import {
 } from '@angular/core';
 import {ComponentFixture, TestBed, fakeAsync, tick, waitForAsync} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-import {MatTooltipModule} from './module';
-import {MatTooltip} from './tooltip';
+import {MatTooltipModule} from './tooltip-module';
+import {MatTooltip, TooltipPosition} from './tooltip';
 
 const initialTooltipMessage = 'initial tooltip message';
 
 describe('MatTooltip Zone.js integration', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [MatTooltipModule, OverlayModule, ScrollableTooltipDemo],
       providers: [provideZoneChangeDetection(), provideFakeDirectionality('rtl')],
     });
   }));
@@ -69,11 +68,11 @@ describe('MatTooltip Zone.js integration', () => {
   imports: [MatTooltipModule, OverlayModule],
 })
 class ScrollableTooltipDemo {
-  position: string = 'below';
+  position: TooltipPosition = 'below';
   message: string = initialTooltipMessage;
   showButton: boolean = true;
 
-  @ViewChild(CdkScrollable) scrollingContainer: CdkScrollable;
+  @ViewChild(CdkScrollable) scrollingContainer!: CdkScrollable;
 
   scrollDown() {
     const scrollingContainerEl = this.scrollingContainer.getElementRef().nativeElement;

@@ -10,12 +10,6 @@ describe('MatRipple Zone.js integration', () => {
   let originalBodyMargin: string | null;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [MatRippleModule, BasicRippleContainer],
-    });
-  });
-
-  beforeEach(() => {
     // Set body margin to 0 during tests so it doesn't mess up position calculations.
     originalBodyMargin = document.body.style.margin;
     document.body.style.margin = '0';
@@ -55,5 +49,5 @@ describe('MatRipple Zone.js integration', () => {
   imports: [MatRippleModule],
 })
 class BasicRippleContainer {
-  @ViewChild('ripple') ripple: MatRipple;
+  @ViewChild('ripple') ripple!: MatRipple;
 }

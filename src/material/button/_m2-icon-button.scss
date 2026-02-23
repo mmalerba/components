@@ -6,11 +6,17 @@
 @function get-tokens($theme) {
   $system: m2-utils.get-system($theme);
   $density-scale: theming.clamp-density(map.get($system, density-scale), -3);
+  $touch-target-display: block;
+
+  @if ($density-scale < -1) {
+    $touch-target-display: none;
+  }
 
   @return (
     base: (
       icon-button-icon-size: 24px,
       icon-button-container-shape: 50%,
+      icon-button-touch-target-size: 48px,
     ),
     color: (
       icon-button-disabled-icon-color:
@@ -26,7 +32,7 @@
     ),
     typography: (),
     density: (
-      icon-button-touch-target-display: if($density-scale < -1, none, block),
+      icon-button-touch-target-display: $touch-target-display,
       icon-button-state-layer-size: map.get((
         0: 48px,
         -1: 44px,

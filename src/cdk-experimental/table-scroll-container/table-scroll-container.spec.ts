@@ -18,19 +18,12 @@ describe('CdkTableScrollContainer', () => {
   let headerRows: HTMLElement[];
   let footerRows: HTMLElement[];
 
-  function createComponent<T>(
-    componentType: Type<T>,
-    declarations: any[] = [],
-  ): ComponentFixture<T> {
-    TestBed.configureTestingModule({
-      imports: [CdkTableModule, CdkTableScrollContainerModule, componentType, ...declarations],
-    });
-
+  function createComponent<T>(componentType: Type<T>): ComponentFixture<T> {
     return TestBed.createComponent<T>(componentType);
   }
 
-  function setupTableTestApp(componentType: Type<any>, declarations: any[] = []) {
-    fixture = createComponent(componentType, declarations);
+  function setupTableTestApp(componentType: Type<any>) {
+    fixture = createComponent(componentType);
     component = fixture.componentInstance;
     fixture.detectChanges();
 
@@ -306,7 +299,7 @@ class StickyNativeLayoutCdkTableApp {
   dataSource: FakeDataSource = new FakeDataSource();
   columns = ['column-1', 'column-2', 'column-3', 'column-4', 'column-5', 'column-6'];
 
-  @ViewChild(CdkTable) table: CdkTable<TestData>;
+  @ViewChild(CdkTable) table!: CdkTable<TestData>;
 
   stickyHeaders: string[] = [];
   stickyFooters: string[] = [];

@@ -333,7 +333,6 @@ describe('MatButton', () => {
 
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      imports: [MatButtonModule, ConfigTestApp],
       providers: [
         {
           provide: MAT_BUTTON_CONFIG,
@@ -419,7 +418,6 @@ describe('MatButton', () => {
 describe('MatFabDefaultOptions', () => {
   function configure(defaults: MatFabDefaultOptions) {
     TestBed.configureTestingModule({
-      imports: [MatButtonModule, TestApp],
       providers: [{provide: MAT_FAB_DEFAULT_OPTIONS, useValue: defaults}],
     });
   }
@@ -466,8 +464,8 @@ class TestApp {
   clickCount = 0;
   isDisabled = false;
   rippleDisabled = false;
-  buttonColor: ThemePalette;
-  tabIndex: number;
+  buttonColor!: ThemePalette;
+  tabIndex!: number;
   extended = false;
   disabledInteractive = false;
   appearance: MatButtonAppearance = 'text';

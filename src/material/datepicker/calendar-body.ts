@@ -26,13 +26,12 @@ import {
   Renderer2,
 } from '@angular/core';
 import {_IdGenerator} from '@angular/cdk/a11y';
-import {NgClass} from '@angular/common';
 import {_CdkPrivateStyleLoader} from '@angular/cdk/private';
 import {_StructuralStylesLoader} from '../core';
 import {MatDatepickerIntl} from './datepicker-intl';
 
 /** Extra CSS classes that can be associated with a calendar cell. */
-export type MatCalendarCellCssClasses = string | string[] | Set<string> | {[key: string]: any};
+export type MatCalendarCellCssClasses = string | string[] | Set<string> | Record<string, any>;
 
 /** Function that can generate the extra classes that should be added to a calendar cell. */
 export type MatCalendarCellClassFunction<D> = (
@@ -48,16 +47,19 @@ let uniqueIdCounter = 0;
  */
 export class MatCalendarCell<D = any> {
   readonly id = uniqueIdCounter++;
+  readonly cssClasses: string | string[] | Record<string, any> | undefined;
 
   constructor(
     public value: number,
     public displayValue: string,
     public ariaLabel: string,
     public enabled: boolean,
-    public cssClasses: MatCalendarCellCssClasses = {},
+    cssClasses?: MatCalendarCellCssClasses,
     public compareValue = value,
     public rawValue?: D,
-  ) {}
+  ) {
+    this.cssClasses = cssClasses instanceof Set ? Array.from(cssClasses) : cssClasses;
+  }
 }
 
 /** Event emitted when a date inside the calendar is triggered as a result of a user action. */
@@ -95,20 +97,19 @@ const passiveEventOptions = {passive: true};
   exportAs: 'matCalendarBody',
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgClass],
 })
 export class MatCalendarBody<D = any> implements OnChanges, OnDestroy, AfterViewChecked {
   private _elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private _ngZone = inject(NgZone);
   private _platform = inject(Platform);
   private _intl = inject(MatDatepickerIntl);
-  private _eventCleanups: (() => void)[];
+  private _eventCleanups!: (() => void)[];
 
   /**
    * Used to skip the next focus event when rendering the preview range.
    * We need a flag like this, because some browsers fire focus events asynchronously.
    */
-  private _skipNextFocus: boolean;
+  private _skipNextFocus: boolean = false;
 
   /**
    * Used to focus the active cell after change detection has run.
@@ -116,22 +117,22 @@ export class MatCalendarBody<D = any> implements OnChanges, OnDestroy, AfterView
   private _focusActiveCellAfterViewChecked = false;
 
   /** The label for the table. (e.g. "Jan 2017"). */
-  @Input() label: string;
+  @Input() label!: string;
 
   /** The cells to display in the table. */
-  @Input() rows: MatCalendarCell[][];
+  @Input() rows!: MatCalendarCell[][];
 
   /** The value in the table that corresponds to today. */
-  @Input() todayValue: number;
+  @Input() todayValue!: number;
 
   /** Start value of the selected date range. */
-  @Input() startValue: number;
+  @Input() startValue!: number;
 
   /** End value of the selected date range. */
-  @Input() endValue: number;
+  @Input() endValue!: number;
 
   /** The minimum number of free cells needed to fit the label in the first row. */
-  @Input() labelMinRequiredCells: number;
+  @Input() labelMinRequiredCells!: number;
 
   /** The number of columns in the table. */
   @Input() numCols: number = 7;
@@ -156,10 +157,10 @@ export class MatCalendarBody<D = any> implements OnChanges, OnDestroy, AfterView
   @Input() cellAspectRatio: number = 1;
 
   /** Start of the comparison range. */
-  @Input() comparisonStart: number | null;
+  @Input() comparisonStart: number | null = null;
 
   /** End of the comparison range. */
-  @Input() comparisonEnd: number | null;
+  @Input() comparisonEnd: number | null = null;
 
   /** Start of the preview range. */
   @Input() previewStart: number | null = null;
@@ -168,10 +169,10 @@ export class MatCalendarBody<D = any> implements OnChanges, OnDestroy, AfterView
   @Input() previewEnd: number | null = null;
 
   /** ARIA Accessible name of the `<input matStartDate/>` */
-  @Input() startDateAccessibleName: string | null;
+  @Input() startDateAccessibleName: string | null = null;
 
   /** ARIA Accessible name of the `<input matEndDate/>` */
-  @Input() endDateAccessibleName: string | null;
+  @Input() endDateAccessibleName: string | null = null;
 
   /** Emits when a new value is selected. */
   @Output() readonly selectedValueChange = new EventEmitter<MatCalendarUserEvent<number>>();
@@ -190,13 +191,13 @@ export class MatCalendarBody<D = any> implements OnChanges, OnDestroy, AfterView
   @Output() readonly dragEnded = new EventEmitter<MatCalendarUserEvent<D | null>>();
 
   /** The number of blank cells to put at the beginning for the first row. */
-  _firstRowOffset: number;
+  _firstRowOffset!: number;
 
   /** Padding for the individual date cells. */
-  _cellPadding: string;
+  _cellPadding!: string;
 
   /** Width of an individual cell. */
-  _cellWidth: string;
+  _cellWidth!: string;
 
   /** ID for the start date label. */
   _startDateLabelId: string;
@@ -615,7 +616,9 @@ export class MatCalendarBody<D = any> implements OnChanges, OnDestroy, AfterView
       const col = cell.getAttribute('data-mat-col');
 
       if (row && col) {
-        return this.rows[parseInt(row)][parseInt(col)];
+        // We need the optional read here, because this can
+        // fire too late when the user is navigating quickly.
+        return this.rows[parseInt(row)]?.[parseInt(col)] || null;
       }
     }
 

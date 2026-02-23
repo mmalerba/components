@@ -3,17 +3,19 @@
 load("@aspect_rules_jasmine//jasmine:defs.bzl", _jasmine_test = "jasmine_test")
 load("@aspect_rules_js//npm:defs.bzl", _npm_package = "npm_package")
 load("@devinfra//bazel/http-server:index.bzl", _http_server = "http_server")
-load("@devinfra//bazel/spec-bundling:index_rjs.bzl", _spec_bundle = "spec_bundle")
+load("@devinfra//bazel/spec-bundling:index.bzl", _spec_bundle = "spec_bundle")
 load("@devinfra//bazel/ts_project:index.bzl", "strict_deps_test")
+load("@rules_angular//src/ng_examples_db:index.bzl", _ng_examples_db = "ng_examples_db")
 load("@rules_angular//src/ng_package:index.bzl", _ng_package = "ng_package")
 load("@rules_angular//src/ng_package/text_replace:index.bzl", _text_replace = "text_replace")
 load("@rules_angular//src/ng_project:index.bzl", _ng_project = "ng_project")
 load("@rules_angular//src/ts_project:index.bzl", _ts_project = "ts_project")
-load("@rules_browsers//src/protractor_test:index.bzl", "protractor_test")
+load("@rules_browsers//protractor_test:index.bzl", "protractor_test")
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 load("@rules_sass//src:index.bzl", _sass_binary = "sass_binary", _sass_library = "sass_library")
 load("//:packages.bzl", "NO_STAMP_NPM_PACKAGE_SUBSTITUTIONS", "NPM_PACKAGE_SUBSTITUTIONS")
 load("//:pkg-externals.bzl", "PKG_EXTERNALS")
+load("//tools/adev-api-extraction:extract_api_to_json.bzl", _extract_api_to_json = "extract_api_to_json")
 load("//tools/bazel:ng_package_interop.bzl", "ng_package_interop")
 load("//tools/bazel:web_test_suite.bzl", _ng_web_test_suite = "ng_web_test_suite")
 load("//tools/extract-tokens:index.bzl", _extract_tokens = "extract_tokens")
@@ -25,6 +27,7 @@ extract_tokens = _extract_tokens
 ng_web_test_suite = _ng_web_test_suite
 spec_bundle = _spec_bundle
 http_server = _http_server
+ng_examples_db = _ng_examples_db
 
 def sass_binary(sourcemap = False, include_paths = [], **kwargs):
     _sass_binary(
@@ -78,6 +81,7 @@ def ng_package(
         }),
         visibility = visibility,
         rollup_runtime_deps = [
+            "//:node_modules/@babel/core",
             "//:node_modules/@rollup/plugin-commonjs",
             "//:node_modules/@rollup/plugin-node-resolve",
             "//:node_modules/magic-string",
@@ -129,13 +133,12 @@ def npm_package(name, srcs = [], **kwargs):
 
 def ts_project(
         name,
+        srcs = [],
         deps = [],
         source_map = True,
         testonly = False,
         tsconfig = None,
         visibility = None,
-        # TODO: Switch this flag as we no longer depend on `interop_deps`.
-        ignore_strict_deps = True,
         **kwargs):
     if tsconfig == None and native.package_name().startswith("src"):
         tsconfig = "//src:test-tsconfig" if testonly else "//src:build-tsconfig"
@@ -147,16 +150,17 @@ def ts_project(
         declaration = True,
         tsconfig = tsconfig,
         visibility = visibility,
+        srcs = srcs,
         deps = deps,
         **kwargs
     )
 
-    if not ignore_strict_deps:
-        strict_deps_test(
-            name = "%s_strict_deps_test" % name,
-            srcs = kwargs.get("srcs", []),
-            deps = deps,
-        )
+    strict_deps_test(
+        name = "%s_strict_deps_test" % name,
+        srcs = srcs,
+        deps = deps,
+        tsconfig = tsconfig,
+    )
 
     # TODO(devversion): Partner with ISE team to support `rules_js` here.
     # if False and not testonly:
@@ -164,13 +168,12 @@ def ts_project(
 
 def ng_project(
         name,
+        srcs = [],
         deps = [],
         source_map = True,
         testonly = False,
         tsconfig = None,
         visibility = None,
-        # TODO: Switch this flag as we no longer depend on `interop_deps`.
-        ignore_strict_deps = True,
         **kwargs):
     if tsconfig == None and native.package_name().startswith("src"):
         tsconfig = "//src:test-tsconfig" if testonly else "//src:build-tsconfig"
@@ -182,16 +185,17 @@ def ng_project(
         declaration = True,
         tsconfig = tsconfig,
         visibility = visibility,
+        srcs = srcs,
         deps = deps,
         **kwargs
     )
 
-    if not ignore_strict_deps:
-        strict_deps_test(
-            name = "%s_strict_deps_test" % name,
-            srcs = kwargs.get("srcs", []),
-            deps = deps,
-        )
+    strict_deps_test(
+        name = "%s_strict_deps_test" % name,
+        srcs = srcs,
+        deps = deps,
+        tsconfig = tsconfig,
+    )
 
     # TODO(devversion): Partner with ISE team to support `rules_js` here.
     # if False and not testonly:
@@ -244,5 +248,16 @@ def protractor_web_test_suite(name, deps, **kwargs):
             "//:node_modules/protractor",
             "//:node_modules/selenium-webdriver",
         ],
+        **kwargs
+    )
+
+def extract_api_to_json(**kwargs):
+    _extract_api_to_json(
+        import_map = {
+            "@angular/core": "//:node_modules/@angular/core",
+            "@angular/core/*": "//:node_modules/@angular/core",
+            "@angular/cdk/bidi": "//src/cdk/bidi",
+            "@angular/aria/private": "//src/aria/private",
+        },
         **kwargs
     )

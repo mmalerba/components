@@ -17,6 +17,7 @@ import {
   ChangeDetectorRef,
   booleanAttribute,
   inject,
+  Injector,
 } from '@angular/core';
 import {Directionality} from '../../bidi';
 import {_IdGenerator} from '../../a11y';
@@ -24,9 +25,8 @@ import {ScrollDispatcher} from '../../scrolling';
 import {CDK_DROP_LIST, CdkDrag} from './drag';
 import {CdkDragDrop, CdkDragEnter, CdkDragExit, CdkDragSortEvent} from '../drag-events';
 import {CDK_DROP_LIST_GROUP, CdkDropListGroup} from './drop-list-group';
-import {DropListRef} from '../drop-list-ref';
+import {createDropListRef, DropListRef} from '../drop-list-ref';
 import {DragRef} from '../drag-ref';
-import {DragDrop} from '../drag-drop';
 import {DropListOrientation, DragAxis, DragDropConfig, CDK_DRAG_CONFIG} from './config';
 import {merge, Subject} from 'rxjs';
 import {startWith, takeUntil} from 'rxjs/operators';
@@ -66,7 +66,7 @@ export class CdkDropList<T = any> implements OnDestroy {
   private readonly _destroyed = new Subject<void>();
 
   /** Whether the element's scrollable parents have been resolved. */
-  private _scrollableParentsResolved: boolean;
+  private _scrollableParentsResolved = false;
 
   /** Keeps track of the drop lists that are currently on the page. */
   private static _dropLists: CdkDropList[] = [];
@@ -83,10 +83,10 @@ export class CdkDropList<T = any> implements OnDestroy {
   connectedTo: (CdkDropList | string)[] | CdkDropList | string = [];
 
   /** Arbitrary data to attach to this container. */
-  @Input('cdkDropListData') data: T;
+  @Input('cdkDropListData') data!: T;
 
   /** Direction in which the list is oriented. */
-  @Input('cdkDropListOrientation') orientation: DropListOrientation;
+  @Input('cdkDropListOrientation') orientation: DropListOrientation = 'vertical';
 
   /**
    * Unique ID for the drop zone. Can be used as a reference
@@ -95,7 +95,7 @@ export class CdkDropList<T = any> implements OnDestroy {
   @Input() id: string = inject(_IdGenerator).getId('cdk-drop-list-');
 
   /** Locks the position of the draggable elements inside the container along the specified axis. */
-  @Input('cdkDropListLockAxis') lockAxis: DragAxis;
+  @Input('cdkDropListLockAxis') lockAxis: DragAxis | null = null;
 
   /** Whether starting a dragging sequence from this container is disabled. */
   @Input({alias: 'cdkDropListDisabled', transform: booleanAttribute})
@@ -109,11 +109,11 @@ export class CdkDropList<T = any> implements OnDestroy {
     // the user in a disabled state, so we also need to sync it as it's being set.
     this._dropListRef.disabled = this._disabled = value;
   }
-  private _disabled: boolean;
+  private _disabled = false;
 
   /** Whether sorting within this drop list is disabled. */
   @Input({alias: 'cdkDropListSortingDisabled', transform: booleanAttribute})
-  sortingDisabled: boolean;
+  sortingDisabled: boolean = false;
 
   /**
    * Function that is used to determine whether an item
@@ -128,7 +128,7 @@ export class CdkDropList<T = any> implements OnDestroy {
 
   /** Whether to auto-scroll the view when the user moves their pointer close to the edges. */
   @Input({alias: 'cdkDropListAutoScrollDisabled', transform: booleanAttribute})
-  autoScrollDisabled: boolean;
+  autoScrollDisabled: boolean = false;
 
   /** Number of pixels to scroll for each frame when auto-scrolling an element. */
   @Input('cdkDropListAutoScrollStep')
@@ -148,7 +148,7 @@ export class CdkDropList<T = any> implements OnDestroy {
    * </div>
    * ```
    */
-  @Input('cdkDropListElementContainer') elementContainerSelector: string | null;
+  @Input('cdkDropListElementContainer') elementContainerSelector: string | null = null;
 
   /**
    * By default when an item leaves its initial container, its placeholder will be transferred
@@ -162,7 +162,7 @@ export class CdkDropList<T = any> implements OnDestroy {
    * behavior in a drop list.
    */
   @Input({alias: 'cdkDropListHasAnchor', transform: booleanAttribute})
-  hasAnchor: boolean;
+  hasAnchor: boolean = false;
 
   /** Emits when the user drops an item inside the container. */
   @Output('cdkDropListDropped')
@@ -197,14 +197,14 @@ export class CdkDropList<T = any> implements OnDestroy {
   constructor(...args: unknown[]);
 
   constructor() {
-    const dragDrop = inject(DragDrop);
     const config = inject<DragDropConfig>(CDK_DRAG_CONFIG, {optional: true});
+    const injector = inject(Injector);
 
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
       assertElementNode(this.element.nativeElement, 'cdkDropList');
     }
 
-    this._dropListRef = dragDrop.createDropList(this.element);
+    this._dropListRef = createDropListRef(injector, this.element);
     this._dropListRef.data = this;
 
     if (config) {
@@ -235,6 +235,7 @@ export class CdkDropList<T = any> implements OnDestroy {
   /** Registers an items with the drop list. */
   addItem(item: CdkDrag): void {
     this._unsortedItems.add(item);
+    item._dragRef._withDropContainer(this._dropListRef);
 
     // Only sync the items while dragging since this method is
     // called when items are being initialized one-by-one.
@@ -424,10 +425,7 @@ export class CdkDropList<T = any> implements OnDestroy {
     this.sortingDisabled = sortingDisabled == null ? false : sortingDisabled;
     this.autoScrollDisabled = listAutoScrollDisabled == null ? false : listAutoScrollDisabled;
     this.orientation = listOrientation || 'vertical';
-
-    if (lockAxis) {
-      this.lockAxis = lockAxis;
-    }
+    this.lockAxis = lockAxis || null;
   }
 
   /** Syncs up the registered drag items with underlying drop list ref. */

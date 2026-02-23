@@ -11,7 +11,7 @@ import {
   dispatchMouseEvent,
   patchElementFocus,
 } from '@angular/cdk/testing/private';
-import {Location} from '@angular/common';
+import {AsyncPipe, Location} from '@angular/common';
 import {SpyLocation} from '@angular/common/testing';
 import {
   ChangeDetectionStrategy,
@@ -39,6 +39,7 @@ import {
 } from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
 import {Subject} from 'rxjs';
+import {map} from 'rxjs/operators';
 import {CLOSE_ANIMATION_DURATION, OPEN_ANIMATION_DURATION} from './dialog-container';
 import {
   MAT_DIALOG_DATA,
@@ -47,7 +48,6 @@ import {
   MatDialogActions,
   MatDialogClose,
   MatDialogContent,
-  MatDialogModule,
   MatDialogRef,
   MatDialogState,
   MatDialogTitle,
@@ -66,17 +66,6 @@ describe('MatDialog', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
-        MatDialogModule,
-        ComponentWithChildViewContainer,
-        ComponentWithTemplateRef,
-        PizzaMsg,
-        ContentElementDialog,
-        DialogWithInjectedData,
-        DialogWithoutFocusableElements,
-        DirectiveWithViewContainer,
-        ComponentWithContentElementTemplateRef,
-      ],
       providers: [
         {provide: Location, useClass: SpyLocation},
         {provide: MATERIAL_ANIMATIONS, useValue: {animationsDisabled: true}},
@@ -1252,6 +1241,14 @@ describe('MatDialog', () => {
     }),
   );
 
+  it('should be able to use afterOpened in the template while animations are disabled', async () => {
+    const ref = dialog.open(DialogWithAfterOpenSubscription);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(ref.componentInstance.animations.animationsDisabled).toBe(true);
+    expect(overlayContainerElement.textContent).toContain('The dialog is now open!');
+  });
+
   describe('hasBackdrop option', () => {
     it('should have a backdrop', () => {
       dialog.open(PizzaMsg, {hasBackdrop: true, viewContainerRef: testViewContainerRef});
@@ -1784,7 +1781,7 @@ describe('MatDialog', () => {
         changeDetection: ChangeDetectionStrategy.OnPush,
       })
       class OnPushHost {
-        @ViewChild(Child, {static: true}) child: Child;
+        @ViewChild(Child, {static: true}) child!: Child;
       }
 
       const hostFixture = TestBed.createComponent(OnPushHost);
@@ -2035,7 +2032,6 @@ describe('MatDialog with a parent MatDialog', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      imports: [MatDialogModule, ComponentThatProvidesMatDialog],
       providers: [
         {
           provide: OverlayContainer,
@@ -2144,7 +2140,6 @@ describe('MatDialog with default options', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [MatDialogModule, ComponentWithChildViewContainer, DirectiveWithViewContainer],
       providers: [
         {provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: defaultConfig},
         {provide: MATERIAL_ANIMATIONS, useValue: {animationsDisabled: true}},
@@ -2205,10 +2200,6 @@ describe('MatDialog with animations enabled', () => {
   let viewContainerFixture: ComponentFixture<ComponentWithChildViewContainer>;
 
   beforeEach(fakeAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [MatDialogModule, ComponentWithChildViewContainer, DirectiveWithViewContainer],
-    });
-
     dialog = TestBed.inject(MatDialog);
     viewContainerFixture = TestBed.createComponent(ComponentWithChildViewContainer);
     viewContainerFixture.detectChanges();
@@ -2259,10 +2250,6 @@ describe('MatDialog with explicit injector provided', () => {
   let fixture: ComponentFixture<ModuleBoundDialogParentComponent>;
 
   beforeEach(fakeAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [MatDialogModule, ModuleBoundDialogParentComponent],
-    });
-
     overlayContainerElement = TestBed.inject(OverlayContainer).getContainerElement();
     fixture = TestBed.createComponent(ModuleBoundDialogParentComponent);
   }));
@@ -2300,7 +2287,7 @@ class ComponentWithOnPushViewContainer {
 class ComponentWithChildViewContainer {
   showChildView = true;
 
-  @ViewChild(DirectiveWithViewContainer) childWithViewContainer: DirectiveWithViewContainer;
+  @ViewChild(DirectiveWithViewContainer) childWithViewContainer!: DirectiveWithViewContainer;
 
   get childViewContainer() {
     return this.childWithViewContainer.viewContainerRef;
@@ -2313,10 +2300,10 @@ class ComponentWithChildViewContainer {
     Cheese {{localValue}} {{data?.value}}{{setDialogRef(dialogRef)}}</ng-template>`,
 })
 class ComponentWithTemplateRef {
-  localValue: string;
-  dialogRef: MatDialogRef<any>;
+  localValue!: string;
+  dialogRef!: MatDialogRef<any>;
 
-  @ViewChild(TemplateRef) templateRef: TemplateRef<any>;
+  @ViewChild(TemplateRef) templateRef!: TemplateRef<any>;
 
   setDialogRef(dialogRef: MatDialogRef<any>): string {
     this.dialogRef = dialogRef;
@@ -2395,7 +2382,7 @@ class ContentElementDialog {
   imports: [MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose],
 })
 class ComponentWithContentElementTemplateRef {
-  @ViewChild(TemplateRef) templateRef: TemplateRef<any>;
+  @ViewChild(TemplateRef) templateRef!: TemplateRef<any>;
 
   shownTitle: 'first' | 'second' | 'third' | 'all' = 'first';
 
@@ -2472,3 +2459,15 @@ class ModuleBoundDialogChildComponent {
   providers: [ModuleBoundDialogService],
 })
 class ModuleBoundDialogModule {}
+
+@Component({
+  template: `{{message | async}}`,
+  imports: [AsyncPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class DialogWithAfterOpenSubscription {
+  dialogRef = inject(MatDialogRef);
+  animations = inject(MATERIAL_ANIMATIONS);
+
+  protected message = this.dialogRef.afterOpened().pipe(map(() => 'The dialog is now open!'));
+}

@@ -1,4 +1,4 @@
-load("@devinfra//bazel/api-golden:index_rjs.bzl", "api_golden_test_npm_package")
+load("@devinfra//bazel/api-golden:index.bzl", "api_golden_test_npm_package")
 
 exports_files([
     "tsec-exemption.json",
@@ -38,4 +38,13 @@ api_golden_test_npm_package(
     types = {
         "//:node_modules/@types/youtube": "youtube",
     },
+)
+
+api_golden_test_npm_package(
+    name = "aria_api",
+    data = glob(["aria/**"]) + [
+        "//src/aria:npm_package",
+    ],
+    golden_dir = "goldens/aria",
+    npm_package = "src/aria/npm_package",
 )

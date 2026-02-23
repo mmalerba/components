@@ -16,22 +16,6 @@ import {MatSlideToggle, MatSlideToggleChange, MatSlideToggleModule} from './inde
 import {MAT_SLIDE_TOGGLE_DEFAULT_OPTIONS} from './slide-toggle-config';
 
 describe('MatSlideToggle without forms', () => {
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatSlideToggleModule,
-        BidiModule,
-        SlideToggleBasic,
-        SlideToggleCheckedAndDisabledAttr,
-        SlideToggleWithTabindexAttr,
-        SlideToggleWithoutLabel,
-        SlideToggleProjectedLabel,
-        TextBindingComponent,
-        SlideToggleWithStaticAriaAttributes,
-      ],
-    });
-  });
-
   describe('basic behavior', () => {
     let fixture: ComponentFixture<any>;
 
@@ -167,7 +151,7 @@ describe('MatSlideToggle without forms', () => {
       expect(slideToggleElement.id).toBe('nextId');
       expect(buttonElement.id).toBe(`${slideToggleElement.id}-button`);
 
-      testComponent.slideId = null;
+      testComponent.slideId = null!;
       fixture.changeDetectorRef.markForCheck();
       fixture.detectChanges();
 
@@ -245,7 +229,7 @@ describe('MatSlideToggle without forms', () => {
 
       expect(buttonElement.getAttribute('aria-describedby')).toBe('some-element');
 
-      testComponent.slideAriaDescribedBy = null;
+      testComponent.slideAriaDescribedBy = null!;
       fixture.changeDetectorRef.markForCheck();
       fixture.detectChanges();
 
@@ -539,20 +523,6 @@ describe('MatSlideToggle without forms', () => {
 });
 
 describe('MatSlideToggle with forms', () => {
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatSlideToggleModule,
-        FormsModule,
-        ReactiveFormsModule,
-        SlideToggleWithForm,
-        SlideToggleWithModel,
-        SlideToggleWithFormControl,
-        SlideToggleWithModelAndChangeEvent,
-      ],
-    });
-  });
-
   describe('using ngModel', () => {
     let fixture: ComponentFixture<SlideToggleWithModel>;
 
@@ -684,6 +654,8 @@ describe('MatSlideToggle with forms', () => {
 
     it('should update checked state on click if control is checked initially', fakeAsync(() => {
       fixture = TestBed.createComponent(SlideToggleWithModel);
+      fixture.detectChanges();
+
       slideToggle = fixture.debugElement.query(By.directive(MatSlideToggle))!.componentInstance;
       labelElement = fixture.debugElement.query(By.css('label'))!.nativeElement;
 
@@ -888,15 +860,15 @@ class SlideToggleBasic {
   isRequired = false;
   disableRipple = false;
   slideChecked = false;
-  slideColor: string;
-  slideId: string | null;
-  slideName: string | null;
-  slideLabel: string | null;
-  slideLabelledBy: string | null;
-  slideAriaDescribedBy: string | null;
-  slideTabindex: number;
-  lastEvent: MatSlideToggleChange;
-  labelPosition: string;
+  slideColor!: string;
+  slideId!: string;
+  slideName: string | null = null;
+  slideLabel: string | null = null;
+  slideLabelledBy: string | null = null;
+  slideAriaDescribedBy!: string;
+  slideTabindex!: number;
+  lastEvent!: MatSlideToggleChange;
+  labelPosition!: 'before' | 'after';
   toggleTriggered = 0;
   dragTriggered = 0;
   direction: Direction = 'ltr';
@@ -959,35 +931,12 @@ class SlideToggleWithTabindexAttr {
 }
 
 @Component({
-  template: `<mat-slide-toggle>{{label}}</mat-slide-toggle>`,
-  imports: [MatSlideToggleModule, BidiModule],
-})
-class SlideToggleWithoutLabel {
-  label: string;
-}
-
-@Component({
   template: `<mat-slide-toggle [(ngModel)]="checked" (change)="onChange()"></mat-slide-toggle>`,
   imports: [MatSlideToggleModule, FormsModule, ReactiveFormsModule],
 })
 class SlideToggleWithModelAndChangeEvent {
-  checked: boolean;
+  checked = false;
   onChange: () => void = () => {};
-}
-
-@Component({
-  template: `<mat-slide-toggle><some-text></some-text></mat-slide-toggle>`,
-  imports: [MatSlideToggleModule, BidiModule],
-})
-class SlideToggleProjectedLabel {}
-
-@Component({
-  selector: 'some-text',
-  template: `<span>{{text}}</span>`,
-  imports: [MatSlideToggleModule, BidiModule],
-})
-class TextBindingComponent {
-  text: string = 'Some text';
 }
 
 @Component({

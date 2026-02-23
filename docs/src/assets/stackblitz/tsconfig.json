@@ -2,13 +2,12 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
     "target": "es2022",
     "module": "es2020",
@@ -19,6 +18,7 @@
     "noUnusedLocals": false,
     "useDefineForClassFields": false,
     "strictNullChecks": true,
+    "strictPropertyInitialization": true,
     "noImplicitReturns": true,
     "strictFunctionTypes": true,
     "noImplicitOverride": true,

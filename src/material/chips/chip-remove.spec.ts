@@ -11,12 +11,6 @@ describe('Chip Remove', () => {
   let chipNativeElement: HTMLElement;
 
   beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [MatChipsModule, TestChip],
-    });
-  }));
-
-  beforeEach(waitForAsync(() => {
     fixture = TestBed.createComponent(TestChip);
     testChip = fixture.debugElement.componentInstance;
     fixture.detectChanges();
@@ -119,7 +113,7 @@ describe('Chip Remove', () => {
   imports: [MatChipsModule],
 })
 class TestChip {
-  removable: boolean;
+  removable = false;
   disabled = false;
   didRemove = jasmine.createSpy('didRemove spy');
 }

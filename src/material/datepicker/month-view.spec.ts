@@ -23,9 +23,9 @@ import {
 import {Component, signal, WritableSignal} from '@angular/core';
 import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-import {MAT_DATE_FORMATS, MatNativeDateModule} from '../core';
+import {MAT_DATE_FORMATS, provideNativeDateAdapter} from '../core';
 import {DEC, FEB, JAN, MAR, NOV} from '../testing';
-import {MatCalendarBody, MatCalendarUserEvent} from './calendar-body';
+import {MatCalendarCellClassFunction, MatCalendarUserEvent} from './calendar-body';
 import {
   DefaultMatCalendarRangeStrategy,
   MAT_DATE_RANGE_SELECTION_STRATEGY,
@@ -41,16 +41,8 @@ describe('MatMonthView', () => {
       dir = signal<Direction>('ltr');
 
       TestBed.configureTestingModule({
-        imports: [
-          MatNativeDateModule,
-          MatCalendarBody,
-          MatMonthView,
-          // Test components.
-          StandardMonthView,
-          MonthViewWithDateFilter,
-          MonthViewWithDateClass,
-        ],
         providers: [
+          provideNativeDateAdapter(),
           provideFakeDirectionality(dir),
           {provide: MAT_DATE_RANGE_SELECTION_STRATEGY, useClass: DefaultMatCalendarRangeStrategy},
         ],
@@ -806,16 +798,8 @@ describe('MatMonthView', () => {
 
     beforeEach(waitForAsync(() => {
       TestBed.configureTestingModule({
-        imports: [
-          MatNativeDateModule,
-          MatCalendarBody,
-          MatMonthView,
-          // Test components.
-          StandardMonthView,
-          MonthViewWithDateFilter,
-          MonthViewWithDateClass,
-        ],
         providers: [
+          provideNativeDateAdapter(),
           provideFakeDirectionality('ltr'),
           {provide: MAT_DATE_RANGE_SELECTION_STRATEGY, useClass: DefaultMatCalendarRangeStrategy},
           {
@@ -909,7 +893,7 @@ class MonthViewWithDateFilter {
 })
 class MonthViewWithDateClass {
   activeDate = new Date(2017, JAN, 1);
-  dateClass(date: Date) {
-    return date.getDate() % 2 == 0 ? 'even' : undefined;
-  }
+  dateClass: MatCalendarCellClassFunction<Date> = (date: Date) => {
+    return date.getDate() % 2 == 0 ? 'even' : [];
+  };
 }

@@ -51,8 +51,6 @@ export type Calculator = (markers: google.maps.Marker[], clusterIconStylesCount:
 // @public (undocumented)
 export interface Cluster {
     // (undocumented)
-    new (options: ClusterOptions): Cluster;
-    // (undocumented)
     bounds?: google.maps.LatLngBounds;
     // (undocumented)
     count: number;
@@ -61,7 +59,7 @@ export interface Cluster {
     // (undocumented)
     marker?: Marker;
     // (undocumented)
-    readonly markers?: Marker[];
+    markers?: Marker[];
     // (undocumented)
     position: google.maps.LatLng;
     // (undocumented)
@@ -320,14 +318,14 @@ export class MapAdvancedMarker implements OnInit, OnChanges, OnDestroy, MapAncho
     getAnchor(): google.maps.marker.AdvancedMarkerElement;
     set gmpDraggable(draggable: boolean);
     readonly mapClick: Observable<google.maps.MapMouseEvent>;
-    readonly mapDblclick: Observable<google.maps.MapMouseEvent>;
+    readonly mapDblclick: Observable<MouseEvent>;
     readonly mapDrag: Observable<google.maps.MapMouseEvent>;
     readonly mapDragend: Observable<google.maps.MapMouseEvent>;
     readonly mapDragstart: Observable<google.maps.MapMouseEvent>;
-    readonly mapMouseout: Observable<google.maps.MapMouseEvent>;
+    readonly mapMouseout: Observable<MouseEvent>;
     readonly mapMouseover: Observable<google.maps.MapMouseEvent>;
-    readonly mapMouseup: Observable<google.maps.MapMouseEvent>;
-    readonly mapRightclick: Observable<google.maps.MapMouseEvent>;
+    readonly mapMouseup: Observable<MouseEvent>;
+    readonly mapRightclick: Observable<MouseEvent>;
     readonly markerInitialized: EventEmitter<google.maps.marker.AdvancedMarkerElement>;
     // (undocumented)
     ngOnChanges(changes: SimpleChanges): void;
@@ -493,7 +491,7 @@ export class MapDirectionsService {
 export class MapEventManager {
     constructor(_ngZone: NgZone);
     destroy(): void;
-    getLazyEmitter<T>(name: string): Observable<T>;
+    getLazyEmitter<T>(name: string, type?: 'custom' | 'native'): Observable<T>;
     setTarget(target: MapEventManagerTarget): void;
 }
 

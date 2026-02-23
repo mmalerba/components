@@ -1,4 +1,4 @@
-import {TestBed, waitForAsync, fakeAsync, ComponentFixture, tick} from '@angular/core/testing';
+import {TestBed, fakeAsync, ComponentFixture, tick} from '@angular/core/testing';
 import {Component, ViewChild, ElementRef} from '@angular/core';
 import {CdkScrollable, ScrollDispatcher, ScrollingModule} from './public-api';
 import {dispatchFakeEvent} from '../testing/private';
@@ -6,13 +6,9 @@ import {dispatchFakeEvent} from '../testing/private';
 describe('ScrollDispatcher', () => {
   let scroll: ScrollDispatcher;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [ScrollingModule, ScrollingComponent, NestedScrollingComponent],
-    });
-
+  beforeEach(() => {
     scroll = TestBed.inject(ScrollDispatcher);
-  }));
+  });
 
   describe('Basic usage', () => {
     let fixture: ComponentFixture<ScrollingComponent>;
@@ -265,8 +261,8 @@ describe('ScrollDispatcher', () => {
   imports: [ScrollingModule],
 })
 class ScrollingComponent {
-  @ViewChild(CdkScrollable) scrollable: CdkScrollable;
-  @ViewChild('scrollingElement') scrollingElement: ElementRef<HTMLElement>;
+  @ViewChild(CdkScrollable) scrollable!: CdkScrollable;
+  @ViewChild('scrollingElement') scrollingElement!: ElementRef<HTMLElement>;
 }
 
 /** Component containing nested scrollables. */
@@ -283,5 +279,5 @@ class ScrollingComponent {
   imports: [ScrollingModule],
 })
 class NestedScrollingComponent {
-  @ViewChild('interestingElement') interestingElement: ElementRef<HTMLElement>;
+  @ViewChild('interestingElement') interestingElement!: ElementRef<HTMLElement>;
 }

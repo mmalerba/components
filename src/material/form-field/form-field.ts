@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 import {_IdGenerator} from '@angular/cdk/a11y';
-import {Directionality} from '@angular/cdk/bidi';
+import {Direction, Directionality} from '@angular/cdk/bidi';
 import {BooleanInput, coerceBooleanProperty} from '@angular/cdk/coercion';
 import {Platform} from '@angular/cdk/platform';
 import {NgTemplateOutlet} from '@angular/common';
@@ -30,6 +30,7 @@ import {
   afterRenderEffect,
   computed,
   contentChild,
+  effect,
   inject,
   signal,
   viewChild,
@@ -160,7 +161,6 @@ interface MatFormFieldControl<T> extends _MatFormFieldControl<T> {}
     '[class.mat-form-field-appearance-fill]': 'appearance == "fill"',
     '[class.mat-form-field-appearance-outline]': 'appearance == "outline"',
     '[class.mat-form-field-hide-placeholder]': '_hasFloatingLabel() && !_shouldLabelFloat()',
-    '[class.mat-focused]': '_control.focused',
     '[class.mat-primary]': 'color !== "accent" && color !== "warn"',
     '[class.mat-accent]': 'color === "accent"',
     '[class.mat-warn]': 'color === "warn"',
@@ -191,19 +191,19 @@ export class MatFormField
 {
   _elementRef = inject(ElementRef);
   private _changeDetectorRef = inject(ChangeDetectorRef);
-  private _dir = inject(Directionality);
   private _platform = inject(Platform);
   private _idGenerator = inject(_IdGenerator);
   private _ngZone = inject(NgZone);
   private _defaults = inject<MatFormFieldDefaultOptions>(MAT_FORM_FIELD_DEFAULT_OPTIONS, {
     optional: true,
   });
+  private _currentDirection!: Direction;
 
-  @ViewChild('textField') _textField: ElementRef<HTMLElement>;
-  @ViewChild('iconPrefixContainer') _iconPrefixContainer: ElementRef<HTMLElement>;
-  @ViewChild('textPrefixContainer') _textPrefixContainer: ElementRef<HTMLElement>;
-  @ViewChild('iconSuffixContainer') _iconSuffixContainer: ElementRef<HTMLElement>;
-  @ViewChild('textSuffixContainer') _textSuffixContainer: ElementRef<HTMLElement>;
+  @ViewChild('textField') _textField!: ElementRef<HTMLElement>;
+  @ViewChild('iconPrefixContainer') _iconPrefixContainer!: ElementRef<HTMLElement>;
+  @ViewChild('textPrefixContainer') _textPrefixContainer!: ElementRef<HTMLElement>;
+  @ViewChild('iconSuffixContainer') _iconSuffixContainer!: ElementRef<HTMLElement>;
+  @ViewChild('textSuffixContainer') _textSuffixContainer!: ElementRef<HTMLElement>;
   @ViewChild(MatFormFieldFloatingLabel) _floatingLabel: MatFormFieldFloatingLabel | undefined;
   @ViewChild(MatFormFieldNotchedOutline) _notchedOutline: MatFormFieldNotchedOutline | undefined;
   @ViewChild(MatFormFieldLineRipple) _lineRipple: MatFormFieldLineRipple | undefined;
@@ -223,11 +223,11 @@ export class MatFormField
       .filter(e => e !== undefined);
   });
 
-  @ContentChild(_MatFormFieldControl) _formFieldControl: MatFormFieldControl<any>;
-  @ContentChildren(MAT_PREFIX, {descendants: true}) _prefixChildren: QueryList<MatPrefix>;
-  @ContentChildren(MAT_SUFFIX, {descendants: true}) _suffixChildren: QueryList<MatSuffix>;
-  @ContentChildren(MAT_ERROR, {descendants: true}) _errorChildren: QueryList<MatError>;
-  @ContentChildren(MatHint, {descendants: true}) _hintChildren: QueryList<MatHint>;
+  @ContentChild(_MatFormFieldControl) _formFieldControl!: MatFormFieldControl<any>;
+  @ContentChildren(MAT_PREFIX, {descendants: true}) _prefixChildren!: QueryList<MatPrefix>;
+  @ContentChildren(MAT_SUFFIX, {descendants: true}) _suffixChildren!: QueryList<MatSuffix>;
+  @ContentChildren(MAT_ERROR, {descendants: true}) _errorChildren!: QueryList<MatError>;
+  @ContentChildren(MatHint, {descendants: true}) _hintChildren!: QueryList<MatHint>;
 
   private readonly _labelChild = contentChild(MatLabel);
 
@@ -265,7 +265,7 @@ export class MatFormField
       this._changeDetectorRef.markForCheck();
     }
   }
-  private _floatLabel: FloatLabelType;
+  private _floatLabel!: FloatLabelType;
 
   /** The form field appearance style. */
   @Input()
@@ -334,18 +334,20 @@ export class MatFormField
 
   private _destroyed = new Subject<void>();
   private _isFocused: boolean | null = null;
-  private _explicitFormFieldControl: MatFormFieldControl<any>;
+  private _explicitFormFieldControl!: MatFormFieldControl<any>;
   private _previousControl: MatFormFieldControl<unknown> | null = null;
   private _previousControlValidatorFn: ValidatorFn | null = null;
   private _stateChanges: Subscription | undefined;
   private _valueChanges: Subscription | undefined;
   private _describedByChanges: Subscription | undefined;
+  private _outlineLabelOffsetResizeObserver: ResizeObserver | null = null;
   protected readonly _animationsDisabled = _animationsDisabled();
 
   constructor(...args: unknown[]);
 
   constructor() {
     const defaults = this._defaults;
+    const dir = inject(Directionality);
 
     if (defaults) {
       if (defaults.appearance) {
@@ -357,6 +359,10 @@ export class MatFormField
       }
     }
 
+    // We need this value inside a `afterRenderEffect`, however at the time of writing, reading the
+    // signal directly causes a memory leak (see https://github.com/angular/angular/issues/62980).
+    // TODO(crisbeto): clean this up once the framework issue is resolved.
+    effect(() => (this._currentDirection = dir.valueSignal()));
     this._syncOutlineLabelOffset();
   }
 
@@ -544,26 +550,24 @@ export class MatFormField
   }
 
   private _updateFocusState() {
+    const controlFocused = this._control.focused;
+
     // Usually the MDC foundation would call "activateFocus" and "deactivateFocus" whenever
     // certain DOM events are emitted. This is not possible in our implementation of the
     // form field because we support abstract form field controls which are not necessarily
     // of type input, nor do we have a reference to a native form field control element. Instead
     // we handle the focus by checking if the abstract form field control focused state changes.
-    if (this._control.focused && !this._isFocused) {
+    if (controlFocused && !this._isFocused) {
       this._isFocused = true;
       this._lineRipple?.activate();
-    } else if (!this._control.focused && (this._isFocused || this._isFocused === null)) {
+    } else if (!controlFocused && (this._isFocused || this._isFocused === null)) {
       this._isFocused = false;
       this._lineRipple?.deactivate();
     }
 
-    this._textField?.nativeElement.classList.toggle(
-      'mdc-text-field--focused',
-      this._control.focused,
-    );
+    this._elementRef.nativeElement.classList.toggle('mat-focused', controlFocused);
+    this._textField?.nativeElement.classList.toggle('mdc-text-field--focused', controlFocused);
   }
-
-  private _outlineLabelOffsetResizeObserver: ResizeObserver | null = null;
 
   /**
    * The floating label in the docked state needs to account for prefixes. The horizontal offset
@@ -754,7 +758,6 @@ export class MatFormField
    * incorporate the horizontal offset into their default text-field styles.
    */
   private _getOutlinedLabelOffset(): OutlinedLabelStyles {
-    const dir = this._dir.valueSignal();
     if (!this._hasOutline() || !this._floatingLabel) {
       return null;
     }
@@ -778,7 +781,7 @@ export class MatFormField
     const textSuffixContainerWidth = textSuffixContainer?.getBoundingClientRect().width ?? 0;
     // If the directionality is RTL, the x-axis transform needs to be inverted. This
     // is because `transformX` does not change based on the page directionality.
-    const negate = dir === 'rtl' ? '-1' : '1';
+    const negate = this._currentDirection === 'rtl' ? '-1' : '1';
     const prefixWidth = `${iconPrefixContainerWidth + textPrefixContainerWidth}px`;
     const labelOffset = `var(--mat-mdc-form-field-label-offset-x, 0px)`;
     const labelHorizontalOffset = `calc(${negate} * (${prefixWidth} + ${labelOffset}))`;

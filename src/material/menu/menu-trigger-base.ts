@@ -22,6 +22,7 @@ import {
 } from '@angular/cdk/overlay';
 import {TemplatePortal} from '@angular/cdk/portal';
 import {
+  booleanAttribute,
   ChangeDetectorRef,
   Directive,
   ElementRef,
@@ -55,27 +56,6 @@ export const MAT_MENU_SCROLL_STRATEGY = new InjectionToken<() => ScrollStrategy>
 );
 
 /**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function MAT_MENU_SCROLL_STRATEGY_FACTORY(_overlay: unknown): () => ScrollStrategy {
-  const injector = inject(Injector);
-  return () => createRepositionScrollStrategy(injector);
-}
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export const MAT_MENU_SCROLL_STRATEGY_FACTORY_PROVIDER = {
-  provide: MAT_MENU_SCROLL_STRATEGY,
-  deps: [] as any[],
-  useFactory: MAT_MENU_SCROLL_STRATEGY_FACTORY,
-};
-
-/**
  * Default top padding of the menu panel.
  * @deprecated No longer being used. Will be removed.
  * @breaking-change 15.0.0
@@ -99,7 +79,7 @@ export abstract class MatMenuTriggerBase implements OnDestroy {
   private _changeDetectorRef = inject(ChangeDetectorRef);
   private _animationsDisabled = _animationsDisabled();
 
-  private _portal: TemplatePortal;
+  private _portal!: TemplatePortal;
   protected _overlayRef: OverlayRef | null = null;
   private _menuOpen: boolean = false;
   private _closingActionsSubscription = Subscription.EMPTY;
@@ -158,7 +138,7 @@ export abstract class MatMenuTriggerBase implements OnDestroy {
 
     this._menuItemInstance?._setTriggersSubmenu(this._triggersSubmenu());
   }
-  private _menuInternal: MatMenuPanel | null;
+  private _menuInternal: MatMenuPanel | null = null;
 
   /** Event emitted when the associated menu is opened. */
   abstract menuOpened: EventEmitter<void>;
@@ -212,6 +192,10 @@ export abstract class MatMenuTriggerBase implements OnDestroy {
 
   /** Internal method to open menu providing option to auto focus on first item. */
   protected _openMenu(autoFocus: boolean): void {
+    if (this._triggerIsAriaDisabled()) {
+      return;
+    }
+
     const menu = this._menu;
 
     if (this._menuOpen || !menu) {
@@ -300,7 +284,14 @@ export abstract class MatMenuTriggerBase implements OnDestroy {
     if (menu instanceof MatMenu && this._ownsMenu(menu)) {
       this._pendingRemoval = menu._animationDone.pipe(take(1)).subscribe(() => {
         overlayRef.detach();
-        menu.lazyContent?.detach();
+
+        // Only detach the lazy content if no other trigger took over the menu, otherwise we may
+        // detach something we no longer own. Note that we don't use `this._ownsMenu` here,
+        // because the current trigger relinquishes ownership as soon as the closing sequence
+        // is kicked off whereas the animation takes some time to play out.
+        if (!PANELS_TO_TRIGGERS.has(menu)) {
+          menu.lazyContent?.detach();
+        }
       });
       menu._setIsOpen(false);
     } else {
@@ -490,5 +481,13 @@ export abstract class MatMenuTriggerBase implements OnDestroy {
    */
   private _ownsMenu(menu: MatMenuPanel): boolean {
     return PANELS_TO_TRIGGERS.get(menu) === this;
+  }
+
+  /**
+   * Detect if the trigger element is aria-disabled, indicating it should behave as
+   * disabled and not open the menu.
+   */
+  private _triggerIsAriaDisabled() {
+    return booleanAttribute(this._element.nativeElement.getAttribute('aria-disabled'));
   }
 }

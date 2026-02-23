@@ -17,10 +17,10 @@ import {
 import {Component, signal, ViewChild, WritableSignal} from '@angular/core';
 import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-import {MatNativeDateModule} from '../core';
+import {provideNativeDateAdapter} from '../core';
 import {JAN, MAR} from '../testing';
-import {MatCalendarBody} from './calendar-body';
 import {MatMultiYearView, yearsPerPage, yearsPerRow} from './multi-year-view';
+import {MatCalendarCellClassFunction} from './calendar-body';
 
 describe('MatMultiYearView', () => {
   let dir: WritableSignal<Direction>;
@@ -29,17 +29,7 @@ describe('MatMultiYearView', () => {
     dir = signal<Direction>('ltr');
 
     TestBed.configureTestingModule({
-      imports: [
-        MatNativeDateModule,
-        MatCalendarBody,
-        MatMultiYearView,
-        // Test components.
-        StandardMultiYearView,
-        MultiYearViewWithDateFilter,
-        MultiYearViewWithMinMaxDate,
-        MultiYearViewWithDateClass,
-      ],
-      providers: [provideFakeDirectionality(dir)],
+      providers: [provideNativeDateAdapter(), provideFakeDirectionality(dir)],
     });
   }));
 
@@ -412,9 +402,9 @@ describe('MatMultiYearView', () => {
 class StandardMultiYearView {
   date = new Date(2017, JAN, 1);
   selected = new Date(2020, JAN, 1);
-  selectedYear: Date;
+  selectedYear!: Date;
 
-  @ViewChild(MatMultiYearView) multiYearView: MatMultiYearView<Date>;
+  @ViewChild(MatMultiYearView) multiYearView!: MatMultiYearView<Date>;
 }
 
 @Component({
@@ -445,8 +435,8 @@ class MultiYearViewWithDateFilter {
 })
 class MultiYearViewWithMinMaxDate {
   activeDate = new Date(2019, JAN, 1);
-  minDate: Date | null;
-  maxDate: Date | null;
+  minDate: Date | null = null;
+  maxDate: Date | null = null;
 }
 
 @Component({
@@ -457,7 +447,7 @@ class MultiYearViewWithMinMaxDate {
 })
 class MultiYearViewWithDateClass {
   activeDate = new Date(2017, JAN, 1);
-  dateClass(date: Date) {
-    return date.getFullYear() % 2 == 0 ? 'even' : undefined;
-  }
+  dateClass: MatCalendarCellClassFunction<Date> = (date: Date) => {
+    return date.getFullYear() % 2 == 0 ? 'even' : [];
+  };
 }

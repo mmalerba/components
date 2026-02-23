@@ -6,7 +6,6 @@ load(
     "ng_web_test_suite",
     "sass_binary",
     "sass_library",
-    "ts_project",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -132,7 +131,6 @@ ng_project(
         "date-selection-model.ts",
         "datepicker.ts",
         "datepicker-actions.ts",
-        "datepicker-animations.ts",
         "datepicker-base.ts",
         "datepicker-errors.ts",
         "datepicker-input.ts",
@@ -180,10 +178,11 @@ ng_project(
         "//src/material/core",
         "//src/material/form-field",
         "//src/material/input",
+        "//src/material/tooltip",
     ],
 )
 
-ts_project(
+ng_project(
     name = "unit_test_sources",
     testonly = True,
     srcs = glob(
@@ -204,6 +203,7 @@ ts_project(
         "//src/cdk/platform",
         "//src/cdk/scrolling",
         "//src/cdk/testing/private",
+        "//src/material/button",
         "//src/material/core",
         "//src/material/form-field",
         "//src/material/input",

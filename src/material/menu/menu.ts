@@ -29,6 +29,7 @@ import {
   AfterRenderRef,
   inject,
   Injector,
+  signal,
 } from '@angular/core';
 import {_IdGenerator, FocusKeyManager, FocusOrigin} from '@angular/cdk/a11y';
 import {Direction} from '@angular/cdk/bidi';
@@ -78,23 +79,14 @@ export const MAT_MENU_DEFAULT_OPTIONS = new InjectionToken<MatMenuDefaultOptions
   'mat-menu-default-options',
   {
     providedIn: 'root',
-    factory: MAT_MENU_DEFAULT_OPTIONS_FACTORY,
+    factory: () => ({
+      overlapTrigger: false,
+      xPosition: 'after',
+      yPosition: 'below',
+      backdropClass: 'cdk-overlay-transparent-backdrop',
+    }),
   },
 );
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function MAT_MENU_DEFAULT_OPTIONS_FACTORY(): MatMenuDefaultOptions {
-  return {
-    overlapTrigger: false,
-    xPosition: 'after',
-    yPosition: 'below',
-    backdropClass: 'cdk-overlay-transparent-backdrop',
-  };
-}
 
 /** Name of the enter animation `@keyframes`. */
 const ENTER_ANIMATION = '_mat-menu-enter';
@@ -121,7 +113,7 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
   private _changeDetectorRef = inject(ChangeDetectorRef);
   private _injector = inject(Injector);
 
-  private _keyManager: FocusKeyManager<MatMenuItem>;
+  private _keyManager!: FocusKeyManager<MatMenuItem>;
   private _xPosition: MenuPositionX;
   private _yPosition: MenuPositionY;
   private _firstItemFocusRef?: AfterRenderRef;
@@ -131,7 +123,7 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
   protected _animationsDisabled = _animationsDisabled();
 
   /** All items inside the menu. Includes items nested inside another menu. */
-  @ContentChildren(MatMenuItem, {descendants: true}) _allItems: QueryList<MatMenuItem>;
+  @ContentChildren(MatMenuItem, {descendants: true}) _allItems!: QueryList<MatMenuItem>;
 
   /** Only the direct descendant menu items. */
   _directDescendantItems = new QueryList<MatMenuItem>();
@@ -146,13 +138,13 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
   readonly _animationDone = new Subject<'void' | 'enter'>();
 
   /** Whether the menu is animating. */
-  _isAnimating = false;
+  _isAnimating = signal(false);
 
   /** Parent menu of the current menu panel. */
   parentMenu: MatMenuPanel | undefined;
 
   /** Layout direction of the menu. */
-  direction: Direction;
+  direction!: Direction;
 
   /** Class or list of classes to be added to the overlay panel. */
   overlayPanelClass: string | string[];
@@ -161,13 +153,13 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
   @Input() backdropClass: string;
 
   /** aria-label for the menu panel. */
-  @Input('aria-label') ariaLabel: string;
+  @Input('aria-label') ariaLabel!: string;
 
   /** aria-labelledby for the menu panel. */
-  @Input('aria-labelledby') ariaLabelledby: string;
+  @Input('aria-labelledby') ariaLabelledby!: string;
 
   /** aria-describedby for the menu panel. */
-  @Input('aria-describedby') ariaDescribedby: string;
+  @Input('aria-describedby') ariaDescribedby!: string;
 
   /** Position of the menu in the X axis. */
   @Input()
@@ -200,23 +192,23 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
   }
 
   /** @docs-private */
-  @ViewChild(TemplateRef) templateRef: TemplateRef<any>;
+  @ViewChild(TemplateRef) templateRef!: TemplateRef<any>;
 
   /**
    * List of the items inside of a menu.
    * @deprecated
    * @breaking-change 8.0.0
    */
-  @ContentChildren(MatMenuItem, {descendants: false}) items: QueryList<MatMenuItem>;
+  @ContentChildren(MatMenuItem, {descendants: false}) items!: QueryList<MatMenuItem>;
 
   /**
    * Menu content that will be rendered lazily.
    * @docs-private
    */
-  @ContentChild(MAT_MENU_CONTENT) lazyContent: MatMenuContent;
+  @ContentChild(MAT_MENU_CONTENT) lazyContent!: MatMenuContent;
 
   /** Whether the menu should overlap its trigger. */
-  @Input({transform: booleanAttribute}) overlapTrigger: boolean;
+  @Input({transform: booleanAttribute}) overlapTrigger: boolean = false;
 
   /** Whether the menu has a backdrop. */
   @Input({transform: (value: any) => (value == null ? null : booleanAttribute(value))})
@@ -251,7 +243,7 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
 
     this._classList = newClassList;
   }
-  private _previousPanelClass: string;
+  private _previousPanelClass!: string;
 
   /**
    * This method takes classes set on the host mat-menu element and applies them on the
@@ -470,13 +462,13 @@ export class MatMenu implements AfterContentInit, MatMenuPanel<MatMenuItem>, OnI
         this._exitFallbackTimeout = undefined;
       }
       this._animationDone.next(isExit ? 'void' : 'enter');
-      this._isAnimating = false;
+      this._isAnimating.set(false);
     }
   }
 
   protected _onAnimationStart(state: string) {
     if (state === ENTER_ANIMATION || state === EXIT_ANIMATION) {
-      this._isAnimating = true;
+      this._isAnimating.set(true);
     }
   }
 

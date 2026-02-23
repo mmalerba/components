@@ -6,7 +6,6 @@ load(
     "ng_web_test_suite",
     "sass_binary",
     "sass_library",
-    "ts_project",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -73,13 +72,12 @@ ng_project(
     name = "dialog",
     srcs = [
         "dialog.ts",
-        "dialog-animations.ts",
         "dialog-config.ts",
         "dialog-container.ts",
         "dialog-content-directives.ts",
+        "dialog-module.ts",
         "dialog-ref.ts",
         "index.ts",
-        "module.ts",
         "public-api.ts",
     ],
     assets = [
@@ -93,6 +91,7 @@ ng_project(
         "//src/cdk/overlay",
         "//src/cdk/portal",
         "//src/material/core",
+        "//src/material/core/animation",
     ],
 )
 
@@ -100,7 +99,7 @@ ng_project(
 # Testing
 ###########
 
-ts_project(
+ng_project(
     name = "dialog_tests_lib",
     testonly = True,
     srcs = glob(
@@ -120,6 +119,7 @@ ts_project(
         "//src/cdk/platform",
         "//src/cdk/scrolling",
         "//src/cdk/testing/private",
+        "//src/material/core",
     ],
 )
 

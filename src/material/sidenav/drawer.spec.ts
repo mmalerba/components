@@ -18,7 +18,7 @@ import {
   waitForAsync,
 } from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-import {MatDrawer, MatDrawerContainer, MatSidenavModule} from './index';
+import {MatDrawer, MatDrawerContainer, MatDrawerMode, MatSidenavModule} from './index';
 import {MATERIAL_ANIMATIONS} from '../core';
 
 describe('MatDrawer', () => {
@@ -451,7 +451,6 @@ describe('MatDrawer', () => {
       const errorHandler = jasmine.createSpyObj(['handleError']);
 
       TestBed.configureTestingModule({
-        imports: [DrawerDynamicPosition],
         providers: [
           {
             provide: ErrorHandler,
@@ -714,6 +713,22 @@ describe('MatDrawer', () => {
       fixture.detectChanges();
       flush();
       expect(anchors.map(anchor => anchor.getAttribute('tabindex'))).toEqual([null, null]);
+    }));
+
+    it('should not trap focus if the drawer container has a backdrop, but is not showing it', fakeAsync(() => {
+      fixture.destroy();
+
+      const hiddenBackdropFixture = TestBed.createComponent(DrawerWithSideAndHiddenBackdrop);
+      hiddenBackdropFixture.detectChanges();
+      tick();
+      hiddenBackdropFixture.detectChanges();
+
+      const anchors = Array.from<HTMLElement>(
+        hiddenBackdropFixture.nativeElement.querySelectorAll('.cdk-focus-trap-anchor'),
+      );
+
+      expect(anchors.length).toBeGreaterThan(0);
+      expect(anchors.every(anchor => !anchor.hasAttribute('tabindex'))).toBe(true);
     }));
   });
 
@@ -1181,7 +1196,7 @@ describe('MatDrawerContainer', () => {
   imports: [MatSidenavModule, A11yModule],
 })
 class DrawerContainerTwoDrawerTestApp {
-  @ViewChild(MatDrawerContainer) drawerContainer: MatDrawerContainer;
+  @ViewChild(MatDrawerContainer) drawerContainer!: MatDrawerContainer;
 }
 
 /** Test component that contains an MatDrawerContainer and one MatDrawer. */
@@ -1215,13 +1230,13 @@ class BasicTestApp {
   closeStartCount = 0;
   backdropClickedCount = 0;
   hasBackdrop: boolean | null = null;
-  position = 'start';
+  position: 'start' | 'end' = 'start';
 
-  @ViewChild('drawer') drawer: MatDrawer;
-  @ViewChild('drawerButton') drawerButton: ElementRef<HTMLButtonElement>;
-  @ViewChild('openButton') openButton: ElementRef<HTMLButtonElement>;
-  @ViewChild('svg') svg: ElementRef<SVGElement>;
-  @ViewChild('closeButton') closeButton: ElementRef<HTMLButtonElement>;
+  @ViewChild('drawer') drawer!: MatDrawer;
+  @ViewChild('drawerButton') drawerButton!: ElementRef<HTMLButtonElement>;
+  @ViewChild('openButton') openButton!: ElementRef<HTMLButtonElement>;
+  @ViewChild('svg') svg!: ElementRef<SVGElement>;
+  @ViewChild('closeButton') closeButton!: ElementRef<HTMLButtonElement>;
 
   open() {
     this.openCount++;
@@ -1290,8 +1305,8 @@ class DrawerOpenBinding {
   imports: [MatSidenavModule, A11yModule],
 })
 class DrawerDynamicPosition {
-  drawer1Position = 'start';
-  drawer2Position = 'end';
+  drawer1Position: 'start' | 'end' = 'start';
+  drawer2Position: 'start' | 'end' = 'end';
 }
 
 @Component({
@@ -1307,7 +1322,7 @@ class DrawerDynamicPosition {
   imports: [MatSidenavModule, A11yModule],
 })
 class DrawerWithFocusableElements {
-  mode: string = 'over';
+  mode: MatDrawerMode = 'over';
   hasBackdrop: boolean | null = null;
 }
 
@@ -1333,7 +1348,7 @@ class DrawerWithoutFocusableElements {}
   imports: [MatSidenavModule, A11yModule],
 })
 class DrawerDelayed {
-  @ViewChild(MatDrawer) drawer: MatDrawer;
+  @ViewChild(MatDrawer) drawer!: MatDrawer;
   showDrawer = false;
 }
 
@@ -1347,18 +1362,18 @@ class DrawerDelayed {
   imports: [MatSidenavModule, A11yModule],
 })
 class DrawerContainerStateChangesTestApp {
-  @ViewChild(MatDrawer) drawer: MatDrawer;
-  @ViewChild(MatDrawerContainer) drawerContainer: MatDrawerContainer;
+  @ViewChild(MatDrawer) drawer!: MatDrawer;
+  @ViewChild(MatDrawerContainer) drawerContainer!: MatDrawerContainer;
 
   direction: Direction = 'ltr';
-  mode = 'side';
+  mode: MatDrawerMode = 'side';
   renderDrawer = true;
 }
 
 @Component({
   template: `
     <mat-drawer-container autosize style="min-height: 200px;">
-      <mat-drawer mode="push" [position]="drawer1Position">
+      <mat-drawer mode="push">
         Text
         <div [style.width.px]="fillerWidth" style="height: 200px; background: red;"></div>
       </mat-drawer>
@@ -1366,8 +1381,8 @@ class DrawerContainerStateChangesTestApp {
   imports: [MatSidenavModule, A11yModule],
 })
 class AutosizeDrawer {
-  @ViewChild(MatDrawer) drawer: MatDrawer;
-  @ViewChild(MatDrawerContainer) drawerContainer: MatDrawerContainer;
+  @ViewChild(MatDrawer) drawer!: MatDrawer;
+  @ViewChild(MatDrawerContainer) drawerContainer!: MatDrawerContainer;
   fillerWidth = 0;
 }
 
@@ -1381,7 +1396,7 @@ class AutosizeDrawer {
   imports: [MatSidenavModule, A11yModule],
 })
 class DrawerContainerWithContent {
-  @ViewChild(MatDrawerContainer) drawerContainer: MatDrawerContainer;
+  @ViewChild(MatDrawerContainer) drawerContainer!: MatDrawerContainer;
 }
 
 @Component({
@@ -1396,8 +1411,8 @@ class DrawerContainerWithContent {
   imports: [MatSidenavModule, A11yModule],
 })
 class IndirectDescendantDrawer {
-  @ViewChild('container') container: MatDrawerContainer;
-  @ViewChild('drawer') drawer: MatDrawer;
+  @ViewChild('container') container!: MatDrawerContainer;
+  @ViewChild('drawer') drawer!: MatDrawer;
 }
 
 @Component({
@@ -1414,8 +1429,21 @@ class IndirectDescendantDrawer {
   imports: [MatSidenavModule, A11yModule],
 })
 class NestedDrawerContainers {
-  @ViewChild('outerContainer') outerContainer: MatDrawerContainer;
-  @ViewChild('outerDrawer') outerDrawer: MatDrawer;
-  @ViewChild('innerContainer') innerContainer: MatDrawerContainer;
-  @ViewChild('innerDrawer') innerDrawer: MatDrawer;
+  @ViewChild('outerContainer') outerContainer!: MatDrawerContainer;
+  @ViewChild('outerDrawer') outerDrawer!: MatDrawer;
+  @ViewChild('innerContainer') innerContainer!: MatDrawerContainer;
+  @ViewChild('innerDrawer') innerDrawer!: MatDrawer;
 }
+
+@Component({
+  template: `
+    <mat-sidenav-container>
+      <mat-sidenav opened mode="side">
+        <button>Button inside</button>
+      </mat-sidenav>
+      <mat-sidenav mode="over" position="end">End content</mat-sidenav>
+    </mat-sidenav-container>
+  `,
+  imports: [MatSidenavModule],
+})
+class DrawerWithSideAndHiddenBackdrop {}

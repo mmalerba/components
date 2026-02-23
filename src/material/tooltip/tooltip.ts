@@ -31,9 +31,9 @@ import {
   afterNextRender,
   Injector,
   DOCUMENT,
+  Renderer2,
 } from '@angular/core';
-import {NgClass} from '@angular/common';
-import {normalizePassiveListenerOptions, Platform} from '@angular/cdk/platform';
+import {Platform} from '@angular/cdk/platform';
 import {AriaDescriber, FocusMonitor} from '@angular/cdk/a11y';
 import {Directionality} from '@angular/cdk/bidi';
 import {
@@ -52,8 +52,18 @@ import {
   VerticalConnectionPos,
 } from '@angular/cdk/overlay';
 import {ComponentPortal} from '@angular/cdk/portal';
+import {MediaMatcher} from '@angular/cdk/layout';
 import {Observable, Subject} from 'rxjs';
 import {_animationsDisabled} from '../core';
+
+declare global {
+  interface CSSStyleDeclaration {
+    msUserSelect: string;
+    MozUserSelect: string;
+    webkitUserDrag: string;
+    webkitTapHighlightColor: string;
+  }
+}
 
 /** Possible positions for a tooltip. */
 export type TooltipPosition = 'left' | 'right' | 'above' | 'below' | 'before' | 'after';
@@ -90,46 +100,16 @@ export const MAT_TOOLTIP_SCROLL_STRATEGY = new InjectionToken<() => ScrollStrate
   },
 );
 
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function MAT_TOOLTIP_SCROLL_STRATEGY_FACTORY(_overlay: unknown): () => ScrollStrategy {
-  const injector = inject(Injector);
-  return () => createRepositionScrollStrategy(injector, {scrollThrottle: SCROLL_THROTTLE_MS});
-}
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export const MAT_TOOLTIP_SCROLL_STRATEGY_FACTORY_PROVIDER = {
-  provide: MAT_TOOLTIP_SCROLL_STRATEGY,
-  deps: [] as any[],
-  useFactory: MAT_TOOLTIP_SCROLL_STRATEGY_FACTORY,
-};
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function MAT_TOOLTIP_DEFAULT_OPTIONS_FACTORY(): MatTooltipDefaultOptions {
-  return {
-    showDelay: 0,
-    hideDelay: 0,
-    touchendHideDelay: 1500,
-  };
-}
-
 /** Injection token to be used to override the default options for `matTooltip`. */
 export const MAT_TOOLTIP_DEFAULT_OPTIONS = new InjectionToken<MatTooltipDefaultOptions>(
   'mat-tooltip-default-options',
   {
     providedIn: 'root',
-    factory: MAT_TOOLTIP_DEFAULT_OPTIONS_FACTORY,
+    factory: () => ({
+      showDelay: 0,
+      hideDelay: 0,
+      touchendHideDelay: 1500,
+    }),
   },
 );
 
@@ -167,6 +147,14 @@ export interface MatTooltipDefaultOptions {
    * `tooltipClass` is defined directly on the tooltip element, as it will override the default.
    */
   tooltipClass?: string | string[];
+
+  /**
+   * Whether the tooltip should use a media query to detect if the device is able to hover.
+   * Note that this may affect tests that run in a headless browser which reports that it's
+   * unable to hover. In such cases you may need to include an additional timeout, because
+   * the tooltip will fall back to treating the device as a touch screen.
+   */
+  detectHoverCapability?: boolean;
 }
 
 /**
@@ -179,7 +167,7 @@ export const TOOLTIP_PANEL_CLASS = 'mat-mdc-tooltip-panel';
 const PANEL_CLASS = 'tooltip-panel';
 
 /** Options used to bind passive event listeners. */
-const passiveListenerOptions = normalizePassiveListenerOptions({passive: true});
+const passiveListenerOptions = {passive: true};
 
 // These constants were taken from MDC's `numbers` object. We can't import them from MDC,
 // because they have some top-level references to `window` which break during SSR.
@@ -211,27 +199,30 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
   protected _dir = inject(Directionality);
   private _injector = inject(Injector);
   private _viewContainerRef = inject(ViewContainerRef);
+  private _mediaMatcher = inject(MediaMatcher);
+  private _document = inject(DOCUMENT);
+  private _renderer = inject(Renderer2);
   private _animationsDisabled = _animationsDisabled();
   private _defaultOptions = inject<MatTooltipDefaultOptions>(MAT_TOOLTIP_DEFAULT_OPTIONS, {
     optional: true,
   });
 
-  _overlayRef: OverlayRef | null;
-  _tooltipInstance: TooltipComponent | null;
+  _overlayRef: OverlayRef | null = null;
+  _tooltipInstance: TooltipComponent | null = null;
   _overlayPanelClass: string[] | undefined; // Used for styling internally.
 
-  private _portal: ComponentPortal<TooltipComponent>;
+  private _portal!: ComponentPortal<TooltipComponent>;
   private _position: TooltipPosition = 'below';
   private _positionAtOrigin: boolean = false;
   private _disabled: boolean = false;
-  private _tooltipClass: string | string[] | Set<string> | {[key: string]: any};
+  private _tooltipClass!: string | string[] | Set<string> | {[key: string]: unknown};
   private _viewInitialized = false;
   private _pointerExitEventsInitialized = false;
   private readonly _tooltipComponent = TooltipComponent;
   private _viewportMargin = 8;
-  private _currentPosition: TooltipPosition;
+  private _currentPosition!: TooltipPosition;
   private readonly _cssClassPrefix: string = 'mat-mdc';
-  private _ariaDescriptionPending: boolean;
+  private _ariaDescriptionPending = false;
   private _dirSubscribed = false;
 
   /** Allows the user to define the position of the tooltip relative to the parent element */
@@ -300,7 +291,7 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
     this._showDelay = coerceNumberProperty(value);
   }
 
-  private _showDelay: number;
+  private _showDelay!: number;
 
   /** The default delay in ms before hiding the tooltip after hide is called */
   @Input('matTooltipHideDelay')
@@ -316,7 +307,7 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
     }
   }
 
-  private _hideDelay: number;
+  private _hideDelay!: number;
 
   /**
    * How touch gestures should be handled by the tooltip. On touch devices the tooltip directive
@@ -340,7 +331,7 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
     return this._message;
   }
 
-  set message(value: string | null | undefined) {
+  set message(value: string | number | null | undefined) {
     const oldMessage = this._message;
 
     // If the message is not a string (e.g. number), convert it to a string and trim it.
@@ -366,7 +357,7 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
     return this._tooltipClass;
   }
 
-  set tooltipClass(value: string | string[] | Set<string> | {[key: string]: any}) {
+  set tooltipClass(value: string | string[] | Set<string> | {[key: string]: unknown}) {
     this._tooltipClass = value;
     if (this._tooltipInstance) {
       this._setTooltipClass(this._tooltipClass);
@@ -374,8 +365,7 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
   }
 
   /** Manually-bound passive event listeners. */
-  private readonly _passiveListeners: (readonly [string, EventListenerOrEventListenerObject])[] =
-    [];
+  private readonly _eventCleanups: (() => void)[] = [];
 
   /** Timer started at the last `touchstart` event. */
   private _touchstartTimeout: null | ReturnType<typeof setTimeout> = null;
@@ -449,17 +439,11 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
       this._tooltipInstance = null;
     }
 
-    // Clean up the event listeners set in the constructor
-    this._passiveListeners.forEach(([event, listener]) => {
-      nativeElement.removeEventListener(event, listener, passiveListenerOptions);
-    });
-    this._passiveListeners.length = 0;
-
+    this._eventCleanups.forEach(cleanup => cleanup());
+    this._eventCleanups.length = 0;
     this._destroyed.next();
     this._destroyed.complete();
-
     this._isDestroyed = true;
-
     this._ariaDescriber.removeDescription(nativeElement, this.message, 'tooltip');
     this._focusMonitor.stopMonitoring(nativeElement);
   }
@@ -538,7 +522,8 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
       .withTransformOriginOn(`.${this._cssClassPrefix}-tooltip`)
       .withFlexibleDimensions(false)
       .withViewportMargin(this._viewportMargin)
-      .withScrollableContainers(scrollableAncestors);
+      .withScrollableContainers(scrollableAncestors)
+      .withPopoverLocation('global');
 
     strategy.positionChanges.pipe(takeUntil(this._destroyed)).subscribe(change => {
       this._updateCurrentPositionClass(change.connectionPair);
@@ -558,6 +543,7 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
       panelClass: this._overlayPanelClass ? [...this._overlayPanelClass, panelClass] : panelClass,
       scrollStrategy: this._injector.get(MAT_TOOLTIP_SCROLL_STRATEGY)(),
       disableAnimations: this._animationsDisabled,
+      eventPredicate: this._overlayEventPredicate,
     });
 
     this._updatePosition(this._overlayRef);
@@ -576,11 +562,10 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
       .keydownEvents()
       .pipe(takeUntil(this._destroyed))
       .subscribe(event => {
-        if (this._isTooltipVisible() && event.keyCode === ESCAPE && !hasModifierKey(event)) {
-          event.preventDefault();
-          event.stopPropagation();
-          this._ngZone.run(() => this.hide(0));
-        }
+        // Note: we don't check the `keyCode` since it's covered by the `eventPredicate` above.
+        event.preventDefault();
+        event.stopPropagation();
+        this._ngZone.run(() => this.hide(0));
       });
 
     if (this._defaultOptions?.disableTooltipInteractivity) {
@@ -729,9 +714,12 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
   }
 
   /** Updates the tooltip class */
-  private _setTooltipClass(tooltipClass: string | string[] | Set<string> | {[key: string]: any}) {
+  private _setTooltipClass(
+    tooltipClass: string | string[] | Set<string> | {[key: string]: unknown},
+  ) {
     if (this._tooltipInstance) {
-      this._tooltipInstance.tooltipClass = tooltipClass;
+      this._tooltipInstance.tooltipClass =
+        tooltipClass instanceof Set ? Array.from(tooltipClass) : tooltipClass;
       this._tooltipInstance._markForCheck();
     }
   }
@@ -791,54 +779,40 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
   /** Binds the pointer events to the tooltip trigger. */
   private _setupPointerEnterEventsIfNeeded() {
     // Optimization: Defer hooking up events if there's no message or the tooltip is disabled.
-    if (
-      this._disabled ||
-      !this.message ||
-      !this._viewInitialized ||
-      this._passiveListeners.length
-    ) {
+    if (this._disabled || !this.message || !this._viewInitialized || this._eventCleanups.length) {
       return;
     }
 
     // The mouse events shouldn't be bound on mobile devices, because they can prevent the
     // first tap from firing its click event or can cause the tooltip to open for clicks.
-    if (this._platformSupportsMouseEvents()) {
-      this._passiveListeners.push([
-        'mouseenter',
-        event => {
-          this._setupPointerExitEventsIfNeeded();
-          let point = undefined;
-          if ((event as MouseEvent).x !== undefined && (event as MouseEvent).y !== undefined) {
-            point = event as MouseEvent;
-          }
-          this.show(undefined, point);
-        },
-      ]);
+    if (!this._isTouchPlatform()) {
+      this._addListener('mouseenter', (event: MouseEvent) => {
+        this._setupPointerExitEventsIfNeeded();
+        let point = undefined;
+        if (event.x !== undefined && event.y !== undefined) {
+          point = event;
+        }
+        this.show(undefined, point);
+      });
     } else if (this.touchGestures !== 'off') {
       this._disableNativeGesturesIfNecessary();
+      this._addListener('touchstart', (event: TouchEvent) => {
+        const touch = event.targetTouches?.[0];
+        const origin = touch ? {x: touch.clientX, y: touch.clientY} : undefined;
+        // Note that it's important that we don't `preventDefault` here,
+        // because it can prevent click events from firing on the element.
+        this._setupPointerExitEventsIfNeeded();
+        if (this._touchstartTimeout) {
+          clearTimeout(this._touchstartTimeout);
+        }
 
-      this._passiveListeners.push([
-        'touchstart',
-        event => {
-          const touch = (event as TouchEvent).targetTouches?.[0];
-          const origin = touch ? {x: touch.clientX, y: touch.clientY} : undefined;
-          // Note that it's important that we don't `preventDefault` here,
-          // because it can prevent click events from firing on the element.
-          this._setupPointerExitEventsIfNeeded();
-          if (this._touchstartTimeout) {
-            clearTimeout(this._touchstartTimeout);
-          }
-
-          const DEFAULT_LONGPRESS_DELAY = 500;
-          this._touchstartTimeout = setTimeout(() => {
-            this._touchstartTimeout = null;
-            this.show(undefined, origin);
-          }, this._defaultOptions?.touchLongPressShowDelay ?? DEFAULT_LONGPRESS_DELAY);
-        },
-      ]);
+        const DEFAULT_LONGPRESS_DELAY = 500;
+        this._touchstartTimeout = setTimeout(() => {
+          this._touchstartTimeout = null;
+          this.show(undefined, origin);
+        }, this._defaultOptions?.touchLongPressShowDelay ?? DEFAULT_LONGPRESS_DELAY);
+      });
     }
-
-    this._addListeners(this._passiveListeners);
   }
 
   private _setupPointerExitEventsIfNeeded() {
@@ -847,20 +821,28 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
     }
     this._pointerExitEventsInitialized = true;
 
-    const exitListeners: (readonly [string, EventListenerOrEventListenerObject])[] = [];
-    if (this._platformSupportsMouseEvents()) {
-      exitListeners.push(
-        [
-          'mouseleave',
-          event => {
-            const newTarget = (event as MouseEvent).relatedTarget as Node | null;
-            if (!newTarget || !this._overlayRef?.overlayElement.contains(newTarget)) {
-              this.hide();
-            }
-          },
-        ],
-        ['wheel', event => this._wheelListener(event as WheelEvent)],
-      );
+    if (!this._isTouchPlatform()) {
+      this._addListener('mouseleave', (event: MouseEvent) => {
+        const newTarget = event.relatedTarget as Node | null;
+        if (!newTarget || !this._overlayRef?.overlayElement.contains(newTarget)) {
+          this.hide();
+        }
+      });
+
+      this._addListener('wheel', (event: WheelEvent) => {
+        if (this._isTooltipVisible()) {
+          const elementUnderPointer = this._document.elementFromPoint(event.clientX, event.clientY);
+          const element = this._elementRef.nativeElement;
+
+          // On non-touch devices we depend on the `mouseleave` event to close the tooltip, but it
+          // won't fire if the user scrolls away using the wheel without moving their cursor. We
+          // work around it by finding the element under the user's cursor and closing the tooltip
+          // if it's not the trigger.
+          if (elementUnderPointer !== element && !element.contains(elementUnderPointer)) {
+            this.hide();
+          }
+        }
+      });
     } else if (this.touchGestures !== 'off') {
       this._disableNativeGesturesIfNecessary();
       const touchendListener = () => {
@@ -870,39 +852,30 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
         this.hide(this._defaultOptions?.touchendHideDelay);
       };
 
-      exitListeners.push(['touchend', touchendListener], ['touchcancel', touchendListener]);
+      this._addListener('touchend', touchendListener);
+      this._addListener('touchcancel', touchendListener);
+    }
+  }
+
+  private _addListener<T extends Event>(name: string, listener: (event: T) => void) {
+    this._eventCleanups.push(
+      this._renderer.listen(this._elementRef.nativeElement, name, listener, passiveListenerOptions),
+    );
+  }
+
+  private _isTouchPlatform(): boolean {
+    if (this._platform.IOS || this._platform.ANDROID) {
+      // If we detected iOS or Android, it's definitely supported.
+      return true;
+    } else if (!this._platform.isBrowser) {
+      // If it's not a browser, it's definitely not supported.
+      return false;
     }
 
-    this._addListeners(exitListeners);
-    this._passiveListeners.push(...exitListeners);
-  }
-
-  private _addListeners(listeners: (readonly [string, EventListenerOrEventListenerObject])[]) {
-    listeners.forEach(([event, listener]) => {
-      this._elementRef.nativeElement.addEventListener(event, listener, passiveListenerOptions);
-    });
-  }
-
-  private _platformSupportsMouseEvents() {
-    return !this._platform.IOS && !this._platform.ANDROID;
-  }
-
-  /** Listener for the `wheel` event on the element. */
-  private _wheelListener(event: WheelEvent) {
-    if (this._isTooltipVisible()) {
-      const elementUnderPointer = this._injector
-        .get(DOCUMENT)
-        .elementFromPoint(event.clientX, event.clientY);
-      const element = this._elementRef.nativeElement;
-
-      // On non-touch devices we depend on the `mouseleave` event to close the tooltip, but it
-      // won't fire if the user scrolls away using the wheel without moving their cursor. We
-      // work around it by finding the element under the user's cursor and closing the tooltip
-      // if it's not the trigger.
-      if (elementUnderPointer !== element && !element.contains(elementUnderPointer)) {
-        this.hide();
-      }
-    }
+    return (
+      !!this._defaultOptions?.detectHoverCapability &&
+      this._mediaMatcher.matchMedia('(any-hover: none)').matches
+    );
   }
 
   /** Disables the native browser gestures, based on how the tooltip has been configured. */
@@ -917,20 +890,20 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
       // textareas, because it prevents the user from typing into them on iOS Safari.
       if (gestures === 'on' || (element.nodeName !== 'INPUT' && element.nodeName !== 'TEXTAREA')) {
         style.userSelect =
-          (style as any).msUserSelect =
+          style.msUserSelect =
           style.webkitUserSelect =
-          (style as any).MozUserSelect =
+          style.MozUserSelect =
             'none';
       }
 
       // If we have `auto` gestures and the element uses native HTML dragging,
       // we don't set `-webkit-user-drag` because it prevents the native behavior.
       if (gestures === 'on' || !element.draggable) {
-        (style as any).webkitUserDrag = 'none';
+        style.webkitUserDrag = 'none';
       }
 
       style.touchAction = 'none';
-      (style as any).webkitTapHighlightColor = 'transparent';
+      style.webkitTapHighlightColor = 'transparent';
     }
   }
 
@@ -962,6 +935,18 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
       );
     }
   }
+
+  /** Determines which events should be routed to the tooltip overlay. */
+  private _overlayEventPredicate = (event: Event) => {
+    if (event.type === 'keydown') {
+      return (
+        this._isTooltipVisible() &&
+        (event as KeyboardEvent).keyCode === ESCAPE &&
+        !hasModifierKey(event as KeyboardEvent)
+      );
+    }
+    return true;
+  };
 }
 
 /**
@@ -978,7 +963,6 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
     '(mouseleave)': '_handleMouseLeave($event)',
     'aria-hidden': 'true',
   },
-  imports: [NgClass],
 })
 export class TooltipComponent implements OnDestroy {
   private _changeDetectorRef = inject(ChangeDetectorRef);
@@ -988,10 +972,10 @@ export class TooltipComponent implements OnDestroy {
   _isMultiline = false;
 
   /** Message to display in the tooltip */
-  message: string;
+  message!: string;
 
-  /** Classes to be added to the tooltip. Supports the same syntax as `ngClass`. */
-  tooltipClass: string | string[] | Set<string> | {[key: string]: any};
+  /** Classes to be added to the tooltip. */
+  tooltipClass!: string | string[] | {[key: string]: unknown};
 
   /** The timeout ID of any current timer set to show the tooltip */
   private _showTimeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -1000,10 +984,10 @@ export class TooltipComponent implements OnDestroy {
   private _hideTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
   /** Element that caused the tooltip to open. */
-  _triggerElement: HTMLElement;
+  _triggerElement!: HTMLElement;
 
   /** Amount of milliseconds to delay the closing sequence. */
-  _mouseLeaveHideDelay: number;
+  _mouseLeaveHideDelay!: number;
 
   /** Whether animations are currently disabled. */
   private _animationsDisabled = _animationsDisabled();
@@ -1014,7 +998,7 @@ export class TooltipComponent implements OnDestroy {
     // the DOM which can happen before `ngAfterViewInit`.
     static: true,
   })
-  _tooltip: ElementRef<HTMLElement>;
+  _tooltip!: ElementRef<HTMLElement>;
 
   /** Whether interactions on the page should close the tooltip */
   private _closeOnInteraction = false;

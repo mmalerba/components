@@ -1281,6 +1281,16 @@ describe('CdkTree', () => {
         expect(nodes.map(x => x.getAttribute('tabindex')).join(', ')).toEqual('0, -1, -1');
       });
 
+      it('should ensure that at least one item is focusable when the items are swapped out', () => {
+        expect(nodes.map(x => x.getAttribute('tabindex')).join(', ')).toEqual('0, -1, -1');
+
+        dataSource.data = [new TestData('foo'), new TestData('bar'), new TestData('baz')];
+        fixture.detectChanges();
+        nodes = getNodes(treeElement);
+
+        expect(nodes.map(x => x.getAttribute('tabindex')).join(', ')).toEqual('0, -1, -1');
+      });
+
       it('maintains tabindex when component is blurred', () => {
         // activate the second child by clicking on it
         nodes[1].click();
@@ -1695,11 +1705,11 @@ class SimpleCdkTreeApp {
   getLevel = (node: TestData) => node.level;
   isExpandable = (node: TestData) => node.children.length > 0;
 
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
   indent: number | string = 28;
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
-  @ViewChildren(CdkTreeNodePadding) paddingNodes: QueryList<CdkTreeNodePadding<TestData>>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
+  @ViewChildren(CdkTreeNodePadding) paddingNodes!: QueryList<CdkTreeNodePadding<TestData>>;
 }
 
 @Component({
@@ -1736,9 +1746,9 @@ class SimpleCdkTreeAppWithIndirectNodes extends SimpleCdkTreeApp {}
 class NestedCdkTreeApp {
   getChildren = (node: TestData) => node.observableChildren;
 
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 @Component({
@@ -1762,7 +1772,7 @@ class StaticNestedCdkTreeApp {
 
   dataSource: FakeDataSource;
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 
   constructor() {
     const dataSource = new FakeDataSource();
@@ -1796,9 +1806,9 @@ class WhenNodeNestedCdkTreeApp {
 
   getChildren = (node: TestData) => node.observableChildren;
 
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 @Component({
@@ -1821,9 +1831,9 @@ class CdkTreeAppWithToggle {
   getLevel = (node: TestData) => node.level;
   isExpandable = (node: TestData) => node.children.length > 0;
 
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 @Component({
@@ -1852,9 +1862,9 @@ class NestedCdkTreeAppWithToggle {
   isExpandable = (node: TestData) =>
     node.observableChildren.pipe(map(children => children.length > 0));
 
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 @Component({
@@ -1882,9 +1892,9 @@ class WhenNodeCdkTreeApp {
   getLevel = (node: TestData) => node.level;
   isExpandable = (node: TestData) => node.children.length > 0;
 
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 @Component({
@@ -1905,13 +1915,13 @@ class ArrayDataSourceCdkTreeApp {
   getLevel = (node: TestData) => node.level;
   isExpandable = (node: TestData) => node.children.length > 0;
 
-  dataSource: FakeDataSource = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
   get dataArray() {
     return this.dataSource.data;
   }
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 
   cdr = inject(ChangeDetectorRef);
 
@@ -1940,13 +1950,13 @@ class ObservableDataSourceCdkTreeApp {
   getLevel = (node: TestData) => node.level;
   isExpandable = (node: TestData) => node.children.length > 0;
 
-  dataSource: FakeDataSource = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
   get dataObservable() {
     return this.dataSource._dataChange;
   }
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 @Component({
@@ -1964,13 +1974,13 @@ class ObservableDataSourceCdkTreeApp {
 class ArrayDataSourceNestedCdkTreeApp {
   getChildren = (node: TestData) => node.observableChildren;
 
-  dataSource: FakeDataSource = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
   get dataArray() {
     return this.dataSource.data;
   }
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 @Component({
@@ -1988,13 +1998,13 @@ class ArrayDataSourceNestedCdkTreeApp {
 class ObservableDataSourceNestedCdkTreeApp {
   getChildren = (node: TestData) => node.observableChildren;
 
-  dataSource: FakeDataSource = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
   get dataObservable() {
     return this.dataSource._dataChange;
   }
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 @Component({
@@ -2013,13 +2023,13 @@ class ObservableDataSourceNestedCdkTreeApp {
 class DepthNestedCdkTreeApp {
   getChildren = (node: TestData) => node.observableChildren;
 
-  dataSource: FakeDataSource = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
   get dataArray() {
     return this.dataSource.data;
   }
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 @Component({
@@ -2050,9 +2060,9 @@ class CdkTreeAppWithTrackBy {
   getLevel = (node: TestData) => node.level;
   isExpandable = (node: TestData) => node.children.length > 0;
 
-  dataSource: FakeDataSource = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 @Component({
@@ -2083,13 +2093,13 @@ class NestedCdkTreeAppWithTrackBy {
 
   getChildren = (node: TestData) => node.observableChildren;
 
-  dataSource: FakeDataSource = new FakeDataSource();
+  dataSource = new FakeDataSource();
 
   get dataArray() {
     return this.dataSource.data;
   }
 
-  @ViewChild(CdkTree) tree: CdkTree<TestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<TestData>;
 }
 
 class MinimalTestData {
@@ -2121,8 +2131,8 @@ class TypeaheadLabelFlatTreeWithThreeNodes {
     new MinimalTestData('cherry', 'typeahead'),
   ]);
 
-  @ViewChild('tree', {read: ElementRef}) tree: ElementRef<HTMLElement>;
-  @ViewChildren('node') treeNodes: QueryList<ElementRef<HTMLElement>>;
+  @ViewChild('tree', {read: ElementRef}) tree!: ElementRef<HTMLElement>;
+  @ViewChildren('node') treeNodes!: QueryList<ElementRef<HTMLElement>>;
 }
 
 @Component({
@@ -2145,8 +2155,8 @@ class FlatTreeWithThreeNodes {
     new MinimalTestData('cherry'),
   ]);
 
-  @ViewChild('tree', {read: ElementRef}) tree: ElementRef<HTMLElement>;
-  @ViewChildren('node') treeNodes: QueryList<ElementRef<HTMLElement>>;
+  @ViewChild('tree', {read: ElementRef}) tree!: ElementRef<HTMLElement>;
+  @ViewChildren('node') treeNodes!: QueryList<ElementRef<HTMLElement>>;
 }
 
 @Component({
@@ -2165,7 +2175,7 @@ class FlatTreeWithThreeNodes {
 class IsExpandableOrderingTest {
   getChildren = (node: MinimalTestData) => node.children;
 
-  @ViewChild(CdkTree) tree: CdkTree<MinimalTestData>;
+  @ViewChild(CdkTree) tree!: CdkTree<MinimalTestData>;
 
   dataSource: MinimalTestData[];
 

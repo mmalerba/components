@@ -11,9 +11,14 @@ export * from './position/connected-position';
 export * from './scroll/index';
 export * from './overlay-module';
 export * from './dispatchers/index';
-export {Overlay, createOverlayRef} from './overlay';
+export {Overlay, createOverlayRef, OverlayDefaultConfig, OVERLAY_DEFAULT_CONFIG} from './overlay';
 export {OverlayContainer} from './overlay-container';
-export {CdkOverlayOrigin, CdkConnectedOverlay} from './overlay-directives';
+export {
+  CdkOverlayOrigin,
+  CdkConnectedOverlay,
+  CdkConnectedOverlayConfig,
+  CDK_CONNECTED_OVERLAY_DEFAULT_CONFIG,
+} from './overlay-directives';
 export {FullscreenOverlayContainer} from './fullscreen-overlay-container';
 export {OverlayRef, OverlaySizeConfig} from './overlay-ref';
 export {ViewportRuler} from '../scrolling';
@@ -27,6 +32,7 @@ export {
   createGlobalPositionStrategy,
 } from './position/global-position-strategy';
 export {
+  FlexibleOverlayPopoverLocation,
   ConnectedPosition,
   FlexibleConnectedPositionStrategy,
   FlexibleConnectedPositionStrategyOrigin,

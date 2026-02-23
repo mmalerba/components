@@ -9,7 +9,7 @@ import {
   Injectable,
   ViewChild,
 } from '@angular/core';
-import {ComponentFixture, TestBed, fakeAsync, flush} from '@angular/core/testing';
+import {ComponentFixture, TestBed, fakeAsync, flush, tick} from '@angular/core/testing';
 import {MatTableModule} from '@angular/material/table';
 import {BehaviorSubject, Observable, ReplaySubject} from 'rxjs';
 import {dispatchKeyboardEvent} from '../../cdk/testing/private';
@@ -158,7 +158,7 @@ const MOUSE_START_OFFSET = 1000;
 
 @Directive()
 abstract class BaseTestComponent {
-  @ViewChild('table') table: ElementRef;
+  @ViewChild('table') table!: ElementRef;
 
   abstract columnResize: AbstractMatColumnResize;
 
@@ -279,7 +279,7 @@ abstract class BaseTestComponentRtl extends BaseTestComponent {
   imports: [BidiModule, MatTableModule, MatColumnResizeModule],
 })
 class MatResizeTest extends BaseTestComponent {
-  @ViewChild(MatColumnResize) columnResize: AbstractMatColumnResize;
+  @ViewChild(MatColumnResize) columnResize!: AbstractMatColumnResize;
 }
 
 @Component({
@@ -294,7 +294,7 @@ class MatResizeOnPushTest extends MatResizeTest {}
   imports: [BidiModule, MatTableModule, MatDefaultEnabledColumnResizeModule],
 })
 class MatResizeDefaultTest extends BaseTestComponent {
-  @ViewChild(MatDefaultEnabledColumnResize) columnResize: AbstractMatColumnResize;
+  @ViewChild(MatDefaultEnabledColumnResize) columnResize!: AbstractMatColumnResize;
 }
 
 @Component({
@@ -302,7 +302,7 @@ class MatResizeDefaultTest extends BaseTestComponent {
   imports: [BidiModule, MatTableModule, MatDefaultEnabledColumnResizeModule],
 })
 class MatResizeDefaultRtlTest extends BaseTestComponentRtl {
-  @ViewChild(MatDefaultEnabledColumnResize) columnResize: AbstractMatColumnResize;
+  @ViewChild(MatDefaultEnabledColumnResize) columnResize!: AbstractMatColumnResize;
 }
 
 @Component({
@@ -310,7 +310,7 @@ class MatResizeDefaultRtlTest extends BaseTestComponentRtl {
   imports: [BidiModule, MatTableModule, MatColumnResizeModule],
 })
 class MatResizeFlexTest extends BaseTestComponent {
-  @ViewChild(MatColumnResizeFlex) columnResize: AbstractMatColumnResize;
+  @ViewChild(MatColumnResizeFlex) columnResize!: AbstractMatColumnResize;
 }
 
 @Component({
@@ -319,7 +319,7 @@ class MatResizeFlexTest extends BaseTestComponent {
 })
 class MatResizeDefaultFlexTest extends BaseTestComponent {
   @ViewChild(MatDefaultEnabledColumnResizeFlex)
-  columnResize: AbstractMatColumnResize;
+  columnResize!: AbstractMatColumnResize;
 }
 
 @Component({
@@ -328,7 +328,7 @@ class MatResizeDefaultFlexTest extends BaseTestComponent {
 })
 class MatResizeDefaultFlexRtlTest extends BaseTestComponentRtl {
   @ViewChild(MatDefaultEnabledColumnResizeFlex)
-  columnResize: AbstractMatColumnResize;
+  columnResize!: AbstractMatColumnResize;
 }
 
 interface PeriodicElement {
@@ -406,6 +406,7 @@ describe('Material Popover Edit', () => {
 
         component.triggerHoverState();
         fixture.detectChanges();
+        tick(200);
 
         expect(
           component.getOverlayThumbElement(0).classList.contains('mat-column-resize-overlay-thumb'),
@@ -435,6 +436,7 @@ describe('Material Popover Edit', () => {
         component.completeResizeWithMouseInProgress(0);
         component.endHoverState();
         fixture.detectChanges();
+        tick(200);
         flush();
 
         expect(component.getOverlayThumbElement(0)).toBeUndefined();
@@ -448,6 +450,7 @@ describe('Material Popover Edit', () => {
 
         component.triggerHoverState();
         fixture.detectChanges();
+        tick(200);
         component.beginColumnResizeWithMouse(1);
 
         const initialThumbPosition = component.getOverlayThumbPosition(1);
@@ -497,6 +500,7 @@ describe('Material Popover Edit', () => {
 
         component.triggerHoverState();
         fixture.detectChanges();
+        tick(200);
         component.beginColumnResizeWithMouse(1);
 
         const initialThumbPosition = component.getOverlayThumbPosition(1);
@@ -532,6 +536,7 @@ describe('Material Popover Edit', () => {
 
         component.triggerHoverState();
         fixture.detectChanges();
+        tick(200);
         component.beginColumnResizeWithMouse(1, 2);
 
         const initialPosition = component.getOverlayThumbPosition(1);
@@ -549,6 +554,7 @@ describe('Material Popover Edit', () => {
 
         component.triggerHoverState();
         fixture.detectChanges();
+        tick(200);
         component.beginColumnResizeWithMouse(1);
 
         const initialThumbPosition = component.getOverlayThumbPosition(1);
@@ -586,6 +592,7 @@ describe('Material Popover Edit', () => {
 
         component.triggerHoverState();
         fixture.detectChanges();
+        tick(200);
 
         expect(resize).toBe(null);
 
@@ -607,6 +614,7 @@ describe('Material Popover Edit', () => {
 
         component.triggerHoverState();
         fixture.detectChanges();
+        tick(200);
         component.beginColumnResizeWithMouse(0);
 
         component.updateResizeWithMouseInProgress(5);
@@ -669,6 +677,7 @@ describe('Material Popover Edit', () => {
 
       component.triggerHoverState();
       fixture.detectChanges();
+      tick(200);
 
       component.resizeColumnWithMouse(1, 5);
       fixture.detectChanges();
@@ -694,6 +703,7 @@ describe('Material Popover Edit', () => {
 
       component.triggerHoverState();
       fixture.detectChanges();
+      tick(200);
 
       component.resizeColumnWithMouse(1, 5);
       fixture.detectChanges();

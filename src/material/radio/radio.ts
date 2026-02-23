@@ -94,21 +94,12 @@ export const MAT_RADIO_DEFAULT_OPTIONS = new InjectionToken<MatRadioDefaultOptio
   'mat-radio-default-options',
   {
     providedIn: 'root',
-    factory: MAT_RADIO_DEFAULT_OPTIONS_FACTORY,
+    factory: () => ({
+      color: 'accent',
+      disabledInteractive: false,
+    }),
   },
 );
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function MAT_RADIO_DEFAULT_OPTIONS_FACTORY(): MatRadioDefaultOptions {
-  return {
-    color: 'accent',
-    disabledInteractive: false,
-  };
-}
 
 /**
  * A group of radio buttons. May contain one or more `<mat-radio-button>` elements.
@@ -150,7 +141,7 @@ export class MatRadioGroup implements AfterContentInit, OnDestroy, ControlValueA
   private _required: boolean = false;
 
   /** Subscription to changes in amount of radio buttons. */
-  private _buttonChanges: Subscription;
+  private _buttonChanges!: Subscription;
 
   /** The method to be called in order to update ngModel */
   _controlValueAccessorChangeFn: (value: any) => void = () => {};
@@ -170,7 +161,7 @@ export class MatRadioGroup implements AfterContentInit, OnDestroy, ControlValueA
 
   /** Child radio buttons. */
   @ContentChildren(forwardRef(() => MatRadioButton), {descendants: true})
-  _radios: QueryList<MatRadioButton>;
+  _radios!: QueryList<MatRadioButton>;
 
   /**
    * Theme color of the radio buttons in the group. This API is supported in M2
@@ -179,7 +170,7 @@ export class MatRadioGroup implements AfterContentInit, OnDestroy, ControlValueA
    * For information on applying color variants in M3, see
    * https://material.angular.dev/guide/material-2-theming#optional-add-backwards-compatibility-styles-for-color-variants
    */
-  @Input() color: ThemePalette;
+  @Input() color!: ThemePalette;
 
   /** Name of the radio button group. All radio buttons inside this group will use this name. */
   @Input()
@@ -433,16 +424,16 @@ export class MatRadioButton implements OnInit, AfterViewInit, DoCheck, OnDestroy
   @Input() id: string = this._uniqueId;
 
   /** Analog to HTML 'name' attribute used to group radios for unique selection. */
-  @Input() name: string;
+  @Input() name!: string;
 
   /** Used to set the 'aria-label' attribute on the underlying input element. */
-  @Input('aria-label') ariaLabel: string;
+  @Input('aria-label') ariaLabel!: string | null;
 
   /** The 'aria-labelledby' attribute takes precedence as the element's text alternative. */
-  @Input('aria-labelledby') ariaLabelledby: string;
+  @Input('aria-labelledby') ariaLabelledby!: string | null;
 
   /** The 'aria-describedby' attribute is read after the element's label and field type. */
-  @Input('aria-describedby') ariaDescribedby: string;
+  @Input('aria-describedby') ariaDescribedby!: string | null;
 
   /** Whether ripples are disabled inside the radio button */
   @Input({transform: booleanAttribute})
@@ -506,7 +497,7 @@ export class MatRadioButton implements OnInit, AfterViewInit, DoCheck, OnDestroy
   set labelPosition(value) {
     this._labelPosition = value;
   }
-  private _labelPosition: 'before' | 'after';
+  private _labelPosition: 'before' | 'after' | undefined;
 
   /** Whether the radio button is disabled. */
   @Input({transform: booleanAttribute})
@@ -580,13 +571,13 @@ export class MatRadioButton implements OnInit, AfterViewInit, DoCheck, OnDestroy
   }
 
   /** Whether this radio is checked. */
-  private _checked: boolean = false;
+  private _checked = false;
 
   /** Whether this radio is disabled. */
-  private _disabled: boolean;
+  private _disabled = false;
 
   /** Whether this radio is required. */
-  private _required: boolean;
+  private _required = false;
 
   /** Value assigned to this radio. */
   private _value: any = null;
@@ -598,11 +589,11 @@ export class MatRadioButton implements OnInit, AfterViewInit, DoCheck, OnDestroy
   private _previousTabIndex: number | undefined;
 
   /** The native `<input type=radio>` element */
-  @ViewChild('input') _inputElement: ElementRef<HTMLInputElement>;
+  @ViewChild('input') _inputElement!: ElementRef<HTMLInputElement>;
 
   /** Trigger elements for the ripple events. */
   @ViewChild('formField', {read: ElementRef, static: true})
-  _rippleTrigger: ElementRef<HTMLElement>;
+  _rippleTrigger!: ElementRef<HTMLElement>;
 
   /** Whether animations are disabled. */
   _noopAnimations = _animationsDisabled();

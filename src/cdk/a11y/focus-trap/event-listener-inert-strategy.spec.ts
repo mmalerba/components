@@ -10,7 +10,6 @@ import {
 import {ComponentFixture, TestBed, fakeAsync, flush} from '@angular/core/testing';
 import {patchElementFocus} from '../../testing/private';
 import {
-  A11yModule,
   ConfigurableFocusTrap,
   ConfigurableFocusTrapFactory,
   EventListenerFocusTrapInertStrategy,
@@ -69,10 +68,7 @@ function createComponent<T>(
   componentType: Type<T>,
   providers: Provider[] = [],
 ): ComponentFixture<T> {
-  TestBed.configureTestingModule({
-    imports: [A11yModule, componentType],
-    providers: providers,
-  });
+  TestBed.configureTestingModule({providers});
 
   return TestBed.createComponent<T>(componentType);
 }
@@ -94,11 +90,11 @@ class SimpleFocusTrap implements AfterViewInit {
   @ViewChild('firstFocusable') firstFocusableElement!: ElementRef<HTMLElement>;
   @ViewChild('secondFocusable') secondFocusableElement!: ElementRef<HTMLElement>;
 
-  focusTrap: ConfigurableFocusTrap;
+  focusTrap!: ConfigurableFocusTrap;
 
   // Since our custom stubbing in `patchElementFocus` won't update
   // the `document.activeElement`, we need to keep track of it here.
-  activeElement: Element | null;
+  activeElement: Element | null = null;
 
   ngAfterViewInit() {
     // Ensure consistent focus timing across browsers.

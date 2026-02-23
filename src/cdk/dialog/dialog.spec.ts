@@ -1306,7 +1306,6 @@ describe('Dialog with a parent Dialog', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      imports: [DialogModule, ComponentThatProvidesMatDialog],
       providers: [
         {
           provide: OverlayContainer,
@@ -1415,7 +1414,7 @@ class ComponentWithOnPushViewContainer {
   imports: [DirectiveWithViewContainer],
 })
 class ComponentWithChildViewContainer {
-  @ViewChild(DirectiveWithViewContainer) childWithViewContainer: DirectiveWithViewContainer;
+  @ViewChild(DirectiveWithViewContainer) childWithViewContainer!: DirectiveWithViewContainer;
 
   get childViewContainer() {
     return this.childWithViewContainer.viewContainerRef;
@@ -1429,10 +1428,10 @@ class ComponentWithChildViewContainer {
   imports: [DialogModule],
 })
 class ComponentWithTemplateRef {
-  localValue: string;
-  dialogRef: DialogRef<any>;
+  localValue = '';
+  dialogRef: DialogRef<any> | undefined;
 
-  @ViewChild(TemplateRef) templateRef: TemplateRef<any>;
+  @ViewChild(TemplateRef) templateRef!: TemplateRef<any>;
 
   setDialogRef(dialogRef: DialogRef<any>): string {
     this.dialogRef = dialogRef;
@@ -1462,7 +1461,7 @@ class PizzaMsg {
   },
 })
 class ContentElementDialog {
-  closeButtonAriaLabel: string;
+  closeButtonAriaLabel = '';
 }
 
 @Component({
@@ -1522,6 +1521,6 @@ class TemplateInjectorInnerDirective {
   imports: [TemplateInjectorInnerDirective],
 })
 class TemplateInjectorParentComponent {
-  @ViewChild(TemplateRef) templateRef: TemplateRef<any>;
+  @ViewChild(TemplateRef) templateRef!: TemplateRef<any>;
   innerComponentValue = '';
 }

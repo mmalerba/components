@@ -45,10 +45,6 @@ describe('MenuBar', () => {
     let menuItems: CdkMenuItemRadio[];
 
     beforeEach(waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [CdkMenuModule, MenuBarRadioGroup],
-      });
-
       fixture = TestBed.createComponent(MenuBarRadioGroup);
       fixture.detectChanges();
 
@@ -103,12 +99,6 @@ describe('MenuBar', () => {
 
         detectChanges();
       }
-
-      beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-          imports: [CdkMenuModule, MultiMenuWithSubmenu],
-        });
-      }));
 
       beforeEach(() => {
         fixture = TestBed.createComponent(MultiMenuWithSubmenu);
@@ -528,12 +518,6 @@ describe('MenuBar', () => {
         detectChanges();
       }
 
-      beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-          imports: [CdkMenuModule, MultiMenuWithSubmenu],
-        });
-      }));
-
       beforeEach(() => {
         fixture = TestBed.createComponent(MultiMenuWithSubmenu);
         detectChanges();
@@ -655,12 +639,6 @@ describe('MenuBar', () => {
         detectChanges();
       }
 
-      beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-          imports: [CdkMenuModule, MenuWithCheckboxes],
-        });
-      }));
-
       beforeEach(() => {
         fixture = TestBed.createComponent(MenuWithCheckboxes);
         detectChanges();
@@ -721,12 +699,6 @@ describe('MenuBar', () => {
         detectChanges();
       }
 
-      beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-          imports: [CdkMenuModule, MenuWithRadioButtons],
-        });
-      }));
-
       beforeEach(() => {
         fixture = TestBed.createComponent(MenuWithRadioButtons);
         detectChanges();
@@ -775,12 +747,6 @@ describe('MenuBar', () => {
       fixture.detectChanges();
       grabElementsForTesting();
     }
-
-    beforeEach(waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [CdkMenuModule, MenuBarWithMenusAndInlineMenu],
-      });
-    }));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(MenuBarWithMenusAndInlineMenu);
@@ -894,12 +860,6 @@ describe('MenuBar', () => {
       dispatchMouseEvent(fileMenuNativeItems[1], 'mouseenter');
       detectChanges();
     }
-
-    beforeEach(waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [CdkMenuModule, MultiMenuWithSubmenu],
-      });
-    }));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(MultiMenuWithSubmenu);
@@ -1155,11 +1115,11 @@ class MenuBarRadioGroup {}
 })
 class MultiMenuWithSubmenu {
   clickEmitter = new EventEmitter<void>();
-  @ViewChild(CdkMenuBar, {read: ElementRef}) nativeMenuBar: ElementRef;
+  @ViewChild(CdkMenuBar, {read: ElementRef}) nativeMenuBar!: ElementRef;
 
-  @ViewChildren(CdkMenu, {read: ElementRef}) nativeMenus: QueryList<ElementRef>;
+  @ViewChildren(CdkMenu, {read: ElementRef}) nativeMenus!: QueryList<ElementRef>;
 
-  @ViewChildren(CdkMenuItem, {read: ElementRef}) nativeItems: QueryList<ElementRef>;
+  @ViewChildren(CdkMenuItem, {read: ElementRef}) nativeItems!: QueryList<ElementRef>;
 }
 
 @Component({
@@ -1180,13 +1140,13 @@ class MultiMenuWithSubmenu {
   imports: [CdkMenuModule],
 })
 class MenuWithCheckboxes {
-  @ViewChild(CdkMenuBar, {read: ElementRef}) nativeMenuBar: ElementRef;
+  @ViewChild(CdkMenuBar, {read: ElementRef}) nativeMenuBar!: ElementRef;
 
-  @ViewChildren(CdkMenu, {read: ElementRef}) nativeMenus: QueryList<ElementRef>;
+  @ViewChildren(CdkMenu, {read: ElementRef}) nativeMenus!: QueryList<ElementRef>;
 
-  @ViewChildren(CdkMenuItem, {read: ElementRef}) nativeItems: QueryList<ElementRef>;
+  @ViewChildren(CdkMenuItem, {read: ElementRef}) nativeItems!: QueryList<ElementRef>;
 
-  @ViewChildren(CdkMenuItemCheckbox) checkboxItems: QueryList<CdkMenuItemCheckbox>;
+  @ViewChildren(CdkMenuItemCheckbox) checkboxItems!: QueryList<CdkMenuItemCheckbox>;
 }
 
 @Component({
@@ -1207,13 +1167,13 @@ class MenuWithCheckboxes {
   imports: [CdkMenuModule],
 })
 class MenuWithRadioButtons {
-  @ViewChild(CdkMenuBar, {read: ElementRef}) nativeMenuBar: ElementRef;
+  @ViewChild(CdkMenuBar, {read: ElementRef}) nativeMenuBar!: ElementRef;
 
-  @ViewChildren(CdkMenu, {read: ElementRef}) nativeMenus: QueryList<ElementRef>;
+  @ViewChildren(CdkMenu, {read: ElementRef}) nativeMenus!: QueryList<ElementRef>;
 
-  @ViewChildren(CdkMenuItem, {read: ElementRef}) nativeItems: QueryList<ElementRef>;
+  @ViewChildren(CdkMenuItem, {read: ElementRef}) nativeItems!: QueryList<ElementRef>;
 
-  @ViewChildren(CdkMenuItemRadio) radioItems: QueryList<CdkMenuItemRadio>;
+  @ViewChildren(CdkMenuItemRadio) radioItems!: QueryList<CdkMenuItemRadio>;
 }
 
 @Component({
@@ -1240,9 +1200,9 @@ class MenuWithRadioButtons {
   imports: [CdkMenuModule],
 })
 class MenuBarWithMenusAndInlineMenu {
-  @ViewChildren(CdkMenu) menus: QueryList<CdkMenu>;
+  @ViewChildren(CdkMenu) menus!: QueryList<CdkMenu>;
 
-  @ViewChildren(CdkMenuTrigger) triggers: QueryList<CdkMenuTrigger>;
+  @ViewChildren(CdkMenuTrigger) triggers!: QueryList<CdkMenuTrigger>;
 
-  @ViewChild('inline_menu_item') nativeInlineMenuItem: ElementRef;
+  @ViewChild('inline_menu_item') nativeInlineMenuItem!: ElementRef;
 }

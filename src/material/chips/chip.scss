@@ -520,6 +520,7 @@ $fallbacks: m3-chip.get-tokens();
 }
 
 .mat-mdc-chip-edit, .mat-mdc-chip-remove {
+  $chip-opacity: token-utils.slot(chip-hover-state-layer-opacity, $fallbacks);
   opacity: token-utils.slot(chip-trailing-action-opacity, $fallbacks);
 
   &:focus {
@@ -531,11 +532,13 @@ $fallbacks: m3-chip.get-tokens();
   }
 
   &:hover::after {
-    opacity: token-utils.slot(chip-trailing-action-hover-state-layer-opacity, $fallbacks);
+    $action-opacity: token-utils.slot(chip-trailing-action-hover-state-layer-opacity, $fallbacks);
+    opacity: calc($chip-opacity + $action-opacity);
   }
 
   &:focus::after {
-    opacity: token-utils.slot(chip-trailing-action-focus-state-layer-opacity, $fallbacks);
+    $action-opacity: token-utils.slot(chip-trailing-action-focus-state-layer-opacity, $fallbacks);
+    opacity: calc($chip-opacity + $action-opacity);
   }
 }
 
@@ -544,17 +547,24 @@ $fallbacks: m3-chip.get-tokens();
   background-color: token-utils.slot(chip-selected-trailing-action-state-layer-color, $fallbacks);
 }
 
+.mat-mdc-chip.cdk-focused {
+  $chip-opacity: token-utils.slot(chip-selected-focus-state-layer-opacity, $fallbacks);
+
+  .mat-mdc-chip-edit, .mat-mdc-chip-remove {
+    &:focus::after {
+      $action-opacity: token-utils.slot(chip-trailing-action-focus-state-layer-opacity, $fallbacks);
+      opacity: calc($chip-opacity + $action-opacity);
+    }
+
+    &:hover::after {
+      $action-opacity: token-utils.slot(chip-trailing-action-hover-state-layer-opacity, $fallbacks);
+      opacity: calc($chip-opacity + $action-opacity);
+    }
+  }
+}
+
 .mat-mdc-standard-chip {
   -webkit-tap-highlight-color: transparent;
-
-  // MDC sets `overflow: hidden` on these elements in order to truncate the text. This is
-  // unnecessary since our chips don't truncate their text and it makes it difficult to style
-  // the strong focus indicators so we need to override it.
-  .mdc-evolution-chip__cell--primary,
-  .mdc-evolution-chip__action--primary,
-  .mat-mdc-chip-action-label {
-    overflow: visible;
-  }
 
   // MDC sizes and positions this element using `width`, `height` and `padding`.
   // This usually works, but it's common for apps to add `box-sizing: border-box`
@@ -727,7 +737,7 @@ $fallbacks: m3-chip.get-tokens();
 
 // The chip has multiple focus targets so we have to put the indicator on
 // a separate element, rather than on the focusable element itself.
-.mat-mdc-chip-action:focus .mat-focus-indicator::before {
+.mat-mdc-chip-action:focus-visible .mat-focus-indicator::before {
   content: '';
 }
 
@@ -736,4 +746,10 @@ $fallbacks: m3-chip.get-tokens();
 // Fixes b/250063405.
 .mdc-evolution-chip__icon, .mat-mdc-chip-edit .mat-icon, .mat-mdc-chip-remove .mat-icon {
   min-height: fit-content;
+}
+
+// The `min-height: fit-content` above can stretch out image in Safari (see #32251).
+// It also isn't necessary for image since their content doesn't affect the image container.
+img.mdc-evolution-chip__icon {
+  min-height: 0;
 }

@@ -12,24 +12,15 @@ import {Observable, Subject} from 'rxjs';
 /** InjectionToken for datepicker that can be used to override default locale code. */
 export const MAT_DATE_LOCALE = new InjectionToken<{}>('MAT_DATE_LOCALE', {
   providedIn: 'root',
-  factory: MAT_DATE_LOCALE_FACTORY,
+  factory: () => inject(LOCALE_ID),
 });
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function MAT_DATE_LOCALE_FACTORY(): {} {
-  return inject(LOCALE_ID);
-}
 
 const NOT_IMPLEMENTED = 'Method not implemented';
 
 /** Adapts type `D` to be usable as a date by cdk-based components that work with dates. */
 export abstract class DateAdapter<D, L = any> {
   /** The locale to use for all dates. */
-  protected locale: L;
+  protected locale!: L;
   protected readonly _localeChanges = new Subject<void>();
 
   /** A stream that emits when the locale changes. */

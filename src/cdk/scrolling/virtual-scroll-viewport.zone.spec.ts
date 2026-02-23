@@ -8,7 +8,7 @@ import {
   afterNextRender,
   provideZoneChangeDetection,
 } from '@angular/core';
-import {ComponentFixture, TestBed, fakeAsync, flush, waitForAsync} from '@angular/core/testing';
+import {ComponentFixture, TestBed, fakeAsync, flush} from '@angular/core/testing';
 import {animationFrameScheduler} from 'rxjs';
 import {dispatchFakeEvent} from '../testing/private';
 import {ScrollingModule} from './scrolling-module';
@@ -21,16 +21,15 @@ describe('CdkVirtualScrollViewport Zone.js intergation', () => {
     let testComponent: FixedSizeVirtualScroll;
     let viewport: CdkVirtualScrollViewport;
 
-    beforeEach(waitForAsync(() => {
+    beforeEach(() => {
       TestBed.configureTestingModule({
         providers: [provideZoneChangeDetection()],
-        imports: [ScrollingModule, FixedSizeVirtualScroll],
       });
 
       fixture = TestBed.createComponent(FixedSizeVirtualScroll);
       testComponent = fixture.componentInstance;
       viewport = testComponent.viewport;
-    }));
+    });
 
     it('should emit on viewChange inside the Angular zone', fakeAsync(() => {
       const zoneTest = jasmine.createSpy('zone test');
@@ -102,11 +101,11 @@ describe('CdkVirtualScrollViewport Zone.js intergation', () => {
   imports: [ScrollingModule],
 })
 class FixedSizeVirtualScroll {
-  @ViewChild(CdkVirtualScrollViewport, {static: true}) viewport: CdkVirtualScrollViewport;
+  @ViewChild(CdkVirtualScrollViewport, {static: true}) viewport!: CdkVirtualScrollViewport;
   // Casting virtualForOf as any so we can spy on private methods
   @ViewChild(CdkVirtualForOf, {static: true}) virtualForOf: any;
 
-  orientation = 'vertical';
+  orientation: 'vertical' | 'horizontal' = 'vertical';
   viewportSize = 200;
   viewportCrossSize = 100;
   itemSize = 50;
@@ -115,7 +114,7 @@ class FixedSizeVirtualScroll {
   items = Array(10)
     .fill(0)
     .map((_, i) => i);
-  trackBy: TrackByFunction<number>;
+  trackBy!: TrackByFunction<number>;
   templateCacheSize = 20;
 
   scrolledToIndex = 0;

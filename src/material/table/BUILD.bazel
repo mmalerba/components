@@ -6,7 +6,6 @@ load(
     "ng_web_test_suite",
     "sass_binary",
     "sass_library",
-    "ts_project",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -74,11 +73,11 @@ ng_project(
     srcs = [
         "cell.ts",
         "index.ts",
-        "module.ts",
         "public-api.ts",
         "row.ts",
         "table.ts",
         "table-data-source.ts",
+        "table-module.ts",
         "text-column.ts",
     ],
     assets = [":css"],
@@ -97,7 +96,7 @@ ng_project(
 # Testing
 ###########
 
-ts_project(
+ng_project(
     name = "table_tests_lib",
     testonly = True,
     srcs = glob(

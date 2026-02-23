@@ -1,12 +1,5 @@
-//
-// Design system display name: Material 3
-// Design system version: v0.161
-//
-
 @use 'sass:map';
-
-// Indicates whether alternative tokens should be used
-$_alternate-tokens: false;
+@use './md-sys-color-internal';
 
 @function md-sys-color-values-dark($palettes: ()) {
   $values: (
@@ -58,24 +51,10 @@ $_alternate-tokens: false;
     tertiary: map.get($palettes, tertiary, 80),
     tertiary-container: map.get($palettes, tertiary, 30),
     tertiary-fixed: map.get($palettes, tertiary, 90),
-    tertiary-fixed-dim: map.get($palettes, tertiary, 80)
+    tertiary-fixed-dim: map.get($palettes, tertiary, 80),
   );
 
-  @if ($_alternate-tokens) {
-    $values: map.merge($values, (
-      background: map.get($palettes, neutral, 10),
-      on-surface-variant: map.get($palettes, neutral-variant, 80),
-      surface: map.get($palettes, neutral, 10),
-      surface-bright: #37393b,
-      surface-container: #1e1f20,
-      surface-container-high: #282a2c,
-      surface-container-highest: #333537,
-      surface-container-low: #1b1b1b,
-      surface-container-lowest: #0e0e0e,
-      surface-dim: #131313,
-      surface-tint: #d1e1ff,
-    ));
-  }
+  $values: map.merge($values, md-sys-color-internal.values-dark($palettes));
 
   @return $values;
 }
@@ -130,27 +109,10 @@ $_alternate-tokens: false;
     tertiary: map.get($palettes, tertiary, 40),
     tertiary-container: map.get($palettes, tertiary, 90),
     tertiary-fixed: map.get($palettes, tertiary, 90),
-    tertiary-fixed-dim: map.get($palettes, tertiary, 80)
+    tertiary-fixed-dim: map.get($palettes, tertiary, 80),
   );
 
-  @if ($_alternate-tokens) {
-    $values: map.merge($values, (
-      background: map.get($palettes, neutral, 100),
-      on-error-container: map.get($palettes, error, 10),
-      on-primary-container: map.get($palettes, primary, 10),
-      on-secondary-container: map.get($palettes, secondary, 10),
-      on-tertiary-container: map.get($palettes, tertiary, 10),
-      surface: map.get($palettes, neutral, 100),
-      surface-bright: map.get($palettes, neutral, 100),
-      surface-container: #f0f4f9,
-      surface-container-high: #e9eef6,
-      surface-container-highest: #dde3ea,
-      surface-container-low: #f8fafd,
-      surface-container-lowest: map.get($palettes, primary, 100),
-      surface-dim: #d3dbe5,
-      surface-tint: #6991d6,
-    ));
-  }
+  $values: map.merge($values, md-sys-color-internal.values-light($palettes));
 
   @return $values;
 }

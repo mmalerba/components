@@ -15,10 +15,6 @@ describe('MatOptionHarness', () => {
   let loader: HarnessLoader;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [MatOptionModule, OptionHarnessTest],
-    });
-
     fixture = TestBed.createComponent(OptionHarnessTest);
     fixture.detectChanges();
     loader = TestbedHarnessEnvironment.loader(fixture);
@@ -115,7 +111,7 @@ describe('MatOptionHarness', () => {
   imports: [MatOptionModule],
 })
 class OptionHarnessTest implements MatOptionParentComponent {
-  @ViewChildren(MatOption) options: QueryList<{setActiveStyles(): void}>;
+  @ViewChildren(MatOption) options!: QueryList<{setActiveStyles(): void}>;
   private readonly _multiple = signal(false);
   get multiple() {
     return this._multiple();

@@ -52,8 +52,8 @@ export class CdkTextareaAutosize implements AfterViewInit, DoCheck, OnDestroy {
   private readonly _destroyed = new Subject<void>();
   private _listenerCleanups: (() => void)[] | undefined;
 
-  private _minRows: number;
-  private _maxRows: number;
+  private _minRows!: number;
+  private _maxRows!: number;
   private _enabled: boolean = true;
 
   /**
@@ -118,13 +118,11 @@ export class CdkTextareaAutosize implements AfterViewInit, DoCheck, OnDestroy {
   private _cachedLineHeight?: number;
   /** Cached height of a textarea with only the placeholder. */
   private _cachedPlaceholderHeight?: number;
-  /** Cached scroll top of a textarea */
-  private _cachedScrollTop: number;
 
   /** Used to reference correct document/window */
   protected _document = inject(DOCUMENT);
 
-  private _hasFocus: boolean;
+  private _hasFocus = false;
 
   private _isViewInited = false;
 
@@ -239,14 +237,14 @@ export class CdkTextareaAutosize implements AfterViewInit, DoCheck, OnDestroy {
     const element = this._textareaElement;
     const previousMargin = element.style.marginBottom || '';
     const isFirefox = this._platform.FIREFOX;
-    const needsMarginFiller = isFirefox && this._hasFocus;
+    const needsMarginFiller = this._hasFocus;
     const measuringClass = isFirefox
       ? 'cdk-textarea-autosize-measuring-firefox'
       : 'cdk-textarea-autosize-measuring';
 
-    // In some cases the page might move around while we're measuring the `textarea` on Firefox. We
+    // In some cases the page might move around while we're measuring the `textarea`. We
     // work around it by assigning a temporary margin with the same height as the `textarea` so that
-    // it occupies the same amount of space. See #23233.
+    // it occupies the same amount of space. See #23233 and #23834.
     if (needsMarginFiller) {
       element.style.marginBottom = `${element.clientHeight}px`;
     }
@@ -306,7 +304,6 @@ export class CdkTextareaAutosize implements AfterViewInit, DoCheck, OnDestroy {
 
     this._cacheTextareaLineHeight();
     this._cacheTextareaPlaceholderHeight();
-    this._cachedScrollTop = this._textareaElement.scrollTop;
 
     // If we haven't determined the line-height yet, we know we're still hidden and there's no point
     // in checking the height of the textarea.
@@ -371,7 +368,6 @@ export class CdkTextareaAutosize implements AfterViewInit, DoCheck, OnDestroy {
     // it to receive focus on IE and Edge.
     if (!this._destroyed.isStopped && this._hasFocus) {
       textarea.setSelectionRange(selectionStart, selectionEnd);
-      textarea.scrollTop = this._cachedScrollTop;
     }
   }
 }

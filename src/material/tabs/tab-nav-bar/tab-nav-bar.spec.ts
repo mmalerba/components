@@ -13,7 +13,7 @@ import {By} from '@angular/platform-browser';
 import {Subject} from 'rxjs';
 import {MAT_RIPPLE_GLOBAL_OPTIONS, RippleGlobalOptions} from '../../core';
 import {MAT_TABS_CONFIG} from '../index';
-import {MatTabsModule} from '../module';
+import {MatTabsModule} from '../tabs-module';
 import {MatTabLink, MatTabNav} from './tab-nav-bar';
 
 describe('MatTabNavBar', () => {
@@ -26,12 +26,6 @@ describe('MatTabNavBar', () => {
     dir = signal('ltr');
 
     TestBed.configureTestingModule({
-      imports: [
-        MatTabsModule,
-        SimpleTabNavBarTestApp,
-        TabLinkWithNgIf,
-        TabBarWithInactiveTabsOnInit,
-      ],
       providers: [
         {provide: MAT_RIPPLE_GLOBAL_OPTIONS, useFactory: () => globalRippleOptions},
         provideFakeDirectionality(dir),
@@ -503,7 +497,6 @@ describe('MatTabNavBar with a default config', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      imports: [MatTabsModule, TabLinkWithNgIf],
       providers: [{provide: MAT_TABS_CONFIG, useValue: {fitInkBarToContent: true}}],
     });
   }));
@@ -523,12 +516,6 @@ describe('MatTabNavBar with a default config', () => {
 });
 
 describe('MatTabNavBar with enabled animations', () => {
-  beforeEach(fakeAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [MatTabsModule, TabsWithCustomAnimationDuration],
-    });
-  }));
-
   it('should not throw when setting an animationDuration without units', fakeAsync(() => {
     expect(() => {
       let fixture = TestBed.createComponent(TabsWithCustomAnimationDuration);
@@ -567,8 +554,8 @@ describe('MatTabNavBar with enabled animations', () => {
   imports: [MatTabsModule],
 })
 class SimpleTabNavBarTestApp {
-  @ViewChild(MatTabNav) tabNavBar: MatTabNav;
-  @ViewChildren(MatTabLink) tabLinks: QueryList<MatTabLink>;
+  @ViewChild(MatTabNav) tabNavBar!: MatTabNav;
+  @ViewChildren(MatTabLink) tabLinks!: QueryList<MatTabLink>;
 
   label = '';
   disabled = false;
@@ -599,7 +586,7 @@ class TabLinkWithNgIf {
   template: `
     <nav mat-tab-nav-bar [tabPanel]="tabPanel">
       @for (tab of tabs; track tab) {
-        <a mat-tab-link [active]="false">Tab link {{label}}</a>
+        <a mat-tab-link [active]="false">Tab link {{tab}}</a>
       }
     </nav>
     <mat-tab-nav-panel #tabPanel>Tab panel</mat-tab-nav-panel>

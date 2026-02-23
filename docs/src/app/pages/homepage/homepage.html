@@ -41,7 +41,7 @@
     </div>
   </div>
 
-  <mat-divider></mat-divider>
+  <mat-divider />
 
   <div class="docs-homepage-featured-components docs-homepage-carousel-row">
     <div class="docs-homepage-header">
@@ -53,7 +53,7 @@
       </a>
     </div>
     <app-carousel [aria-label]="'Featured components'">
-      @for (comp of getTopComponents(); track comp) {
+      @for (comp of topComponents; track comp) {
         <a carousel-item class="docs-carousel-item docs-featured-components-carousel-item"
            routerLink="/components/{{comp}}">
           <div class="docs-homepage-img-container">
@@ -65,7 +65,7 @@
     </app-carousel>
   </div>
 
-  <mat-divider></mat-divider>
+  <mat-divider />
 
   <div class="docs-homepage-guides docs-homepage-carousel-row">
     <div class="docs-homepage-header">
@@ -92,5 +92,5 @@
 
 </main>
 
-<app-support></app-support>
-<app-footer></app-footer>
+<app-support />
+<app-footer />

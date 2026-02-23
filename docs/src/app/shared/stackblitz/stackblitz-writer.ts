@@ -39,10 +39,7 @@ const TEMPLATE_PATH = '/assets/stackblitz/';
  * file from the boilerplate.
  */
 export const TEMPLATE_FILES = [
-  '.gitignore',
-  '.stackblitzrc',
   'angular.json',
-  'karma.conf.js',
   'package.json',
   'package-lock.json',
   'tsconfig.app.json',
@@ -50,12 +47,8 @@ export const TEMPLATE_FILES = [
   'tsconfig.spec.json',
   'src/index.html',
   'src/main.ts',
-  'src/styles.scss',
-  'src/test.ts',
+  'src/styles.css',
 ];
-
-const PROJECT_TAGS = ['angular', 'material', 'cdk', 'web', 'example'];
-const PROJECT_TEMPLATE = 'node';
 
 /**
  * Type describing an in-memory file dictionary, representing a
@@ -83,7 +76,7 @@ export class StackBlitzWriter {
     // and the file requests can cause excessive change detections.
     return this._ngZone.runOutsideAngular(async () => {
       const files = await this._buildInMemoryFileDictionary(data, exampleId, isTest);
-      const exampleMainFile = `src/app/${data.indexFilename}`;
+      const exampleMainFile = `src/example/${data.indexFilename}`;
 
       return () => {
         this._openStackBlitz({
@@ -91,6 +84,7 @@ export class StackBlitzWriter {
           title: `Angular Components - ${data.description}`,
           description: `${data.description}\n\nAuto-generated from: https://material.angular.dev`,
           openFile: exampleMainFile,
+          startScript: isTest ? 'test' : 'start',
         });
       };
     });
@@ -102,21 +96,26 @@ export class StackBlitzWriter {
     description,
     openFile,
     files,
+    startScript,
   }: {
     title: string;
     description: string;
     openFile: string;
     files: FileDictionary;
+    startScript: string;
   }): void {
     stackblitz.openProject(
       {
         title,
         files,
         description,
-        template: PROJECT_TEMPLATE,
-        tags: PROJECT_TAGS,
+        template: 'node',
+        tags: ['angular', 'material', 'cdk', 'web', 'example'],
       },
-      {openFile},
+      {
+        openFile,
+        startScript,
+      },
     );
   }
 
@@ -203,11 +202,6 @@ export class StackBlitzWriter {
       fileContent = fileContent
         .replace(/material-docs-example/g, data.selectorName)
         .replace(/\${title}/g, data.description);
-    } else if (fileName === '.stackblitzrc') {
-      fileContent = fileContent.replace(
-        /\${startCommand}/,
-        isTest ? 'npm run test' : 'npm run start',
-      );
     } else if (fileName === 'src/main.ts') {
       const mainComponentName = data.componentNames[0];
 
@@ -219,8 +213,8 @@ export class StackBlitzWriter {
       // Replace `bootstrapApplication(MaterialDocsExample,`
       // will be replaced as `bootstrapApplication(ButtonDemo,`
       fileContent = fileContent.replace(
-        /bootstrapApplication\(MaterialDocsExample,/g,
-        `bootstrapApplication(${mainComponentName},`,
+        /bootstrapApplication\(MaterialDocsExample/g,
+        `bootstrapApplication(${mainComponentName}`,
       );
 
       const dotIndex = data.indexFilename.lastIndexOf('.');

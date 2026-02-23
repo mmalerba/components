@@ -1,12 +1,5 @@
 import {AfterViewInit, Component, OnInit, ViewChild} from '@angular/core';
-import {
-  waitForAsync,
-  ComponentFixture,
-  fakeAsync,
-  flushMicrotasks,
-  TestBed,
-  tick,
-} from '@angular/core/testing';
+import {ComponentFixture, fakeAsync, flushMicrotasks, TestBed, tick} from '@angular/core/testing';
 import {MatTable, MatTableDataSource, MatTableModule} from './index';
 import {DataSource} from '@angular/cdk/table';
 import {BehaviorSubject, Observable} from 'rxjs';
@@ -14,26 +7,6 @@ import {MatSort, MatSortHeader, MatSortModule} from '../sort';
 import {MatPaginator, MatPaginatorModule} from '../paginator';
 
 describe('MatTable', () => {
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatTableModule,
-        MatPaginatorModule,
-        MatSortModule,
-        MatTableApp,
-        MatTableWithWhenRowApp,
-        ArrayDataSourceMatTableApp,
-        NativeHtmlTableApp,
-        MatTableWithSortApp,
-        MatTableWithPaginatorApp,
-        StickyTableApp,
-        TableWithNgContainerRow,
-        NestedTableApp,
-        MatFlexTableApp,
-      ],
-    });
-  }));
-
   describe('with basic data source', () => {
     it('should be able to create a table with the right content and without when row', () => {
       let fixture = TestBed.createComponent(MatTableApp);
@@ -43,9 +16,9 @@ describe('MatTable', () => {
       const data = fixture.componentInstance.dataSource!.data;
       expectTableToMatchContent(tableElement, [
         ['Column A', 'Column B', 'Column C'],
-        [data[0].a, data[0].b, data[0].c],
-        [data[1].a, data[1].b, data[1].c],
-        [data[2].a, data[2].b, data[2].c],
+        [data[0].a, data[0].b, data[0].c] as string[],
+        [data[1].a, data[1].b, data[1].c] as string[],
+        [data[2].a, data[2].b, data[2].c] as string[],
         ['fourth_row'],
         ['Footer A', 'Footer B', 'Footer C'],
       ]);
@@ -91,10 +64,10 @@ describe('MatTable', () => {
       const data = fixture.componentInstance.dataSource!.data;
       expectTableToMatchContent(tableElement, [
         ['Column A', 'Column B', 'Column C'],
-        [data[0].a, data[0].b, data[0].c],
-        [data[1].a, data[1].b, data[1].c],
-        [data[2].a, data[2].b, data[2].c],
-        [data[3].a, data[3].b, data[3].c],
+        [data[0].a, data[0].b, data[0].c] as string[],
+        [data[1].a, data[1].b, data[1].c] as string[],
+        [data[2].a, data[2].b, data[2].c] as string[],
+        [data[3].a, data[3].b, data[3].c] as string[],
       ]);
     });
 
@@ -186,9 +159,9 @@ describe('MatTable', () => {
     const data = fixture.componentInstance.dataSource!.data;
     expectTableToMatchContent(tableElement, [
       ['Column A', 'Column B', 'Column C'],
-      [data[0].a, data[0].b, data[0].c],
-      [data[1].a, data[1].b, data[1].c],
-      [data[2].a, data[2].b, data[2].c],
+      [data[0].a, data[0].b, data[0].c] as string[],
+      [data[1].a, data[1].b, data[1].c] as string[],
+      [data[2].a, data[2].b, data[2].c] as string[],
     ]);
   });
 
@@ -200,9 +173,9 @@ describe('MatTable', () => {
     const data = fixture.componentInstance.dataSource!.data;
     expectTableToMatchContent(tableElement, [
       ['Column A', 'Column B', 'Column C'],
-      [data[0].a, data[0].b, data[0].c],
-      [data[1].a, data[1].b, data[1].c],
-      [data[2].a, data[2].b, data[2].c],
+      [data[0].a, data[0].b, data[0].c] as string[],
+      [data[1].a, data[1].b, data[1].c] as string[],
+      [data[2].a, data[2].b, data[2].c] as string[],
     ]);
   });
 
@@ -384,7 +357,7 @@ describe('MatTable', () => {
       ]);
 
       // Change the filter to a falsy value that might come in from the view.
-      dataSource.filter = 0 as any;
+      dataSource.filter = 0 as unknown as string;
       flushMicrotasks();
       fixture.detectChanges();
       expectTableToMatchContent(tableElement, [
@@ -631,7 +604,7 @@ describe('MatTable', () => {
         ['Footer A', 'Footer B', 'Footer C'],
       ]);
 
-      dataSource.data = {} as any;
+      dataSource.data = {} as TestData[];
       fixture.changeDetectorRef.markForCheck();
       fixture.detectChanges();
       expectTableToMatchContent(tableElement, [
@@ -721,11 +694,11 @@ class FakeDataSource extends DataSource<TestData> {
   imports: [MatTableModule, MatPaginatorModule, MatSortModule],
 })
 class MatTableApp {
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
   columnsToRender = ['column_a', 'column_b', 'column_c'];
   isFourthRow = (i: number, _rowData: TestData) => i == 3;
 
-  @ViewChild(MatTable) table: MatTable<TestData>;
+  @ViewChild(MatTable) table!: MatTable<TestData>;
 }
 
 @Component({
@@ -756,10 +729,10 @@ class MatTableApp {
   imports: [MatTableModule, MatPaginatorModule, MatSortModule],
 })
 class NativeHtmlTableApp {
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
   columnsToRender = ['column_a', 'column_b', 'column_c'];
 
-  @ViewChild(MatTable) table: MatTable<TestData>;
+  @ViewChild(MatTable) table!: MatTable<TestData>;
 }
 
 @Component({
@@ -810,7 +783,7 @@ class NativeHtmlTableApp {
   imports: [MatTableModule, MatPaginatorModule, MatSortModule],
 })
 class NestedTableApp {
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
   columnsToRender = ['column_a', 'column_b', 'column_c'];
 }
 
@@ -832,7 +805,7 @@ class StickyTableApp {
   dataSource = new FakeDataSource();
   columnsToRender = ['column_a'];
 
-  @ViewChild(MatTable) table: MatTable<TestData>;
+  @ViewChild(MatTable) table!: MatTable<TestData>;
 }
 
 @Component({
@@ -858,10 +831,10 @@ class StickyTableApp {
 })
 class MatTableWithWhenRowApp {
   multiTemplateDataRows = false;
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
   isFourthRow = (i: number, _rowData: TestData) => i == 3;
 
-  @ViewChild(MatTable) table: MatTable<TestData>;
+  @ViewChild(MatTable) table!: MatTable<TestData>;
 }
 
 @Component({
@@ -899,10 +872,10 @@ class ArrayDataSourceMatTableApp implements AfterViewInit {
   dataSource = new MatTableDataSource<TestData>();
   columnsToRender = ['column_a', 'column_b', 'column_c'];
 
-  @ViewChild(MatTable) table: MatTable<TestData>;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
-  @ViewChild(MatSortHeader) sortHeader: MatSortHeader;
+  @ViewChild(MatTable) table!: MatTable<TestData>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatSortHeader) sortHeader!: MatSortHeader;
 
   constructor() {
     this.underlyingDataSource.data = [];
@@ -952,8 +925,8 @@ class MatTableWithSortApp implements OnInit {
   dataSource = new MatTableDataSource<TestData>();
   columnsToRender = ['column_a', 'column_b', 'column_c'];
 
-  @ViewChild(MatTable) table: MatTable<TestData>;
-  @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatTable) table!: MatTable<TestData>;
+  @ViewChild(MatSort) sort!: MatSort;
 
   constructor() {
     this.underlyingDataSource.data = [];
@@ -1004,8 +977,8 @@ class MatTableWithPaginatorApp implements OnInit {
   dataSource = new MatTableDataSource<TestData>();
   columnsToRender = ['column_a', 'column_b', 'column_c'];
 
-  @ViewChild(MatTable) table: MatTable<TestData>;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatTable) table!: MatTable<TestData>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor() {
     this.underlyingDataSource.data = [];
@@ -1042,7 +1015,7 @@ class MatTableWithPaginatorApp implements OnInit {
   imports: [MatTableModule, MatPaginatorModule, MatSortModule],
 })
 class TableWithNgContainerRow {
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
   columnsToRender = ['column_a'];
 }
 
@@ -1080,9 +1053,9 @@ class TableWithNgContainerRow {
   imports: [MatTableModule, MatPaginatorModule, MatSortModule],
 })
 class MatFlexTableApp {
-  dataSource: FakeDataSource | null = new FakeDataSource();
+  dataSource = new FakeDataSource();
   columnsToRender = ['column_a', 'column_b', 'column_c'];
-  @ViewChild(MatTable) table: MatTable<TestData>;
+  @ViewChild(MatTable) table!: MatTable<TestData>;
 }
 
 function getElements(element: Element, query: string): Element[] {
@@ -1135,7 +1108,7 @@ function getActualTableContent(tableElement: Element): string[][] {
   return actualTableContent.map(row => row.map(cell => cell.textContent!.trim()));
 }
 
-export function expectTableToMatchContent(tableElement: Element, expected: any[]) {
+export function expectTableToMatchContent(tableElement: Element, expected: string[][]) {
   const missedExpectations: string[] = [];
   function checkCellContent(actualCell: string, expectedCell: string) {
     if (actualCell !== expectedCell) {
@@ -1161,7 +1134,7 @@ export function expectTableToMatchContent(tableElement: Element, expected: any[]
     }
 
     row.forEach((actualCell, cellIndex) => {
-      const expectedCell = expectedRow ? expectedRow[cellIndex] : null;
+      const expectedCell = expectedRow[cellIndex];
       checkCellContent(actualCell, expectedCell);
     });
   });

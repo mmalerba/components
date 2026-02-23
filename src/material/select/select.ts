@@ -31,6 +31,8 @@ import {
   CdkOverlayOrigin,
   ConnectedPosition,
   createRepositionScrollStrategy,
+  FlexibleOverlayPopoverLocation,
+  OVERLAY_DEFAULT_CONFIG,
   ScrollStrategy,
 } from '@angular/cdk/overlay';
 import {ViewportRuler} from '@angular/cdk/scrolling';
@@ -71,6 +73,7 @@ import {
   NgForm,
   Validators,
 } from '@angular/forms';
+import {_getEventTarget} from '@angular/cdk/platform';
 import {
   _animationsDisabled,
   _countGroupLabelsBeforeOption,
@@ -91,7 +94,6 @@ import {
   getMatSelectNonArrayValueError,
   getMatSelectNonFunctionValueError,
 } from './select-errors';
-import {NgClass} from '@angular/common';
 
 /** Injection token that determines the scroll handling while a select is open. */
 export const MAT_SELECT_SCROLL_STRATEGY = new InjectionToken<() => ScrollStrategy>(
@@ -104,18 +106,6 @@ export const MAT_SELECT_SCROLL_STRATEGY = new InjectionToken<() => ScrollStrateg
     },
   },
 );
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function MAT_SELECT_SCROLL_STRATEGY_PROVIDER_FACTORY(
-  _overlay: unknown,
-): () => ScrollStrategy {
-  const injector = inject(Injector);
-  return () => createRepositionScrollStrategy(injector);
-}
 
 /** Object that can be used to configure the default options for the select module. */
 export interface MatSelectConfig {
@@ -146,17 +136,6 @@ export interface MatSelectConfig {
 
 /** Injection token that can be used to provide the default options the select module. */
 export const MAT_SELECT_CONFIG = new InjectionToken<MatSelectConfig>('MAT_SELECT_CONFIG');
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export const MAT_SELECT_SCROLL_STRATEGY_PROVIDER = {
-  provide: MAT_SELECT_SCROLL_STRATEGY,
-  deps: [] as any[],
-  useFactory: MAT_SELECT_SCROLL_STRATEGY_PROVIDER_FACTORY,
-};
 
 /**
  * Injection token that can be used to reference instances of `MatSelectTrigger`. It serves as
@@ -200,6 +179,7 @@ export class MatSelectChange<T = any> {
     '[class.mat-mdc-select-required]': 'required',
     '[class.mat-mdc-select-empty]': 'empty',
     '[class.mat-mdc-select-multiple]': 'multiple',
+    '[class.mat-select-open]': 'panelOpen',
     '(keydown)': '_handleKeydown($event)',
     '(focus)': '_onFocus()',
     '(blur)': '_onBlur()',
@@ -208,7 +188,7 @@ export class MatSelectChange<T = any> {
     {provide: MatFormFieldControl, useExisting: MatSelect},
     {provide: MAT_OPTION_PARENT_COMPONENT, useExisting: MatSelect},
   ],
-  imports: [CdkOverlayOrigin, CdkConnectedOverlay, NgClass],
+  imports: [CdkOverlayOrigin, CdkConnectedOverlay],
 })
 export class MatSelect
   implements
@@ -231,19 +211,20 @@ export class MatSelect
   private _liveAnnouncer = inject(LiveAnnouncer);
   protected _defaultOptions = inject(MAT_SELECT_CONFIG, {optional: true});
   protected _animationsDisabled = _animationsDisabled();
+  protected _popoverLocation: FlexibleOverlayPopoverLocation | null;
   private _initialized = new Subject();
   private _cleanupDetach: (() => void) | undefined;
 
   /** All of the defined select options. */
-  @ContentChildren(MatOption, {descendants: true}) options: QueryList<MatOption>;
+  @ContentChildren(MatOption, {descendants: true}) options!: QueryList<MatOption>;
 
   // TODO(crisbeto): this is only necessary for the non-MDC select, but it's technically a
   // public API so we have to keep it. It should be deprecated and removed eventually.
   /** All of the defined groups of options. */
-  @ContentChildren(MAT_OPTGROUP, {descendants: true}) optionGroups: QueryList<MatOptgroup>;
+  @ContentChildren(MAT_OPTGROUP, {descendants: true}) optionGroups!: QueryList<MatOptgroup>;
 
   /** User-supplied override of the trigger element. */
-  @ContentChild(MAT_SELECT_TRIGGER) customTrigger: MatSelectTrigger;
+  @ContentChild(MAT_SELECT_TRIGGER) customTrigger!: MatSelectTrigger;
 
   /**
    * This position config ensures that the top "start" corner of the overlay
@@ -359,19 +340,19 @@ export class MatSelect
    * Implemented as part of MatFormFieldControl.
    * @docs-private
    */
-  @Input('aria-describedby') userAriaDescribedBy: string;
+  @Input('aria-describedby') userAriaDescribedBy!: string;
 
   /** Deals with the selection logic. */
-  _selectionModel: SelectionModel<MatOption>;
+  _selectionModel!: SelectionModel<MatOption>;
 
   /** Manages keyboard events for options in the panel. */
-  _keyManager: ActiveDescendantKeyManager<MatOption>;
+  _keyManager!: ActiveDescendantKeyManager<MatOption>;
 
   /** Ideal origin for the overlay panel. */
   _preferredOverlayOrigin: CdkOverlayOrigin | ElementRef | undefined;
 
   /** Width of the overlay panel. */
-  _overlayWidth: string | number;
+  _overlayWidth!: string | number;
 
   /** `View -> model callback called when value changes` */
   _onChange: (value: any) => void = () => {};
@@ -397,17 +378,17 @@ export class MatSelect
   controlType = 'mat-select';
 
   /** Trigger that opens the select. */
-  @ViewChild('trigger') trigger: ElementRef;
+  @ViewChild('trigger') trigger!: ElementRef;
 
   /** Panel containing the select options. */
-  @ViewChild('panel') panel: ElementRef;
+  @ViewChild('panel') panel!: ElementRef;
 
   /** Overlay pane containing the options. */
   @ViewChild(CdkConnectedOverlay)
-  protected _overlayDir: CdkConnectedOverlay;
+  protected _overlayDir!: CdkConnectedOverlay;
 
   /** Classes to be passed to the select panel. Supports the same syntax as `ngClass`. */
-  @Input() panelClass: string | string[] | Set<string> | {[key: string]: any};
+  @Input() panelClass!: string | string[] | Set<string> | {[key: string]: any};
 
   /** Whether the select is disabled. */
   @Input({transform: booleanAttribute})
@@ -450,7 +431,7 @@ export class MatSelect
     this._placeholder = value;
     this.stateChanges.next();
   }
-  private _placeholder: string;
+  private _placeholder!: string;
 
   /** Whether the component is required. */
   @Input({transform: booleanAttribute})
@@ -519,7 +500,7 @@ export class MatSelect
   @Input('aria-label') ariaLabel: string = '';
 
   /** Input that can be used to specify the `aria-labelledby` attribute. */
-  @Input('aria-labelledby') ariaLabelledby: string;
+  @Input('aria-labelledby') ariaLabelledby!: string;
 
   /** Object used to control when error messages are shown. */
   @Input()
@@ -532,13 +513,13 @@ export class MatSelect
 
   /** Time to wait in milliseconds after the last keystroke before moving focus to an item. */
   @Input({transform: numberAttribute})
-  typeaheadDebounceInterval: number;
+  typeaheadDebounceInterval!: number;
 
   /**
    * Function used to sort the values in a select in multiple mode.
    * Follows the same logic as `Array.prototype.sort`.
    */
-  @Input() sortComparator: (a: MatOption, b: MatOption, options: MatOption[]) => number;
+  @Input() sortComparator!: (a: MatOption, b: MatOption, options: MatOption[]) => number;
 
   /** Unique id of the element. */
   @Input()
@@ -549,7 +530,7 @@ export class MatSelect
     this._id = value || this._uid;
     this.stateChanges.next();
   }
-  private _id: string;
+  private _id!: string;
 
   /** Whether the select is in an error state. */
   get errorState() {
@@ -623,6 +604,7 @@ export class MatSelect
     const parentForm = inject(NgForm, {optional: true});
     const parentFormGroup = inject(FormGroupDirective, {optional: true});
     const tabIndex = inject(new HostAttributeToken('tabindex'), {optional: true});
+    const defaultPopoverConfig = inject(OVERLAY_DEFAULT_CONFIG, {optional: true});
 
     if (this.ngControl) {
       // Note: we provide the value accessor through here, instead of
@@ -643,8 +625,10 @@ export class MatSelect
       parentForm,
       this.stateChanges,
     );
+
     this._scrollStrategy = this._scrollStrategyFactory();
     this.tabIndex = tabIndex == null ? 0 : parseInt(tabIndex) || 0;
+    this._popoverLocation = defaultPopoverConfig?.usePopover === false ? null : 'inline';
 
     // Force setter to be called in case id was not specified.
     this.id = this.id;
@@ -725,6 +709,10 @@ export class MatSelect
 
     if (changes['typeaheadDebounceInterval'] && this._keyManager) {
       this._keyManager.withTypeAhead(this.typeaheadDebounceInterval);
+    }
+
+    if (changes['panelClass'] && this.panelClass instanceof Set) {
+      this.panelClass = Array.from(this.panelClass);
     }
   }
 
@@ -1098,11 +1086,6 @@ export class MatSelect
       this._changeDetectorRef.markForCheck();
       this.stateChanges.next();
     }
-  }
-
-  /** Returns the theme to be used on the panel. */
-  _getPanelTheme(): string {
-    return this._parentFormField ? `mat-${this._parentFormField.color}` : '';
   }
 
   /** Whether the select has a value. */
@@ -1483,10 +1466,12 @@ export class MatSelect
    * @docs-private
    */
   setDescribedByIds(ids: string[]) {
+    const element = this._elementRef.nativeElement;
+
     if (ids.length) {
-      this._elementRef.nativeElement.setAttribute('aria-describedby', ids.join(' '));
+      element.setAttribute('aria-describedby', ids.join(' '));
     } else {
-      this._elementRef.nativeElement.removeAttribute('aria-describedby');
+      element.removeAttribute('aria-describedby');
     }
   }
 
@@ -1494,7 +1479,22 @@ export class MatSelect
    * Implemented as part of MatFormFieldControl.
    * @docs-private
    */
-  onContainerClick() {
+  onContainerClick(event: MouseEvent) {
+    const target = _getEventTarget(event) as HTMLElement | null;
+
+    // Since the overlay is inside the form field, this handler can fire for interactions
+    // with the container. Note that while it's redundant to select both for the popover
+    // and select panel, we need to do it because it tests the clicks can occur after
+    // the panel was detached from the popover.
+    if (
+      target &&
+      (target.tagName === 'MAT-OPTION' ||
+        target.classList.contains('cdk-overlay-backdrop') ||
+        target.closest('.mat-mdc-select-panel'))
+    ) {
+      return;
+    }
+
     this.focus();
     this.open();
   }

@@ -6,7 +6,6 @@ load(
     "ng_web_test_suite",
     "sass_binary",
     "sass_library",
-    "ts_project",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -83,8 +82,8 @@ ng_project(
         "chip-row.ts",
         "chip-set.ts",
         "chip-text-control.ts",
+        "chips-module.ts",
         "index.ts",
-        "module.ts",
         "public-api.ts",
         "tokens.ts",
     ],
@@ -106,7 +105,7 @@ ng_project(
     ],
 )
 
-ts_project(
+ng_project(
     name = "chips_tests_lib",
     testonly = True,
     srcs = glob(

@@ -38,6 +38,7 @@ import {ExampleViewer} from '../example-viewer/example-viewer';
 import {HeaderLink} from './header-link';
 import {DeprecatedFieldComponent} from './deprecated-tooltip';
 import {ModuleImportCopyButton} from './module-import-copy-button';
+import {AngularAriaBanner} from './angular-aria-banner/angular-aria-banner';
 
 @Injectable({providedIn: 'root'})
 class DocFetcher {
@@ -59,7 +60,7 @@ class DocFetcher {
   selector: 'doc-viewer',
   template: `
     @if (portal) {
-      <ng-template [cdkPortalOutlet]="portal"></ng-template>
+      <ng-template [cdkPortalOutlet]="portal" />
     } @else {
       Loading document...
     }
@@ -80,6 +81,7 @@ export class DocViewer implements OnDestroy {
   protected portal: Portal<any> | undefined;
 
   readonly name = input<string>();
+  readonly packageName = input<string>();
 
   /** The document to display, either as a URL to a markdown file or a component to create. */
   @Input()
@@ -153,6 +155,9 @@ export class DocViewer implements OnDestroy {
     this.textContent = this._elementRef.nativeElement.textContent;
     this._loadComponents('material-docs-example', ExampleViewer);
     this._loadComponents('header-link', HeaderLink);
+
+    // Inject Angular Aria banner for specific CDK components
+    this._injectAngularAriaBanner();
 
     // Create tooltips for the deprecated fields
     this._createTooltipsForDeprecated();
@@ -266,5 +271,37 @@ export class DocViewer implements OnDestroy {
 
       this._portalHosts.push(elementPortalOutlet);
     });
+  }
+
+  /**
+   * Injects the Angular Aria migration banner for specific CDK components.
+   */
+  private _injectAngularAriaBanner() {
+    const componentName = this.name();
+    const packageName = this.packageName();
+
+    if (
+      !componentName ||
+      packageName !== 'cdk' ||
+      !['listbox', 'tree', 'accordion', 'menu'].includes(componentName.toLowerCase())
+    ) {
+      return;
+    }
+
+    // Create a container div for the banner at the beginning of the document
+    const bannerContainer = document.createElement('div');
+    bannerContainer.setAttribute('angular-aria-banner', '');
+    bannerContainer.setAttribute('componentName', componentName);
+
+    // Insert the banner at the beginning of the document content
+    this._elementRef.nativeElement.prepend(bannerContainer);
+
+    // Create and attach the banner component
+    const portalHost = new DomPortalOutlet(bannerContainer, this._appRef, this._injector);
+    const bannerPortal = new ComponentPortal(AngularAriaBanner, this._viewContainerRef);
+    const bannerComponent = portalHost.attach(bannerPortal);
+    bannerComponent.instance.componentName = componentName;
+
+    this._portalHosts.push(portalHost);
   }
 }

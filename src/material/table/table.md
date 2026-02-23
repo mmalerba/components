@@ -175,6 +175,20 @@ and its interface is not tied to any one specific implementation.
 
 <!-- example(table-pagination) -->
 
+#### Virtual scrolling
+
+An alternative approach to showing a large amount of data inside a Material table is to use
+virtual scrolling which will only render the the visible rows in the DOM as the user is scrolling.
+
+To enable virtual scrolling you have to wrap the Material table in a `<cdk-virtual-scroll-viewport>`
+element and add CSS to make the viewport scrollable.
+
+**Note:** tables with virtual scrolling have the following limitations:
+* `fixedLayout` is always enabled, in order to prevent jumping when rows are swapped out.
+* Conditional templates via the `when` input are [not supported at the moment](https://github.com/angular/components/issues/32670).
+
+<!-- example(table-virtual-scroll) -->
+
 #### Sorting
 
 To add sorting behavior to the table, add the `matSort` directive to the table and add
@@ -239,7 +253,15 @@ takes a data object and filter string and returns true if the data object is con
 If you want to show a message when not data matches the filter, you can use the `*matNoDataRow`
 directive.
 
-<!--- example(table-filtering) -->
+<!-- example(table-filtering) -->
+
+#### Drag and drop
+
+Material tables can be integrated with the `@angular/cdk/drag-drop` module to support drag&drop of
+either columns or rows.
+
+<!-- example(table-reorderable) -->
+<!-- example(table-drag-drop) -->
 
 #### Selection
 

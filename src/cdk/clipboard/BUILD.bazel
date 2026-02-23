@@ -1,4 +1,4 @@
-load("//tools:defaults.bzl", "markdown_to_html", "ng_project", "ng_web_test_suite", "ts_project")
+load("//tools:defaults.bzl", "markdown_to_html", "ng_project", "ng_web_test_suite")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -8,7 +8,6 @@ ng_project(
         ["**/*.ts"],
         exclude = ["**/*.spec.ts"],
     ),
-    assets = glob(["**/*.html"]),
     deps = [
         "//:node_modules/@angular/common",
         "//:node_modules/@angular/core",
@@ -16,7 +15,7 @@ ng_project(
     ],
 )
 
-ts_project(
+ng_project(
     name = "unit_test_sources",
     testonly = True,
     srcs = glob(

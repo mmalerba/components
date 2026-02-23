@@ -7,10 +7,6 @@ describe('MatDivider', () => {
   let fixture: ComponentFixture<MatDividerTestComponent>;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [MatDividerModule, MatDividerTestComponent],
-    });
-
     fixture = TestBed.createComponent(MatDividerTestComponent);
   });
 
@@ -66,6 +62,6 @@ describe('MatDivider', () => {
   imports: [MatDividerModule],
 })
 class MatDividerTestComponent {
-  vertical: boolean;
-  inset: boolean;
+  vertical = false;
+  inset = false;
 }

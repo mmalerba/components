@@ -4,7 +4,6 @@ import {SchematicTestRunner} from '@angular-devkit/schematics/testing';
 import {
   getProjectFromWorkspace,
   getProjectIndexFiles,
-  getProjectStyleFile,
   getProjectTargetOptions,
 } from '@angular/cdk/schematics';
 import {createTestApp, createTestLibrary, getFileContent} from '../../../cdk/schematics/testing';
@@ -87,7 +86,7 @@ describe('ng-add schematic', () => {
     const workspace = await readWorkspace(tree);
     const project = getProjectFromWorkspace(workspace, baseOptions.project);
 
-    expectProjectStyleFile(project, '@angular/material/prebuilt-themes/azure-blue.css');
+    expectProjectStyleFile(project, 'projects/material/src/material-theme.scss');
   });
 
   it('should support adding a custom theme', async () => {
@@ -96,7 +95,7 @@ describe('ng-add schematic', () => {
 
     const tree = await runner.runSchematic(
       'ng-add-setup-project',
-      {...baseOptions, theme: 'custom'},
+      {...baseOptions, theme: 'azure-blue'},
       appTree,
     );
     const workspace = await readWorkspace(tree);
@@ -116,17 +115,17 @@ describe('ng-add schematic', () => {
 
     const tree = await runner.runSchematic(
       'ng-add-setup-project',
-      {...baseOptions, theme: 'custom'},
+      {...baseOptions, theme: 'azure-blue'},
       appTree,
     );
     const workspace = await readWorkspace(tree);
     const project = getProjectFromWorkspace(workspace, baseOptions.project);
-    const expectedStylesPath = normalize(`/${project.root}/src/custom-theme.scss`);
+    const expectedStylesPath = normalize(`/${project.root}/src/material-theme.scss`);
 
     expect(tree.files)
       .withContext('Expected a custom theme file to be created')
       .toContain(expectedStylesPath);
-    expectProjectStyleFile(project, 'projects/material/src/custom-theme.scss');
+    expectProjectStyleFile(project, 'projects/material/src/material-theme.scss');
   });
 
   it('should add font links', async () => {
@@ -145,6 +144,12 @@ describe('ng-add schematic', () => {
       // the created links properly align with the existing HTML. Default CLI projects use an
       // indentation of two columns.
       expect(htmlContent).toContain(
+        '  <link rel="preconnect" href="https://fonts.googleapis.com">',
+      );
+      expect(htmlContent).toContain(
+        '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',
+      );
+      expect(htmlContent).toContain(
         '  <link href="https://fonts.googleapis.com/icon?family=Material+Icons"',
       );
       expect(htmlContent).toContain(
@@ -152,20 +157,6 @@ describe('ng-add schematic', () => {
           '300;400;500&display=swap"',
       );
     });
-  });
-
-  it('should add material app styles', async () => {
-    const tree = await runner.runSchematic('ng-add-setup-project', baseOptions, appTree);
-    const workspace = await readWorkspace(tree);
-    const project = getProjectFromWorkspace(workspace, baseOptions.project);
-
-    const defaultStylesPath = getProjectStyleFile(project)!;
-    const htmlContent = tree.read(defaultStylesPath)!.toString();
-
-    expect(htmlContent).toContain('html, body { height: 100%; }');
-    expect(htmlContent).toContain(
-      'body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }',
-    );
   });
 
   describe('custom project builders', () => {
@@ -213,224 +204,19 @@ describe('ng-add schematic', () => {
         runner.runSchematic('ng-add-setup-project', baseOptions, appTree),
       ).toBeRejected();
     });
-
-    it('should warn if the "test" target has been changed', async () => {
-      overwriteTargetBuilder(appTree, 'test', 'thirdparty-test-builder');
-      await runner.runSchematic('ng-add-setup-project', baseOptions, appTree);
-
-      expect(errorOutput.length).toBe(0);
-      expect(warnOutput.length).toBe(1);
-      expect(warnOutput[0]).toMatch(
-        /not using the default builders.*cannot add the configured theme/,
-      );
-    });
   });
 
   describe('theme files', () => {
-    /** Path to the default prebuilt theme file that will be added when running ng-add. */
-    const defaultPrebuiltThemePath = '@angular/material/prebuilt-themes/azure-blue.css';
-
-    /** Writes a specific style file to the workspace in the given tree */
-    function writeStyleFileToWorkspace(tree: Tree, stylePath: string) {
-      tree.overwrite(
-        '/angular.json',
-        JSON.stringify(
-          {
-            version: 1,
-            projects: {
-              material: {
-                projectType: 'application',
-                root: 'projects/material',
-                sourceRoot: 'projects/material/src',
-                prefix: 'app',
-                architect: {
-                  build: {
-                    builder: '@angular-devkit/build-angular:application',
-                    options: {
-                      outputPath: 'dist/material',
-                      index: 'projects/material/src/index.html',
-                      browser: 'projects/material/src/main.ts',
-                      styles: ['projects/material/src/styles.css', stylePath],
-                    },
-                  },
-                },
-              },
-            },
-          },
-          null,
-          2,
-        ),
-      );
-    }
-
-    it('should replace existing prebuilt theme files', async () => {
-      const existingThemePath = '@angular/material/prebuilt-themes/purple-green.css';
-      writeStyleFileToWorkspace(appTree, existingThemePath);
-
-      const tree = await runner.runSchematic('ng-add-setup-project', baseOptions, appTree);
-      const workspace = await readWorkspace(tree);
-      const project = getProjectFromWorkspace(workspace, baseOptions.project);
-      const styles = getProjectTargetOptions(project, 'build')['styles'];
-
-      expect(styles)
-        .not.withContext('Expected the existing prebuilt theme file to be removed.')
-        .toContain(existingThemePath);
-      expect(styles)
-        .withContext('Expected the default prebuilt theme to be added.')
-        .toContain(defaultPrebuiltThemePath);
-    });
-
-    it('should not replace existing custom theme files', async () => {
-      writeStyleFileToWorkspace(appTree, './projects/material/custom-theme.scss');
-
-      const tree = await runner.runSchematic('ng-add-setup-project', baseOptions, appTree);
-      const workspace = await readWorkspace(tree);
-      const project = getProjectFromWorkspace(workspace, baseOptions.project);
-      const styles = getProjectTargetOptions(project, 'build')['styles'];
-
-      expect(styles)
-        .not.withContext('Expected the default prebuilt theme to be not configured.')
-        .toContain(defaultPrebuiltThemePath);
-      expect(errorOutput.length).toBe(1);
-      expect(errorOutput[0]).toMatch(/Could not add the selected theme/);
-    });
-
-    it('should not add a theme file multiple times', async () => {
-      writeStyleFileToWorkspace(appTree, defaultPrebuiltThemePath);
-
-      const tree = await runner.runSchematic('ng-add-setup-project', baseOptions, appTree);
-      const workspace = await readWorkspace(tree);
-      const project = getProjectFromWorkspace(workspace, baseOptions.project);
-      const styles = getProjectTargetOptions(project, 'build')['styles'];
-
-      expect(styles)
-        .withContext(
-          'Expected the "styles.css" file and default prebuilt theme to be ' + 'the only styles',
-        )
-        .toEqual(['projects/material/src/styles.css', defaultPrebuiltThemePath]);
-    });
-
     it('should not overwrite existing custom theme files', async () => {
-      appTree.create('/projects/material/custom-theme.scss', 'custom-theme');
+      appTree.create('/projects/material/material-theme.scss', 'material-theme');
       const tree = await runner.runSchematic(
         'ng-add-setup-project',
-        {...baseOptions, theme: 'custom'},
+        {...baseOptions, theme: 'azure-blue'},
         appTree,
       );
-      expect(tree.readContent('/projects/material/custom-theme.scss'))
+      expect(tree.readContent('/projects/material/material-theme.scss'))
         .withContext('Expected the old custom theme content to be unchanged.')
-        .toBe('custom-theme');
-    });
-  });
-
-  it('should add the global typography class if the body has no classes', async () => {
-    const tree = await runner.runSchematic(
-      'ng-add-setup-project',
-      {
-        ...baseOptions,
-        typography: true,
-      },
-      appTree,
-    );
-    const workspace = await readWorkspace(tree);
-    const project = getProjectFromWorkspace(workspace, baseOptions.project);
-
-    const indexFiles = getProjectIndexFiles(project);
-    expect(indexFiles.length).toBe(1);
-
-    indexFiles.forEach(indexPath => {
-      const buffer = tree.read(indexPath)!;
-      expect(buffer.toString()).toContain('<body class="mat-typography">');
-    });
-  });
-
-  it('should add the global typography class if the body has existing classes', async () => {
-    appTree.overwrite(
-      'projects/material/src/index.html',
-      `
-      <html>
-        <head></head>
-        <body class="one two"></body>
-      </html>
-    `,
-    );
-
-    const tree = await runner.runSchematic(
-      'ng-add-setup-project',
-      {
-        ...baseOptions,
-        typography: true,
-      },
-      appTree,
-    );
-    const workspace = await readWorkspace(tree);
-    const project = getProjectFromWorkspace(workspace, baseOptions.project);
-    const indexFiles = getProjectIndexFiles(project);
-    expect(indexFiles.length).toBe(1);
-
-    indexFiles.forEach(indexPath => {
-      const buffer = tree.read(indexPath)!;
-      expect(buffer.toString()).toContain('<body class="one two mat-typography">');
-    });
-  });
-
-  it('should not add the global typography class if it exists already', async () => {
-    appTree.overwrite(
-      'projects/material/src/index.html',
-      `
-      <html>
-        <head></head>
-        <body class="one mat-typography two"></body>
-      </html>
-    `,
-    );
-
-    const tree = await runner.runSchematic(
-      'ng-add-setup-project',
-      {
-        ...baseOptions,
-        typography: true,
-      },
-      appTree,
-    );
-    const workspace = await readWorkspace(tree);
-    const project = getProjectFromWorkspace(workspace, baseOptions.project);
-    const indexFiles = getProjectIndexFiles(project);
-    expect(indexFiles.length).toBe(1);
-
-    indexFiles.forEach(indexPath => {
-      const buffer = tree.read(indexPath)!;
-      expect(buffer.toString()).toContain('<body class="one mat-typography two">');
-    });
-  });
-
-  it('should not add the global typography class if the user did not opt into it', async () => {
-    appTree.overwrite(
-      'projects/material/src/index.html',
-      `
-      <html>
-        <head></head>
-        <body class="one two"></body>
-      </html>
-    `,
-    );
-
-    const tree = await runner.runSchematic(
-      'ng-add-setup-project',
-      {
-        ...baseOptions,
-        typography: false,
-      },
-      appTree,
-    );
-    const workspace = await readWorkspace(tree);
-    const project = getProjectFromWorkspace(workspace, baseOptions.project);
-    const indexFiles = getProjectIndexFiles(project);
-    expect(indexFiles.length).toBe(1);
-
-    indexFiles.forEach(indexPath => {
-      const buffer = tree.read(indexPath)!;
-      expect(buffer.toString()).toContain('<body class="one two">');
+        .toBe('material-theme');
     });
   });
 
@@ -476,21 +262,7 @@ describe('ng-add schematic', () => {
       const workspace = await readWorkspace(tree);
       const project = getProjectFromWorkspace(workspace, baseOptions.project);
 
-      expectProjectStyleFile(project, '@angular/material/prebuilt-themes/azure-blue.css');
-    });
-
-    it('should add material app styles', async () => {
-      const tree = await runner.runSchematic('ng-add-setup-project', baseOptions, appTree);
-      const workspace = await readWorkspace(tree);
-      const project = getProjectFromWorkspace(workspace, baseOptions.project);
-
-      const defaultStylesPath = getProjectStyleFile(project)!;
-      const htmlContent = tree.read(defaultStylesPath)!.toString();
-
-      expect(htmlContent).toContain('html, body { height: 100%; }');
-      expect(htmlContent).toContain(
-        'body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }',
-      );
+      expectProjectStyleFile(project, 'projects/material/src/material-theme.scss');
     });
   });
 
@@ -536,21 +308,7 @@ describe('ng-add schematic', () => {
       const workspace = await readWorkspace(tree);
       const project = getProjectFromWorkspace(workspace, baseOptions.project);
 
-      expectProjectStyleFile(project, '@angular/material/prebuilt-themes/azure-blue.css');
-    });
-
-    it('should add material app styles', async () => {
-      const tree = await runner.runSchematic('ng-add-setup-project', baseOptions, appTree);
-      const workspace = await readWorkspace(tree);
-      const project = getProjectFromWorkspace(workspace, baseOptions.project);
-
-      const defaultStylesPath = getProjectStyleFile(project)!;
-      const htmlContent = tree.read(defaultStylesPath)!.toString();
-
-      expect(htmlContent).toContain('html, body { height: 100%; }');
-      expect(htmlContent).toContain(
-        'body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }',
-      );
+      expectProjectStyleFile(project, 'projects/material/src/material-theme.scss');
     });
   });
 
@@ -587,7 +345,7 @@ describe('ng-add schematic', () => {
       const workspace = await readWorkspace(tree);
       const project = getProjectFromWorkspace(workspace, baseOptions.project);
 
-      expectProjectStyleFile(project, '@angular/material/prebuilt-themes/azure-blue.css');
+      expectProjectStyleFile(project, 'projects/material/src/material-theme.scss');
     });
   });
 });

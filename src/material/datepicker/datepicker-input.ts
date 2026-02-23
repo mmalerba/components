@@ -79,7 +79,7 @@ export class MatDatepickerInput<D>
       this._registerModel(datepicker.registerInput(this));
     }
   }
-  _datepicker: MatDatepickerPanel<MatDatepickerControl<D>, D | null, D>;
+  _datepicker!: MatDatepickerPanel<MatDatepickerControl<D>, D | null, D>;
 
   /** The id of the panel owned by this input. */
   protected _ariaOwns = signal<string | null>(null);
@@ -97,7 +97,7 @@ export class MatDatepickerInput<D>
       this._validatorOnChange();
     }
   }
-  private _min: D | null;
+  private _min: D | null = null;
 
   /** The maximum valid date. */
   @Input()
@@ -112,14 +112,14 @@ export class MatDatepickerInput<D>
       this._validatorOnChange();
     }
   }
-  private _max: D | null;
+  private _max: D | null = null;
 
   /** Function that can be used to filter out dates within the datepicker. */
   @Input('matDatepickerFilter')
   get dateFilter() {
     return this._dateFilter;
   }
-  set dateFilter(value: DateFilterFn<D | null>) {
+  set dateFilter(value: DateFilterFn<D | null> | null | undefined) {
     const wasMatchingValue = this._matchesFilter(this.value);
     this._dateFilter = value;
 
@@ -127,10 +127,10 @@ export class MatDatepickerInput<D>
       this._validatorOnChange();
     }
   }
-  private _dateFilter: DateFilterFn<D | null>;
+  private _dateFilter: DateFilterFn<D | null> | null | undefined;
 
   /** The combined form control validator for this input. */
-  protected _validator: ValidatorFn | null;
+  protected _validator: ValidatorFn | null = null;
 
   constructor(...args: unknown[]);
 

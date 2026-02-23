@@ -3,7 +3,7 @@ import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {Platform} from '@angular/cdk/platform';
 import {HarnessLoader, parallel} from '@angular/cdk/testing';
 import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
-import {MatButtonModule} from '../module';
+import {MatButtonModule} from '../button-module';
 import {MatIconModule} from '../../icon';
 import {MatIconHarness} from '../../icon/testing';
 import {MatButtonHarness} from './button-harness';
@@ -21,7 +21,7 @@ describe('MatButtonHarness', () => {
 
   it('should load all button harnesses', async () => {
     const buttons = await loader.getAllHarnesses(MatButtonHarness);
-    expect(buttons.length).toBe(17);
+    expect(buttons.length).toBe(18);
   });
 
   it('should load button with exact text', async () => {
@@ -40,7 +40,7 @@ describe('MatButtonHarness', () => {
   it('should filter by whether a button is disabled', async () => {
     const enabledButtons = await loader.getAllHarnesses(MatButtonHarness.with({disabled: false}));
     const disabledButtons = await loader.getAllHarnesses(MatButtonHarness.with({disabled: true}));
-    expect(enabledButtons.length).toBe(15);
+    expect(enabledButtons.length).toBe(16);
     expect(disabledButtons.length).toBe(2);
   });
 
@@ -57,6 +57,13 @@ describe('MatButtonHarness', () => {
     expect(await disabledFilledButton.isDisabled()).toBe(true);
     expect(await enabledElevatedButton.isDisabled()).toBe(false);
     expect(await disabledElevatedAnchor.isDisabled()).toBe(true);
+  });
+
+  it('should load button with type attribute', async () => {
+    const buttons = await loader.getAllHarnesses(MatButtonHarness.with({buttonType: 'submit'}));
+    expect(buttons.length).toBe(1);
+    expect(await buttons[0].getText()).toBe('Submit button');
+    expect(await buttons[0].getType()).toBe('submit');
   });
 
   it('should get button text', async () => {
@@ -108,6 +115,13 @@ describe('MatButtonHarness', () => {
     expect(await favIcon.getName()).toBe('favorite');
   });
 
+  it('should be able to filter buttons containing a named icon', async () => {
+    const favBtn = await loader.getHarness(MatButtonHarness.with({iconName: 'favorite'}));
+
+    expect(await (await favBtn.host()).getAttribute('id')).toBe('favorite-icon');
+    expect(await (await favBtn.getHarness(MatIconHarness)).getName()).toBe('favorite');
+  });
+
   it('should be able to ge the type variant of the button', async () => {
     const buttons = await loader.getAllHarnesses(MatButtonHarness);
     const variants = await parallel(() => buttons.map(button => button.getVariant()));
@@ -122,6 +136,7 @@ describe('MatButtonHarness', () => {
       'icon',
       'fab',
       'mini-fab',
+      'basic',
       'basic',
       'basic',
       'basic',
@@ -147,6 +162,7 @@ describe('MatButtonHarness', () => {
       null,
       null,
       null,
+      'text',
       'text',
       'filled',
       'elevated',
@@ -199,6 +215,7 @@ describe('MatButtonHarness', () => {
     </button>
     <button id="fab" type="button" matFab>Fab button</button>
     <button id="mini-fab" type="button" matMiniFab>Mini Fab button</button>
+    <button id="submit" type="submit" matButton>Submit button</button>
 
     <a id="anchor-basic" matButton>Basic anchor</a>
     <a id="anchor-flat" matButton="filled">Filled anchor</a>

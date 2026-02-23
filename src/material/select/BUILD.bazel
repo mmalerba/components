@@ -6,7 +6,6 @@ load(
     "ng_web_test_suite",
     "sass_binary",
     "sass_library",
-    "ts_project",
 )
 
 package(default_visibility = ["//visibility:public"])
@@ -67,11 +66,10 @@ ng_project(
     name = "select",
     srcs = [
         "index.ts",
-        "module.ts",
         "public-api.ts",
         "select.ts",
-        "select-animations.ts",
         "select-errors.ts",
+        "select-module.ts",
     ],
     assets = [
         "select.html",
@@ -94,7 +92,7 @@ ng_project(
     ],
 )
 
-ts_project(
+ng_project(
     name = "select_tests_lib",
     testonly = True,
     srcs = glob(

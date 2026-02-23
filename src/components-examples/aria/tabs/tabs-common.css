@@ -1,0 +1,120 @@
+[ngTabs] {
+  overflow: hidden;
+  border: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface-container-low);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+[ngTabList] {
+  display: flex;
+  outline: none;
+  overflow-x: scroll;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+[ngTabList][aria-disabled='true'] [ngTab]:not([aria-selected='true']) {
+  cursor: default;
+  color: color-mix(in srgb, var(--mat-sys-on-surface) 38%, transparent);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
+}
+
+[ngTab] {
+  flex: 1;
+  outline: none;
+  padding: 1rem;
+  cursor: pointer;
+  text-align: center;
+  position: relative;
+  white-space: nowrap;
+  color: var(--mat-sys-secondary);
+}
+
+[ngTab][aria-disabled='true'] {
+  cursor: default;
+  color: color-mix(in srgb, var(--mat-sys-on-surface) 38%, transparent);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
+}
+
+[ngTabList]:focus-within [ngTab][aria-disabled='true'][data-active='true']::before {
+  outline-color: var(--mat-sys-outline);
+}
+
+[ngTabList]:focus-within [ngTab][data-active='true']::before {
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 6px;
+  content: '';
+  position: absolute;
+  outline: 2px solid var(--mat-sys-primary);
+  border-radius: var(--mat-sys-corner-small);
+}
+
+[ngTab]:not([aria-disabled='true']):hover {
+  background-color: color-mix(in srgb, var(--mat-sys-outline) 10%, transparent);
+}
+
+[ngTab]:not([aria-disabled='true'])[aria-selected='true'] {
+  color: var(--mat-sys-primary);
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 5%, transparent);
+}
+
+[ngTab][aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--mat-sys-primary);
+  border-top-left-radius: var(--mat-sys-corner-small);
+  border-top-right-radius: var(--mat-sys-corner-small);
+}
+
+[ngTabPanel] {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 100px;
+}
+
+[ngTabPanel][inert='true'] {
+  display: none;
+}
+
+[ngTabPanel]:focus {
+  outline-offset: -4px;
+  outline: 2px solid var(--mat-sys-primary);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+/** Vertical Orientation Styles */
+
+[ngTabs]:has([ngTabList][aria-orientation='vertical']) {
+  display: flex;
+}
+
+[ngTabList][aria-orientation='vertical'] {
+  flex-direction: column;
+  border-bottom: none;
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+
+[ngTabList][aria-orientation='vertical']:focus-within [ngTab][data-active='true']::before {
+  right: 6px;
+  bottom: 3px;
+}
+
+[ngTabList][aria-orientation='vertical'] [ngTab][aria-selected='true']::after {
+  top: 0;
+  left: auto;
+  width: 2px;
+  height: 100%;
+  border-radius: 0;
+  border-top-left-radius: var(--mat-sys-corner-small);
+  border-bottom-left-radius: var(--mat-sys-corner-small);
+}
+
+[ngTabList][aria-orientation='vertical'] [ngTab] {
+  padding: 1rem 2rem;
+}

@@ -36,19 +36,6 @@ describe('MatRipple', () => {
   }
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatRippleModule,
-        BasicRippleContainer,
-        RippleContainerWithInputBindings,
-        RippleContainerWithoutBindings,
-        RippleContainerWithNgIf,
-        RippleCssTransitionNone,
-        RippleCssTransitionDurationZero,
-        RippleWithDomRemovalOnClick,
-      ],
-    });
-
     platform = TestBed.inject(Platform);
 
     // Set body margin to 0 during tests so it doesn't mess up position calculations.
@@ -500,7 +487,6 @@ describe('MatRipple', () => {
       // The testing module has been initialized in the root describe group for the ripples.
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
-        imports: [MatRippleModule, testComponent],
         providers: [
           {provide: MAT_RIPPLE_GLOBAL_OPTIONS, useValue: rippleConfig},
           ...extraProviders,
@@ -605,7 +591,6 @@ describe('MatRipple', () => {
     beforeEach(() => {
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
-        imports: [MatRippleModule, BasicRippleContainer],
         providers: [{provide: MATERIAL_ANIMATIONS, useValue: {animationsDisabled: true}}],
       });
 
@@ -843,7 +828,7 @@ describe('MatRipple', () => {
   imports: [MatRippleModule],
 })
 class BasicRippleContainer {
-  @ViewChild('ripple') ripple: MatRipple;
+  @ViewChild('ripple') ripple!: MatRipple;
 }
 
 @Component({
@@ -862,13 +847,13 @@ class BasicRippleContainer {
   imports: [MatRippleModule],
 })
 class RippleContainerWithInputBindings {
-  animationConfig: RippleAnimationConfig;
-  trigger: HTMLElement;
+  animationConfig!: RippleAnimationConfig;
+  trigger!: HTMLElement;
   centered = false;
   disabled = false;
   radius = 0;
   color = '';
-  @ViewChild(MatRipple) ripple: MatRipple;
+  @ViewChild(MatRipple) ripple!: MatRipple;
 }
 
 @Component({
@@ -882,7 +867,7 @@ class RippleContainerWithoutBindings {}
   imports: [MatRippleModule],
 })
 class RippleContainerWithNgIf {
-  @ViewChild(MatRipple) ripple: MatRipple;
+  @ViewChild(MatRipple) ripple!: MatRipple;
   isDestroyed = false;
 }
 

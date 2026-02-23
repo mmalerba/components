@@ -15,17 +15,14 @@ import {
 import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
 import {MatRippleModule} from '../core';
-import {MatTabBody, MatTabBodyPortal} from './tab-body';
+import {MatTabBody} from './tab-body';
 
 describe('MatTabBody', () => {
   let dir: WritableSignal<Direction>;
 
   beforeEach(waitForAsync(() => {
     dir = signal('ltr');
-    TestBed.configureTestingModule({
-      imports: [PortalModule, MatRippleModule, MatTabBody, MatTabBodyPortal, SimpleTabBodyApp],
-      providers: [provideFakeDirectionality(dir)],
-    });
+    TestBed.configureTestingModule({providers: [provideFakeDirectionality(dir)]});
   }));
 
   it('should be center position if origin is unchanged', () => {
@@ -136,16 +133,16 @@ describe('MatTabBody', () => {
 @Component({
   template: `
     <ng-template>Tab Body Content</ng-template>
-    <mat-tab-body [content]="content()" [position]="position"></mat-tab-body>
+    <mat-tab-body [content]="content()!" [position]="position"></mat-tab-body>
   `,
   imports: [PortalModule, MatRippleModule, MatTabBody],
 })
 class SimpleTabBodyApp implements AfterViewInit {
   content = signal<TemplatePortal | undefined>(undefined);
-  position: number;
+  position!: number;
 
-  @ViewChild(MatTabBody) tabBody: MatTabBody;
-  @ViewChild(TemplateRef) template: TemplateRef<any>;
+  @ViewChild(MatTabBody) tabBody!: MatTabBody;
+  @ViewChild(TemplateRef) template!: TemplateRef<any>;
 
   private readonly _viewContainerRef = inject(ViewContainerRef);
 

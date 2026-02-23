@@ -1,3 +1,4 @@
+load("//src/aria:config.bzl", "ARIA_ENTRYPOINTS")
 load("//src/cdk:config.bzl", "CDK_ENTRYPOINTS")
 load("//src/cdk-experimental:config.bzl", "CDK_EXPERIMENTAL_ENTRYPOINTS")
 load("//src/material:config.bzl", "MATERIAL_ENTRYPOINTS", "MATERIAL_TESTING_ENTRYPOINTS")
@@ -19,6 +20,7 @@ PKG_EXTERNALS = [
     "@angular/common/testing",
     "@angular/localize/init",
     "@angular/core",
+    "@angular/core/primitives/signals",
     "@angular/core/rxjs-interop",
     "@angular/core/testing",
     "@angular/forms",
@@ -28,6 +30,7 @@ PKG_EXTERNALS = [
     "@angular/router",
 
     # Primary entry-points in the project.
+    "@angular/aria",
     "@angular/cdk",
     "@angular/cdk-experimental",
     "@angular/google-maps",
@@ -42,8 +45,6 @@ PKG_EXTERNALS = [
     "axe-core",
     "kagekiri",
     "moment",
-    "moment/locale/fr",
-    "moment/locale/ja",
     "luxon",
     "date-fns",
     "protractor",
@@ -58,6 +59,7 @@ PKG_EXTERNALS = [
 def setup_entry_point_externals(packageName, entryPoints):
     PKG_EXTERNALS.extend(["@angular/%s/%s" % (packageName, ep) for ep in entryPoints])
 
+setup_entry_point_externals("aria", ARIA_ENTRYPOINTS)
 setup_entry_point_externals("cdk", CDK_ENTRYPOINTS)
 setup_entry_point_externals("cdk-experimental", CDK_EXPERIMENTAL_ENTRYPOINTS)
 setup_entry_point_externals("material", MATERIAL_ENTRYPOINTS + MATERIAL_TESTING_ENTRYPOINTS)
@@ -68,6 +70,7 @@ setup_entry_point_externals(
 
 # External module names in the examples package. Individual examples are grouped
 # by package and component, so we add configure such entry-points as external.
+setup_entry_point_externals("components-examples/aria", ARIA_ENTRYPOINTS)
 setup_entry_point_externals("components-examples/cdk", CDK_ENTRYPOINTS)
 setup_entry_point_externals("components-examples/cdk-experimental", CDK_EXPERIMENTAL_ENTRYPOINTS)
 setup_entry_point_externals(

@@ -1,7 +1,7 @@
 import {Direction} from '../bidi';
 import {CdkScrollable, ScrollingModule} from '../scrolling';
 import {Component, ElementRef, Input, ViewChild} from '@angular/core';
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 
 function expectOverlapping(el1: ElementRef<Element>, el2: ElementRef<Element>, expected = true) {
   const r1 = el1.nativeElement.getBoundingClientRect();
@@ -23,12 +23,6 @@ describe('CdkScrollable', () => {
   let fixture: ComponentFixture<ScrollableViewport>;
   let testComponent: ScrollableViewport;
   let maxOffset = 0;
-
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [ScrollingModule, ScrollableViewport],
-    });
-  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ScrollableViewport);
@@ -249,11 +243,11 @@ describe('CdkScrollable', () => {
   imports: [ScrollingModule],
 })
 class ScrollableViewport {
-  @Input() dir: Direction;
-  @ViewChild(CdkScrollable) scrollable: CdkScrollable;
-  @ViewChild('scrollContainer') scrollContainer: ElementRef<Element>;
-  @ViewChild('firstRowStart') firstRowStart: ElementRef<Element>;
-  @ViewChild('firstRowEnd') firstRowEnd: ElementRef<Element>;
-  @ViewChild('lastRowStart') lastRowStart: ElementRef<Element>;
-  @ViewChild('lastRowEnd') lastRowEnd: ElementRef<Element>;
+  @Input() dir: Direction = 'ltr';
+  @ViewChild(CdkScrollable) scrollable!: CdkScrollable;
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef<Element>;
+  @ViewChild('firstRowStart') firstRowStart!: ElementRef<Element>;
+  @ViewChild('firstRowEnd') firstRowEnd!: ElementRef<Element>;
+  @ViewChild('lastRowStart') lastRowStart!: ElementRef<Element>;
+  @ViewChild('lastRowEnd') lastRowEnd!: ElementRef<Element>;
 }

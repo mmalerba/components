@@ -9,6 +9,7 @@
 import {Component, OnDestroy, OnInit, inject} from '@angular/core';
 import {ActivatedRoute, RouterLink} from '@angular/router';
 import {MatRipple} from '@angular/material/core';
+import {NgTemplateOutlet} from '@angular/common';
 import {combineLatest, Subscription} from 'rxjs';
 
 import {
@@ -24,12 +25,12 @@ import {ComponentPageTitle} from '../page-title/page-title';
   selector: 'app-component-category-list',
   templateUrl: './component-category-list.html',
   styleUrls: ['./component-category-list.scss'],
-  imports: [NavigationFocus, RouterLink, MatRipple],
+  imports: [NavigationFocus, RouterLink, MatRipple, NgTemplateOutlet],
 })
 export class ComponentCategoryList implements OnInit, OnDestroy {
-  readonly _docItems = inject(DocumentationItems);
-  private _componentPageTitle = inject(ComponentPageTitle);
-  private _route = inject(ActivatedRoute);
+  private readonly _docItems = inject(DocumentationItems);
+  private readonly _componentPageTitle = inject(ComponentPageTitle);
+  private readonly _route = inject(ActivatedRoute);
 
   items: DocItem[] = [];
   section = '';

@@ -1,34 +1,10 @@
 import {dispatchFakeEvent, dispatchMouseEvent} from '@angular/cdk/testing/private';
 import {Component, QueryList, ViewChild, ViewChildren} from '@angular/core';
-import {TestBed, fakeAsync, waitForAsync} from '@angular/core/testing';
+import {TestBed, fakeAsync} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
 import {MatListItem, MatListModule} from './index';
 
 describe('MatList', () => {
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatListModule,
-        ListWithOneAnchorItem,
-        ListWithOneItem,
-        ListWithTwoLineItem,
-        ListWithThreeLineItem,
-        ListWithAvatar,
-        ListWithItemWithCssClass,
-        ListWithDynamicNumberOfLines,
-        ListWithMultipleItems,
-        NavListWithOneAnchorItem,
-        NavListWithActivatedItem,
-        ActionListWithoutType,
-        ActionListWithType,
-        ActionListWithDisabledList,
-        ActionListWithDisabledItem,
-        ListWithDisabledItems,
-        StandaloneListItem,
-      ],
-    });
-  }));
-
   it('should apply an additional class to lists without lines', () => {
     const fixture = TestBed.createComponent(ListWithOneItem);
     const listItem = fixture.debugElement.query(By.css('mat-list-item'))!;
@@ -439,7 +415,7 @@ class BaseTestList {
 class ListWithOneAnchorItem extends BaseTestList {
   // This needs to be declared directly on the class; if declared on the BaseTestList superclass,
   // it doesn't get populated.
-  @ViewChildren(MatListItem) listItems: QueryList<MatListItem>;
+  @ViewChildren(MatListItem) listItems!: QueryList<MatListItem>;
 }
 
 @Component({
@@ -452,7 +428,7 @@ class ListWithOneAnchorItem extends BaseTestList {
   imports: [MatListModule],
 })
 class NavListWithOneAnchorItem extends BaseTestList {
-  @ViewChildren(MatListItem) listItems: QueryList<MatListItem>;
+  @ViewChildren(MatListItem) listItems!: QueryList<MatListItem>;
   disableItemRipple: boolean = false;
   disableListRipple: boolean = false;
 }
@@ -470,7 +446,7 @@ class NavListWithOneAnchorItem extends BaseTestList {
   imports: [MatListModule],
 })
 class NavListWithActivatedItem extends BaseTestList {
-  @ViewChildren(MatListItem) listItems: QueryList<MatListItem>;
+  @ViewChildren(MatListItem) listItems!: QueryList<MatListItem>;
   disableItemRipple: boolean = false;
   disableListRipple: boolean = false;
 
@@ -488,7 +464,7 @@ class NavListWithActivatedItem extends BaseTestList {
   imports: [MatListModule],
 })
 class ActionListWithoutType extends BaseTestList {
-  @ViewChildren(MatListItem) listItems: QueryList<MatListItem>;
+  @ViewChildren(MatListItem) listItems!: QueryList<MatListItem>;
   disableListRipple = false;
   disableItemRipple = false;
 }
@@ -503,7 +479,7 @@ class ActionListWithoutType extends BaseTestList {
   imports: [MatListModule],
 })
 class ActionListWithType extends BaseTestList {
-  @ViewChildren(MatListItem) listItems: QueryList<MatListItem>;
+  @ViewChildren(MatListItem) listItems!: QueryList<MatListItem>;
 }
 
 @Component({
@@ -529,7 +505,7 @@ class ActionListWithDisabledList extends BaseTestList {
   imports: [MatListModule],
 })
 class ActionListWithDisabledItem extends BaseTestList {
-  @ViewChild(MatListItem) buttonItem: MatListItem;
+  @ViewChild(MatListItem) buttonItem!: MatListItem;
   disableItem = true;
 }
 

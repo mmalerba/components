@@ -66,7 +66,7 @@ describe('MapHeatmapLayer', () => {
     const heatmapConstructorSpy = createHeatmapLayerConstructorSpy(heatmapSpy);
 
     const fixture = TestBed.createComponent(TestApp);
-    fixture.componentInstance.data = options.data;
+    fixture.componentInstance.data = options.data!;
     fixture.changeDetectorRef.markForCheck();
     fixture.detectChanges();
     flush();
@@ -166,7 +166,7 @@ describe('MapHeatmapLayer', () => {
   imports: [GoogleMap, MapHeatmapLayer],
 })
 class TestApp {
-  @ViewChild(MapHeatmapLayer) heatmap: MapHeatmapLayer;
-  options?: Partial<google.maps.visualization.HeatmapLayerOptions>;
-  data?: HeatmapData | null;
+  @ViewChild(MapHeatmapLayer) heatmap!: MapHeatmapLayer;
+  options!: Partial<google.maps.visualization.HeatmapLayerOptions>;
+  data!: HeatmapData;
 }

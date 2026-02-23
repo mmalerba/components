@@ -8,7 +8,7 @@
 
 /** Possible states of the lifecycle of a dialog. */
 import {FocusOrigin} from '@angular/cdk/a11y';
-import {merge, Observable, Subject} from 'rxjs';
+import {merge, Observable, ReplaySubject} from 'rxjs';
 import {DialogRef} from '@angular/cdk/dialog';
 import {DialogPosition, MatDialogConfig} from './dialog-config';
 import {MatDialogContainer} from './dialog-container';
@@ -28,13 +28,13 @@ export enum MatDialogState {
  */
 export class MatDialogRef<T, R = any> {
   /** The instance of component opened into the dialog. */
-  componentInstance: T;
+  componentInstance!: T;
 
   /**
    * `ComponentRef` of the component opened into the dialog. Will be
    * null when the dialog is opened using a `TemplateRef`.
    */
-  readonly componentRef: ComponentRef<T> | null;
+  readonly componentRef: ComponentRef<T> | null = null;
 
   /** Whether the user is allowed to close the dialog. */
   disableClose: boolean | undefined;
@@ -43,16 +43,16 @@ export class MatDialogRef<T, R = any> {
   id: string;
 
   /** Subject for notifying the user that the dialog has finished opening. */
-  private readonly _afterOpened = new Subject<void>();
+  private readonly _afterOpened = new ReplaySubject<void>(1);
 
   /** Subject for notifying the user that the dialog has started closing. */
-  private readonly _beforeClosed = new Subject<R | undefined>();
+  private readonly _beforeClosed = new ReplaySubject<R | undefined>(1);
 
   /** Result to be passed to afterClosed. */
   private _result: R | undefined;
 
   /** Handle to the timeout that's running as a fallback in case the exit animation doesn't fire. */
-  private _closeFallbackTimeout: ReturnType<typeof setTimeout>;
+  private _closeFallbackTimeout: ReturnType<typeof setTimeout> | undefined;
 
   /** Current state of the dialog. */
   private _state = MatDialogState.OPEN;

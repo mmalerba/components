@@ -10,10 +10,10 @@ import { ConnectedPosition } from '@angular/cdk/overlay';
 import { Directionality } from '@angular/cdk/bidi';
 import { ElementRef } from '@angular/core';
 import * as i0 from '@angular/core';
+import * as i1$1 from '@angular/cdk/scrolling';
 import * as i1 from '@angular/cdk/a11y';
-import * as i1_2 from '@angular/cdk/bidi';
+import * as i2$1 from '@angular/cdk/bidi';
 import * as i2 from '@angular/cdk/overlay';
-import * as i5 from '@angular/cdk/scrolling';
 import { InjectionToken } from '@angular/core';
 import { NumberInput } from '@angular/cdk/coercion';
 import { Observable } from 'rxjs';
@@ -29,21 +29,8 @@ export function getMatTooltipInvalidPositionError(position: string): Error;
 // @public
 export const MAT_TOOLTIP_DEFAULT_OPTIONS: InjectionToken<MatTooltipDefaultOptions>;
 
-// @public @deprecated
-export function MAT_TOOLTIP_DEFAULT_OPTIONS_FACTORY(): MatTooltipDefaultOptions;
-
 // @public
 export const MAT_TOOLTIP_SCROLL_STRATEGY: InjectionToken<() => ScrollStrategy>;
-
-// @public @deprecated
-export function MAT_TOOLTIP_SCROLL_STRATEGY_FACTORY(_overlay: unknown): () => ScrollStrategy;
-
-// @public @deprecated
-export const MAT_TOOLTIP_SCROLL_STRATEGY_FACTORY_PROVIDER: {
-    provide: InjectionToken<() => ScrollStrategy>;
-    deps: any[];
-    useFactory: typeof MAT_TOOLTIP_SCROLL_STRATEGY_FACTORY;
-};
 
 // @public
 export class MatTooltip implements OnDestroy, AfterViewInit {
@@ -66,7 +53,7 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
     set hideDelay(value: NumberInput);
     _isTooltipVisible(): boolean;
     get message(): string;
-    set message(value: string | null | undefined);
+    set message(value: string | number | null | undefined);
     // (undocumented)
     ngAfterViewInit(): void;
     ngOnDestroy(): void;
@@ -89,10 +76,10 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
         y: number;
     }): void;
     get tooltipClass(): string | string[] | Set<string> | {
-        [key: string]: any;
+        [key: string]: unknown;
     };
     set tooltipClass(value: string | string[] | Set<string> | {
-        [key: string]: any;
+        [key: string]: unknown;
     });
     // (undocumented)
     _tooltipInstance: TooltipComponent | null;
@@ -103,13 +90,9 @@ export class MatTooltip implements OnDestroy, AfterViewInit {
     static ɵfac: i0.ɵɵFactoryDeclaration<MatTooltip, never>;
 }
 
-// @public @deprecated
-export const matTooltipAnimations: {
-    readonly tooltipState: any;
-};
-
 // @public
 export interface MatTooltipDefaultOptions {
+    detectHoverCapability?: boolean;
     disableTooltipInteractivity?: boolean;
     hideDelay: number;
     position?: TooltipPosition;
@@ -128,7 +111,7 @@ export class MatTooltipModule {
     // (undocumented)
     static ɵinj: i0.ɵɵInjectorDeclaration<MatTooltipModule>;
     // (undocumented)
-    static ɵmod: i0.ɵɵNgModuleDeclaration<MatTooltipModule, never, [typeof i1.A11yModule, typeof i2.OverlayModule, typeof MatCommonModule, typeof MatTooltip, typeof TooltipComponent], [typeof MatTooltip, typeof TooltipComponent, typeof MatCommonModule, typeof i5.CdkScrollableModule]>;
+    static ɵmod: i0.ɵɵNgModuleDeclaration<MatTooltipModule, never, [typeof i1.A11yModule, typeof i2.OverlayModule, typeof MatTooltip, typeof TooltipComponent], [typeof MatTooltip, typeof TooltipComponent, typeof i2$1.BidiModule, typeof i1$1.CdkScrollableModule]>;
 }
 
 // @public
@@ -160,8 +143,8 @@ export class TooltipComponent implements OnDestroy {
     protected _onShow(): void;
     show(delay: number): void;
     _tooltip: ElementRef<HTMLElement>;
-    tooltipClass: string | string[] | Set<string> | {
-        [key: string]: any;
+    tooltipClass: string | string[] | {
+        [key: string]: unknown;
     };
     _triggerElement: HTMLElement;
     // (undocumented)

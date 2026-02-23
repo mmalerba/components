@@ -1,6 +1,6 @@
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("@rules_angular//src/architect:ng_application.bzl", "ng_application")
 load("@rules_angular//src/architect:ng_test.bzl", "ng_test")
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 
 # NOTE:
 #  *_DEPS are runtime dependencies
@@ -19,11 +19,13 @@ COMMON_CONFIG = [
 
 # Project dependencies common across libs/tests
 DEPS = [
+    "//docs:node_modules/zone.js",
+    "//docs:node_modules/@angular/aria",
     "//docs:node_modules/@angular/cdk",
     "//docs:node_modules/@angular/cdk-experimental",
     "//docs:node_modules/@angular/material",
     "//docs:node_modules/@angular/material-experimental",
-    "//docs:node_modules/@angular/material-moment-adapter",
+    "//docs:node_modules/@angular/material-luxon-adapter",
     "//docs:node_modules/@angular/youtube-player",
 ]
 
@@ -33,9 +35,16 @@ APPLICATION_CONFIG = COMMON_CONFIG + [
 ]
 
 TEST_DEPS = [
-    "@rules_browsers//src/browsers/chromium",
-    "@rules_browsers//src/browsers/firefox",
+    "@rules_browsers//browsers/chromium",
+    "@rules_browsers//browsers/firefox",
+    "//docs:node_modules/@types/jasmine",
+    "//docs:node_modules/@types/node",
+    "//docs:node_modules/jasmine-core",
+    "//docs:node_modules/karma",
+    "//docs:node_modules/karma-chrome-launcher",
+    "//docs:node_modules/karma-coverage",
     "//docs:node_modules/karma-firefox-launcher",
+    "//docs:node_modules/karma-jasmine",
 ]
 
 # Common dependencies of Angular CLI test suites
@@ -46,8 +55,8 @@ TEST_CONFIG = COMMON_CONFIG + [
 
 # Common dependencies of Angular CLI e2e tests
 E2E_CONFIG = COMMON_CONFIG + [
-    "@rules_browsers//src/browsers/chromium",
-    "@rules_browsers//src/browsers/firefox",
+    "@rules_browsers//browsers/chromium",
+    "@rules_browsers//browsers/firefox",
     "//docs:ng-base-test-config",
     ":ng-e2e-config",
     "//docs:node_modules/jasmine-spec-reporter",
@@ -200,8 +209,8 @@ def _architect_test(project_name, command, configuration = None, args = [], srcs
         srcs = srcs,
         env = env,
         toolchains = [
-            "@rules_browsers//src/browsers/chromium:toolchain_alias",
-            "@rules_browsers//src/browsers/firefox:toolchain_alias",
+            "@rules_browsers//browsers/chromium:toolchain_alias",
+            "@rules_browsers//browsers/firefox:toolchain_alias",
         ],
         **kwargs
     )

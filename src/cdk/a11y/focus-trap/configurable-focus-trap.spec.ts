@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {
-  A11yModule,
   ConfigurableFocusTrap,
   ConfigurableFocusTrapFactory,
   FOCUS_TRAP_INERT_STRATEGY,
@@ -101,7 +100,6 @@ function createComponent<T>(
   providers: Provider[] = [],
 ): ComponentFixture<T> {
   TestBed.configureTestingModule({
-    imports: [A11yModule, componentType],
     providers: providers,
   });
 
@@ -121,7 +119,7 @@ class SimpleFocusTrap implements AfterViewInit {
 
   @ViewChild('focusTrapElement') focusTrapElement!: ElementRef;
 
-  focusTrap: ConfigurableFocusTrap;
+  focusTrap!: ConfigurableFocusTrap;
 
   ngAfterViewInit() {
     this.focusTrap = this._focusTrapFactory.create(this.focusTrapElement.nativeElement);

@@ -43,9 +43,8 @@ import {CDK_DRAG_HANDLE, CdkDragHandle} from './drag-handle';
 import {CdkDragPlaceholder} from './drag-placeholder';
 import {CdkDragPreview} from './drag-preview';
 import {CDK_DRAG_PARENT} from '../drag-parent';
-import {DragRef, Point, PreviewContainer, DragConstrainPosition} from '../drag-ref';
+import {DragRef, Point, PreviewContainer, DragConstrainPosition, createDragRef} from '../drag-ref';
 import type {CdkDropList} from './drop-list';
-import {DragDrop} from '../drag-drop';
 import {CDK_DRAG_CONFIG, DragDropConfig, DragStartDelay, DragAxis} from './config';
 import {assertElementNode} from './assertions';
 import {DragDropRegistry} from '../drag-drop-registry';
@@ -81,24 +80,24 @@ export class CdkDrag<T = any> implements AfterViewInit, OnChanges, OnDestroy {
 
   private readonly _destroyed = new Subject<void>();
   private _handles = new BehaviorSubject<CdkDragHandle[]>([]);
-  private _previewTemplate: CdkDragPreview | null;
-  private _placeholderTemplate: CdkDragPlaceholder | null;
+  private _previewTemplate: CdkDragPreview | null = null;
+  private _placeholderTemplate: CdkDragPlaceholder | null = null;
 
   /** Reference to the underlying drag instance. */
   _dragRef: DragRef<CdkDrag<T>>;
 
   /** Arbitrary data to attach to this drag instance. */
-  @Input('cdkDragData') data: T;
+  @Input('cdkDragData') data!: T;
 
   /** Locks the position of the dragged element along the specified axis. */
-  @Input('cdkDragLockAxis') lockAxis: DragAxis;
+  @Input('cdkDragLockAxis') lockAxis: DragAxis | null = null;
 
   /**
    * Selector that will be used to determine the root draggable element, starting from
    * the `cdkDrag` element and going up the DOM. Passing an alternate root element is useful
    * when trying to enable dragging on an element that you might not have access to.
    */
-  @Input('cdkDragRootElement') rootElementSelector: string;
+  @Input('cdkDragRootElement') rootElementSelector!: string;
 
   /**
    * Node or selector that will be used to determine the element to which the draggable's
@@ -106,19 +105,19 @@ export class CdkDrag<T = any> implements AfterViewInit, OnChanges, OnDestroy {
    * will be matched starting from the element's parent and going up the DOM until a match
    * has been found.
    */
-  @Input('cdkDragBoundary') boundaryElement: string | ElementRef<HTMLElement> | HTMLElement;
+  @Input('cdkDragBoundary') boundaryElement!: string | ElementRef<HTMLElement> | HTMLElement;
 
   /**
    * Amount of milliseconds to wait after the user has put their
    * pointer down before starting to drag the element.
    */
-  @Input('cdkDragStartDelay') dragStartDelay: DragStartDelay;
+  @Input('cdkDragStartDelay') dragStartDelay!: DragStartDelay;
 
   /**
    * Sets the position of a `CdkDrag` that is outside of a drop container.
    * Can be used to restore the element's position for a returning user.
    */
-  @Input('cdkDragFreeDragPosition') freeDragPosition: Point;
+  @Input('cdkDragFreeDragPosition') freeDragPosition!: Point;
 
   /** Whether starting to drag this element is disabled. */
   @Input({alias: 'cdkDragDisabled', transform: booleanAttribute})
@@ -129,7 +128,7 @@ export class CdkDrag<T = any> implements AfterViewInit, OnChanges, OnDestroy {
     this._disabled = value;
     this._dragRef.disabled = this._disabled;
   }
-  private _disabled: boolean;
+  private _disabled = false;
 
   /**
    * Function that can be used to customize the logic of how the position of the drag item
@@ -140,7 +139,7 @@ export class CdkDrag<T = any> implements AfterViewInit, OnChanges, OnDestroy {
   @Input('cdkDragConstrainPosition') constrainPosition?: DragConstrainPosition;
 
   /** Class to be added to the preview element. */
-  @Input('cdkDragPreviewClass') previewClass: string | string[];
+  @Input('cdkDragPreviewClass') previewClass!: string | string[];
 
   /**
    * Configures the place into which the preview of the item will be inserted. Can be configured
@@ -155,7 +154,7 @@ export class CdkDrag<T = any> implements AfterViewInit, OnChanges, OnDestroy {
    * - `ElementRef<HTMLElement> | HTMLElement` - Preview will be inserted into a specific element.
    * Same advantages and disadvantages as `parent`.
    */
-  @Input('cdkDragPreviewContainer') previewContainer: PreviewContainer;
+  @Input('cdkDragPreviewContainer') previewContainer!: PreviewContainer;
 
   /**
    * If the parent of the dragged element has a `scale` transform, it can throw off the
@@ -222,9 +221,8 @@ export class CdkDrag<T = any> implements AfterViewInit, OnChanges, OnDestroy {
   constructor() {
     const dropContainer = this.dropContainer;
     const config = inject<DragDropConfig>(CDK_DRAG_CONFIG, {optional: true});
-    const dragDrop = inject(DragDrop);
 
-    this._dragRef = dragDrop.createDrag(this.element, {
+    this._dragRef = createDragRef(this._injector, this.element, {
       dragStartThreshold:
         config && config.dragStartThreshold != null ? config.dragStartThreshold : 5,
       pointerDirectionChangeThreshold:
@@ -248,7 +246,6 @@ export class CdkDrag<T = any> implements AfterViewInit, OnChanges, OnDestroy {
     // is too late since the two modes save different kinds of information. We work around it by
     // assigning the drop container both from here and the list.
     if (dropContainer) {
-      this._dragRef._withDropContainer(dropContainer._dropListRef);
       dropContainer.addItem(this);
 
       // The drop container reads this so we need to sync it here.
@@ -561,10 +558,7 @@ export class CdkDrag<T = any> implements AfterViewInit, OnChanges, OnDestroy {
 
     this.disabled = draggingDisabled == null ? false : draggingDisabled;
     this.dragStartDelay = dragStartDelay || 0;
-
-    if (lockAxis) {
-      this.lockAxis = lockAxis;
-    }
+    this.lockAxis = lockAxis || null;
 
     if (constrainPosition) {
       this.constrainPosition = constrainPosition;

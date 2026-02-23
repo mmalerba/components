@@ -15,6 +15,14 @@ $fallbacks: m3-button.get-tokens();
     min-height: fit-content;
     flex-shrink: 0;
   }
+
+  // Hide the hover ripple on devices that don't support hover. Note that we have the `span`
+  // in the selector in order to increase the specificity over the actual hover styles.
+  @media (hover: none) {
+    &:hover > span.mat-mdc-button-persistent-ripple::before {
+      opacity: 0;
+    }
+  }
 }
 
 .mdc-button {
@@ -93,7 +101,7 @@ $fallbacks: m3-button.get-tokens();
       button-text-hover-state-layer-opacity, button-text-focus-state-layer-opacity,
       button-text-pressed-state-layer-opacity, $fallbacks);
   @include button-base.mat-private-button-touch-target(false,
-    button-text-touch-target-display, $fallbacks);
+    button-text-touch-target-size, button-text-touch-target-display, $fallbacks);
 }
 
 .mat-mdc-unelevated-button {
@@ -114,7 +122,7 @@ $fallbacks: m3-button.get-tokens();
       button-filled-hover-state-layer-opacity, button-filled-focus-state-layer-opacity,
       button-filled-pressed-state-layer-opacity, $fallbacks);
   @include button-base.mat-private-button-touch-target(false,
-    button-filled-touch-target-display, $fallbacks);
+    button-filled-touch-target-size, button-filled-touch-target-display, $fallbacks);
 
   &:not(:disabled) {
     color: token-utils.slot(button-filled-label-text-color, $fallbacks);
@@ -152,7 +160,7 @@ $fallbacks: m3-button.get-tokens();
       button-protected-hover-state-layer-opacity, button-protected-focus-state-layer-opacity,
       button-protected-pressed-state-layer-opacity, $fallbacks);
   @include button-base.mat-private-button-touch-target(false,
-      button-protected-touch-target-display, $fallbacks);
+      button-protected-touch-target-size, button-protected-touch-target-display, $fallbacks);
 
   &:not(:disabled) {
     color: token-utils.slot(button-protected-label-text-color, $fallbacks);
@@ -163,8 +171,10 @@ $fallbacks: m3-button.get-tokens();
     border-radius: token-utils.slot(button-protected-container-shape, $fallbacks);
   }
 
-  &:hover {
-    box-shadow: token-utils.slot(button-protected-hover-container-elevation-shadow, $fallbacks);
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: token-utils.slot(button-protected-hover-container-elevation-shadow, $fallbacks);
+    }
   }
 
   &:focus {
@@ -209,7 +219,7 @@ $fallbacks: m3-button.get-tokens();
       button-outlined-hover-state-layer-opacity, button-outlined-focus-state-layer-opacity,
       button-outlined-pressed-state-layer-opacity, $fallbacks);
   @include button-base.mat-private-button-touch-target(false,
-    button-outlined-touch-target-display, $fallbacks);
+      button-outlined-touch-target-size, button-outlined-touch-target-display, $fallbacks);
 
   &:not(:disabled) {
     color: token-utils.slot(button-outlined-label-text-color, $fallbacks);
@@ -258,7 +268,7 @@ $fallbacks: m3-button.get-tokens();
       button-tonal-hover-state-layer-opacity, button-tonal-focus-state-layer-opacity,
       button-tonal-pressed-state-layer-opacity, $fallbacks);
   @include button-base.mat-private-button-touch-target(false,
-    button-tonal-touch-target-display, $fallbacks);
+      button-tonal-touch-target-size, button-tonal-touch-target-display, $fallbacks);
 }
 
 .mat-mdc-button,

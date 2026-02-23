@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 
-import {FactoryProvider, Injectable, Optional, SkipSelf, OnDestroy} from '@angular/core';
+import {FactoryProvider, Injectable, OnDestroy, inject} from '@angular/core';
 import {DateAdapter} from '../core';
 import {Observable, Subject} from 'rxjs';
 
@@ -17,7 +17,7 @@ export class DateRange<D> {
    * expects a `DateRange`
    */
   // tslint:disable-next-line:no-unused-variable
-  private _disableStructuralEquivalency: never;
+  private _disableStructuralEquivalency!: never;
 
   constructor(
     /** The start date of the range. */
@@ -53,9 +53,10 @@ export interface DateSelectionModelChange<S> {
  * @docs-private
  */
 @Injectable()
-export abstract class MatDateSelectionModel<S, D = ExtractDateTypeFromSelection<S>>
-  implements OnDestroy
-{
+export abstract class MatDateSelectionModel<
+  S,
+  D = ExtractDateTypeFromSelection<S>,
+> implements OnDestroy {
   private readonly _selectionChanged = new Subject<DateSelectionModelChange<S>>();
 
   /** Emits when the selection has changed. */
@@ -212,49 +213,25 @@ export class MatRangeDateSelectionModel<D> extends MatDateSelectionModel<DateRan
 }
 
 /**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function MAT_SINGLE_DATE_SELECTION_MODEL_FACTORY(
-  parent: MatSingleDateSelectionModel<unknown>,
-  adapter: DateAdapter<unknown>,
-) {
-  return parent || new MatSingleDateSelectionModel(adapter);
-}
-
-/**
  * Used to provide a single selection model to a component.
  * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
  */
 export const MAT_SINGLE_DATE_SELECTION_MODEL_PROVIDER: FactoryProvider = {
   provide: MatDateSelectionModel,
-  deps: [[new Optional(), new SkipSelf(), MatDateSelectionModel], DateAdapter],
-  useFactory: MAT_SINGLE_DATE_SELECTION_MODEL_FACTORY,
+  useFactory: () => {
+    const parent = inject(MatDateSelectionModel, {optional: true, skipSelf: true});
+    return parent || new MatSingleDateSelectionModel(inject(DateAdapter));
+  },
 };
-
-/**
- * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
- */
-export function MAT_RANGE_DATE_SELECTION_MODEL_FACTORY(
-  parent: MatSingleDateSelectionModel<unknown>,
-  adapter: DateAdapter<unknown>,
-) {
-  return parent || new MatRangeDateSelectionModel(adapter);
-}
 
 /**
  * Used to provide a range selection model to a component.
  * @docs-private
- * @deprecated No longer used, will be removed.
- * @breaking-change 21.0.0
  */
 export const MAT_RANGE_DATE_SELECTION_MODEL_PROVIDER: FactoryProvider = {
   provide: MatDateSelectionModel,
-  deps: [[new Optional(), new SkipSelf(), MatDateSelectionModel], DateAdapter],
-  useFactory: MAT_RANGE_DATE_SELECTION_MODEL_FACTORY,
+  useFactory: () => {
+    const parent = inject(MatDateSelectionModel, {optional: true, skipSelf: true});
+    return parent || new MatRangeDateSelectionModel(inject(DateAdapter));
+  },
 };

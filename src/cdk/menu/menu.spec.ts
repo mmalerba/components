@@ -26,10 +26,6 @@ describe('Menu', () => {
     let menuItems: CdkMenuItemCheckbox[];
 
     beforeEach(waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [CdkMenuModule, MenuCheckboxGroup],
-      });
-
       fixture = TestBed.createComponent(MenuCheckboxGroup);
       fixture.detectChanges();
 
@@ -59,12 +55,6 @@ describe('Menu', () => {
     let fixture: ComponentFixture<InlineMenu>;
     let nativeMenu: HTMLElement;
     let nativeMenuItems: HTMLElement[];
-
-    beforeEach(waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [CdkMenuModule, InlineMenu],
-      });
-    }));
 
     beforeEach(() => {
       fixture = TestBed.createComponent(InlineMenu);
@@ -134,12 +124,6 @@ describe('Menu', () => {
       let nativeShareTrigger: HTMLElement | undefined;
 
       let nativeMenus: HTMLElement[];
-
-      beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-          imports: [CdkMenuModule, WithComplexNestedMenus],
-        });
-      }));
 
       beforeEach(() => {
         fixture = TestBed.createComponent(WithComplexNestedMenus);
@@ -326,12 +310,6 @@ describe('Menu', () => {
 
       let nativeMenus: HTMLElement[];
 
-      beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-          imports: [CdkMenuModule, WithComplexNestedMenusOnBottom],
-        });
-      }));
-
       beforeEach(() => {
         fixture = TestBed.createComponent(WithComplexNestedMenusOnBottom);
         detectChanges();
@@ -507,12 +485,6 @@ describe('Menu', () => {
     let fixture: ComponentFixture<MenuWithActiveItem>;
     let nativeMenuItems: HTMLElement[];
 
-    beforeEach(waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [CdkMenuModule, MenuWithActiveItem],
-      });
-    }));
-
     beforeEach(() => {
       fixture = TestBed.createComponent(MenuWithActiveItem);
       fixture.detectChanges();
@@ -526,6 +498,16 @@ describe('Menu', () => {
       fixture.componentInstance.menu.setActiveMenuItem(2);
       expect(document.activeElement).toEqual(nativeMenuItems[2]);
     });
+  });
+
+  it('should not pick up items from nested menu', () => {
+    const getItemsText = (menu: CdkMenu) =>
+      menu.items.map(i => i._elementRef.nativeElement.textContent?.trim());
+    const fixture = TestBed.createComponent(NestedMenuDefinition);
+    fixture.detectChanges();
+
+    expect(getItemsText(fixture.componentInstance.root)).toEqual(['One', 'Two']);
+    expect(getItemsText(fixture.componentInstance.inner)).toEqual(['Three', 'Four', 'Five']);
   });
 });
 
@@ -548,7 +530,7 @@ describe('Menu', () => {
   imports: [CdkMenuModule],
 })
 class MenuCheckboxGroup {
-  @ViewChild(CdkMenuItem) readonly trigger: CdkMenuItem;
+  @ViewChild(CdkMenuItem) readonly trigger!: CdkMenuItem;
 }
 
 @Component({
@@ -614,11 +596,11 @@ class InlineMenu {}
   imports: [CdkMenuModule],
 })
 class WithComplexNestedMenus {
-  @ViewChild('file_trigger', {read: ElementRef}) nativeFileTrigger: ElementRef<HTMLElement>;
-  @ViewChild('edit_trigger', {read: ElementRef}) nativeEditTrigger?: ElementRef<HTMLElement>;
-  @ViewChild('share_trigger', {read: ElementRef}) nativeShareTrigger?: ElementRef<HTMLElement>;
+  @ViewChild('file_trigger', {read: ElementRef}) nativeFileTrigger!: ElementRef<HTMLElement>;
+  @ViewChild('edit_trigger', {read: ElementRef}) nativeEditTrigger!: ElementRef<HTMLElement>;
+  @ViewChild('share_trigger', {read: ElementRef}) nativeShareTrigger!: ElementRef<HTMLElement>;
 
-  @ViewChildren(CdkMenu) menus: QueryList<CdkMenu>;
+  @ViewChildren(CdkMenu) menus!: QueryList<CdkMenu>;
 }
 
 @Component({
@@ -674,11 +656,11 @@ class WithComplexNestedMenus {
   imports: [CdkMenuModule],
 })
 class WithComplexNestedMenusOnBottom {
-  @ViewChild('file_trigger', {read: ElementRef}) nativeFileTrigger: ElementRef<HTMLElement>;
-  @ViewChild('edit_trigger', {read: ElementRef}) nativeEditTrigger?: ElementRef<HTMLElement>;
-  @ViewChild('share_trigger', {read: ElementRef}) nativeShareTrigger?: ElementRef<HTMLElement>;
+  @ViewChild('file_trigger', {read: ElementRef}) nativeFileTrigger!: ElementRef<HTMLElement>;
+  @ViewChild('edit_trigger', {read: ElementRef}) nativeEditTrigger!: ElementRef<HTMLElement>;
+  @ViewChild('share_trigger', {read: ElementRef}) nativeShareTrigger!: ElementRef<HTMLElement>;
 
-  @ViewChildren(CdkMenu) menus: QueryList<CdkMenu>;
+  @ViewChildren(CdkMenu) menus!: QueryList<CdkMenu>;
 }
 
 @Component({
@@ -693,5 +675,25 @@ class WithComplexNestedMenusOnBottom {
   imports: [CdkMenuModule],
 })
 class MenuWithActiveItem {
-  @ViewChild(CdkMenu) menu: CdkMenu;
+  @ViewChild(CdkMenu) menu!: CdkMenu;
+}
+
+@Component({
+  template: `
+    <div cdkMenu #root>
+      <button cdkMenuItem>One</button>
+      <button cdkMenuItem>Two</button>
+
+      <div cdkMenu #inner>
+        <button cdkMenuItem>Three</button>
+        <button cdkMenuItem>Four</button>
+        <button cdkMenuItem>Five</button>
+      </div>
+    </div>
+  `,
+  imports: [CdkMenuModule],
+})
+class NestedMenuDefinition {
+  @ViewChild('root', {read: CdkMenu}) root!: CdkMenu;
+  @ViewChild('inner', {read: CdkMenu}) inner!: CdkMenu;
 }

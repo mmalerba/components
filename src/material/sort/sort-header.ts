@@ -22,6 +22,8 @@ import {
   signal,
   ChangeDetectorRef,
 } from '@angular/core';
+import {_CdkPrivateStyleLoader} from '@angular/cdk/private';
+import {CdkColumnDef} from '@angular/cdk/table';
 import {merge, Subscription} from 'rxjs';
 import {
   MAT_SORT_DEFAULT_OPTIONS,
@@ -32,8 +34,6 @@ import {
 } from './sort';
 import {SortDirection} from './sort-direction';
 import {getSortHeaderNotContainedWithinSortError} from './sort-errors';
-import {MatSortHeaderIntl} from './sort-header-intl';
-import {_CdkPrivateStyleLoader} from '@angular/cdk/private';
 import {_animationsDisabled, _StructuralStylesLoader} from '../core';
 
 /**
@@ -58,11 +58,6 @@ export type ArrowViewState = SortDirection | 'hint' | 'active';
 export interface ArrowViewStateTransition {
   fromState?: ArrowViewState;
   toState?: ArrowViewState;
-}
-
-/** Column definition associated with a `MatSortHeader`. */
-interface MatSortHeaderColumnDef {
-  name: string;
 }
 
 /**
@@ -91,11 +86,8 @@ interface MatSortHeaderColumnDef {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MatSortHeader implements MatSortable, OnDestroy, OnInit, AfterViewInit {
-  _intl = inject(MatSortHeaderIntl);
-  _sort = inject(MatSort, {optional: true})!;
-  _columnDef = inject<MatSortHeaderColumnDef>('MAT_SORT_HEADER_COLUMN_DEF' as any, {
-    optional: true,
-  });
+  protected _sort = inject(MatSort, {optional: true})!;
+  private _columnDef = inject(CdkColumnDef, {optional: true});
   private _changeDetectorRef = inject(ChangeDetectorRef);
   private _focusMonitor = inject(FocusMonitor);
   private _elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -113,19 +105,19 @@ export class MatSortHeader implements MatSortable, OnDestroy, OnInit, AfterViewI
    * The element with role="button" inside this component's view. We need this
    * in order to apply a description with AriaDescriber.
    */
-  private _sortButton: HTMLElement;
+  private _sortButton!: HTMLElement;
 
   /**
    * ID of this sort header. If used within the context of a CdkColumnDef, this will default to
    * the column's name.
    */
-  @Input('mat-sort-header') id: string;
+  @Input('mat-sort-header') id!: string;
 
   /** Sets the position of the arrow that displays when sorted. */
   @Input() arrowPosition: SortHeaderArrowPosition = 'after';
 
   /** Overrides the sort start value of the containing MatSort for this MatSortable. */
-  @Input() start: SortDirection;
+  @Input() start!: SortDirection;
 
   /** whether the sort header is disabled. */
   @Input({transform: booleanAttribute})
@@ -149,7 +141,7 @@ export class MatSortHeader implements MatSortable, OnDestroy, OnInit, AfterViewI
 
   /** Overrides the disable clear value of the containing MatSort for this MatSortable. */
   @Input({transform: booleanAttribute})
-  disableClear: boolean;
+  disableClear!: boolean;
 
   constructor(...args: unknown[]);
 
@@ -188,9 +180,11 @@ export class MatSortHeader implements MatSortable, OnDestroy, OnInit, AfterViewI
   ngAfterViewInit() {
     // We use the focus monitor because we also want to style
     // things differently based on the focus origin.
-    this._focusMonitor
-      .monitor(this._elementRef, true)
-      .subscribe(() => this._recentlyCleared.set(null));
+    this._focusMonitor.monitor(this._elementRef, true).subscribe(() => {
+      // We need the delay here, because we can trigger a signal write error if the header
+      // has a signal bound to `disabled` which causes it to be blurred (see #31723.)
+      Promise.resolve().then(() => this._recentlyCleared.set(null));
+    });
   }
 
   ngOnDestroy() {

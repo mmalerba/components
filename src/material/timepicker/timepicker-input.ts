@@ -36,12 +36,12 @@ import {
   Validators,
 } from '@angular/forms';
 import {MAT_FORM_FIELD} from '../form-field';
-import {MatTimepicker} from './timepicker';
+import {MatTimepicker, MatTimepickerConnectedInput} from './timepicker';
 import {MAT_INPUT_VALUE_ACCESSOR} from '../input';
 import {Subscription} from 'rxjs';
 import {DOWN_ARROW, ESCAPE, hasModifierKey, UP_ARROW} from '@angular/cdk/keycodes';
 import {validateAdapter} from './util';
-import {_getFocusedElementPierceShadowDom} from '@angular/cdk/platform';
+import {_getEventTarget, _getFocusedElementPierceShadowDom} from '@angular/cdk/platform';
 
 /**
  * Input that can be used to enter time and connect to a `mat-timepicker`.
@@ -80,13 +80,15 @@ import {_getFocusedElementPierceShadowDom} from '@angular/cdk/platform';
     },
   ],
 })
-export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, OnDestroy {
+export class MatTimepickerInput<D>
+  implements MatTimepickerConnectedInput<D>, ControlValueAccessor, Validator, OnDestroy
+{
   private _elementRef = inject<ElementRef<HTMLInputElement>>(ElementRef);
   private _dateAdapter = inject<DateAdapter<D>>(DateAdapter, {optional: true})!;
   private _dateFormats = inject(MAT_DATE_FORMATS, {optional: true})!;
   private _formField = inject(MAT_FORM_FIELD, {optional: true});
 
-  private _onChange: ((value: any) => void) | undefined;
+  private _onChange: ((value: unknown) => void) | undefined;
   private _onTouched: (() => void) | undefined;
   private _validatorOnChange: (() => void) | undefined;
   private _cleanupClick: () => void;
@@ -95,6 +97,8 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
   private _timepickerSubscription: OutputRefSubscription | undefined;
   private _validator: ValidatorFn;
   private _lastValueValid = true;
+  private _minValid = true;
+  private _maxValid = true;
   private _lastValidDate: D | null = null;
 
   /** Value of the `aria-activedescendant` attribute. */
@@ -140,6 +144,16 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
     transform: (value: unknown) => this._transformDateInput<D>(value),
   });
 
+  /**
+   * Whether to open the timepicker overlay when clicking on the input. Enabled by default.
+   * Note that when disabling this option, you'll have to provide your own logic for opening
+   * the overlay.
+   */
+  readonly openOnClick: InputSignalWithTransform<boolean, unknown> = input(true, {
+    alias: 'matTimepickerOpenOnClick',
+    transform: booleanAttribute,
+  });
+
   /** Whether the input is disabled. */
   readonly disabled: Signal<boolean> = computed(
     () => this.disabledInput() || this._accessorDisabled(),
@@ -161,8 +175,7 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
 
     const renderer = inject(Renderer2);
     this._validator = this._getValidator();
-    this._respondToValueChanges();
-    this._respondToMinMaxChanges();
+    this._updateFormsState();
     this._registerTimepicker();
     this._localeSubscription = this._dateAdapter.localeChanges.subscribe(() => {
       if (!this._hasFocus()) {
@@ -183,7 +196,7 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
    * Implemented as a part of `ControlValueAccessor`.
    * @docs-private
    */
-  writeValue(value: any): void {
+  writeValue(value: unknown): void {
     // Note that we need to deserialize here, rather than depend on the value change effect,
     // because `getValidDateOrNull` will clobber the value if it's parseable, but not created by
     // the current adapter (see #30140).
@@ -195,7 +208,7 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
    * Implemented as a part of `ControlValueAccessor`.
    * @docs-private
    */
-  registerOnChange(fn: (value: any) => void): void {
+  registerOnChange(fn: (value: unknown) => void): void {
     this._onChange = fn;
   }
 
@@ -248,13 +261,20 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
   }
 
   /** Gets the ID of the input's label. */
-  _getLabelId(): string | null {
+  getLabelId(): string | null {
     return this._formField?.getLabelId() || null;
   }
 
   /** Handles clicks on the input or the containing form field. */
-  private _handleClick = (): void => {
-    if (!this.disabled()) {
+  private _handleClick = (event: MouseEvent): void => {
+    if (this.disabled() || !this.openOnClick()) {
+      return;
+    }
+
+    const target = _getEventTarget(event) as Node | null;
+    const overlayHost = this.timepicker()._getOverlayHost();
+
+    if (!target || !overlayHost || !overlayHost.contains(target)) {
       this.timepicker().open();
     }
   };
@@ -307,24 +327,45 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
     }
   }
 
-  /** Sets up the code that watches for changes in the value and adjusts the input. */
-  private _respondToValueChanges(): void {
+  /** Called by the timepicker to sync up the user-selected value. */
+  timepickerValueAssigned(value: D | null) {
+    if (!this._dateAdapter.sameTime(value, this.value())) {
+      this._assignUserSelection(value, true);
+      this._formatValue(value);
+    }
+  }
+
+  /** Sets up the code that keeps the input state in sync with the forms module. */
+  private _updateFormsState(): void {
     effect(() => {
-      const value = this._dateAdapter.deserialize(this.value());
-      const wasValid = this._lastValueValid;
-      this._lastValueValid = this._isValid(value);
+      const {
+        _dateAdapter: adapter,
+        _lastValueValid: prevValueValid,
+        _minValid: prevMinValid,
+        _maxValid: prevMaxValid,
+      } = this;
+      const value = adapter.deserialize(this.value());
+      const min = this.min();
+      const max = this.max();
+      const valueValid = (this._lastValueValid = this._isValid(value));
+      this._minValid = !min || !value || !valueValid || adapter.compareTime(min, value) <= 0;
+      this._maxValid = !max || !value || !valueValid || adapter.compareTime(max, value) >= 0;
+      const stateChanged =
+        prevValueValid !== valueValid ||
+        prevMinValid !== this._minValid ||
+        prevMaxValid !== this._maxValid;
 
       // Reformat the value if it changes while the user isn't interacting.
       if (!this._hasFocus()) {
         this._formatValue(value);
       }
 
-      if (value && this._lastValueValid) {
+      if (value && valueValid) {
         this._lastValidDate = value;
       }
 
       // Trigger the validator if the state changed.
-      if (wasValid !== this._lastValueValid) {
+      if (stateChanged) {
         this._validatorOnChange?.();
       }
     });
@@ -336,22 +377,6 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
       const timepicker = this.timepicker();
       timepicker.registerInput(this);
       timepicker.closed.subscribe(() => this._onTouched?.());
-      timepicker.selected.subscribe(({value}) => {
-        if (!this._dateAdapter.sameTime(value, this.value())) {
-          this._assignUserSelection(value, true);
-          this._formatValue(value);
-        }
-      });
-    });
-  }
-
-  /** Sets up the logic that adjusts the input if the min/max changes. */
-  private _respondToMinMaxChanges(): void {
-    effect(() => {
-      // Read the min/max so the effect knows when to fire.
-      this.min();
-      this.max();
-      this._validatorOnChange?.();
     });
   }
 
@@ -361,8 +386,10 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
    * @param propagateToAccessor Whether the value should be propagated to the ControlValueAccessor.
    */
   private _assignUserSelection(selection: D | null, propagateToAccessor: boolean) {
+    let toAssign: D | null;
+
     if (selection == null || !this._isValid(selection)) {
-      this.value.set(selection);
+      toAssign = selection;
     } else {
       // If a datepicker and timepicker are writing to the same object and the user enters an
       // invalid time into the timepicker, we may end up clearing their selection from the
@@ -374,12 +401,15 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
       const hours = adapter.getHours(selection);
       const minutes = adapter.getMinutes(selection);
       const seconds = adapter.getSeconds(selection);
-      this.value.set(target ? adapter.setTime(target, hours, minutes, seconds) : selection);
+      toAssign = target ? adapter.setTime(target, hours, minutes, seconds) : selection;
     }
 
+    // Propagate to the form control before emitting to `valueChange`.
     if (propagateToAccessor) {
-      this._onChange?.(this.value());
+      this._onChange?.(toAssign);
     }
+
+    this.value.set(toAssign);
   }
 
   /** Formats the current value and assigns it to the input. */
@@ -415,24 +445,28 @@ export class MatTimepickerInput<D> implements ControlValueAccessor, Validator, O
         this._lastValueValid
           ? null
           : {'matTimepickerParse': {'text': this._elementRef.nativeElement.value}},
-      control => {
-        const controlValue = this._dateAdapter.getValidDateOrNull(
-          this._dateAdapter.deserialize(control.value),
-        );
-        const min = this.min();
-        return !min || !controlValue || this._dateAdapter.compareTime(min, controlValue) <= 0
+      control =>
+        this._minValid
           ? null
-          : {'matTimepickerMin': {'min': min, 'actual': controlValue}};
-      },
-      control => {
-        const controlValue = this._dateAdapter.getValidDateOrNull(
-          this._dateAdapter.deserialize(control.value),
-        );
-        const max = this.max();
-        return !max || !controlValue || this._dateAdapter.compareTime(max, controlValue) >= 0
+          : {
+              'matTimepickerMin': {
+                'min': this.min(),
+                'actual': this._dateAdapter.getValidDateOrNull(
+                  this._dateAdapter.deserialize(control.value),
+                ),
+              },
+            },
+      control =>
+        this._maxValid
           ? null
-          : {'matTimepickerMax': {'max': max, 'actual': controlValue}};
-      },
+          : {
+              'matTimepickerMax': {
+                'max': this.max(),
+                'actual': this._dateAdapter.getValidDateOrNull(
+                  this._dateAdapter.deserialize(control.value),
+                ),
+              },
+            },
     ])!;
   }
 }

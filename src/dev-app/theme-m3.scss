@@ -1,4 +1,5 @@
 @use '@angular/material' as mat;
+@use '@angular/material-experimental' as matx;
 
 // Plus imports for other components in your app.
 
@@ -37,8 +38,9 @@ html {
     @include mat.all-component-themes($light-theme);
     @include mat.system-level-colors($light-theme);
     @include mat.system-level-typography($light-theme);
-    // TODO(mmalerba): Support M3 for experimental components.
-    // @include matx.column-resize-theme($light-theme);
+    @include matx.column-resize-theme($light-theme);
+
+    // TODO(mmalerba): Support M3 for experimental popover-edit.
     // @include matx.popover-edit-theme($light-theme);
   }
 
@@ -51,16 +53,16 @@ html {
       typography: Roboto,
       density: 0,
     ));
+    @include matx.column-resize-theme();
   }
+
+  @include mat.system-classes();
 }
 
 @include mat.typography-hierarchy($light-theme);
 
 .demo-strong-focus {
-  // Note: we can theme the indicators directly through `strong-focus-indicators` as well.
-  // Use the theme so we have some coverage over the entire API surface.
   @include mat.strong-focus-indicators();
-  @include mat.strong-focus-indicators-theme($light-theme);
 }
 
 // Include the alternative theme styles inside of a block with a CSS class. You can make this
@@ -73,14 +75,9 @@ body.demo-unicorn-dark-theme {
     // Include the dark theme color styles.
     @include mat.all-component-colors($dark-theme);
     @include mat.system-level-colors($dark-theme);
-    // TODO(mmalerba): Support M3 for experimental components.
-    // @include matx.column-resize-color($dark-theme);
+    @include matx.column-resize-color($dark-theme);
+    // TODO(mmalerba): Support M3 for experimental popover-edit.
     // @include matx.popover-edit-color($dark-theme);
-  }
-
-  // Include the dark theme colors for focus indicators.
-  &.demo-strong-focus {
-    @include mat.strong-focus-indicators-color($dark-theme);
   }
 }
 

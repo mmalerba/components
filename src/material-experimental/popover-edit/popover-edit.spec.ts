@@ -64,7 +64,7 @@ interface PeriodicElement {
 
 @Directive()
 abstract class BaseTestComponent {
-  @ViewChild('table') table: ElementRef;
+  @ViewChild('table') table!: ElementRef;
 
   preservedValues = new FormValueContainer<PeriodicElement, {'name': string}>();
 
@@ -203,9 +203,9 @@ class ElementDataSource extends DataSource<PeriodicElement> {
             ${NAME_EDIT_TEMPLATE}
           </ng-template>
 
-          <span *matIfRowHovered>
+          <ng-template>
             <button matEditOpen>Edit</button>
-          </span>
+</ng-template>
         </mat-cell>
       </ng-container>
 
@@ -255,9 +255,9 @@ class MatFlexTableInCell extends BaseTestComponent {
             ${NAME_EDIT_TEMPLATE}
           </ng-template>
 
-          <span *matIfRowHovered>
+          <ng-template>
             <button matEditOpen>Edit</button>
-          </span>
+          </ng-template>
         </td>
       </ng-container>
 

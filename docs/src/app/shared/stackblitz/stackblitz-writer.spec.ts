@@ -102,7 +102,6 @@ describe('StackBlitzWriter', () => {
     const expectedFiles = jasmine.objectContaining({
       'angular.json': 'fake',
       'src/main.ts': `import {ExampleComponent} from './test';`,
-      'src/test.ts': 'fake',
       'src/index.html': `<this-is-the-comp-name></this-is-the-comp-name>`,
       'src/example/test.ts': `ExampleComponent
 
@@ -113,7 +112,8 @@ describe('StackBlitzWriter', () => {
 
     expect(openProjectSpy).toHaveBeenCalledTimes(1);
     expect(openProjectSpy).toHaveBeenCalledWith(jasmine.objectContaining({files: expectedFiles}), {
-      openFile: 'src/app/test.ts',
+      openFile: 'src/example/test.ts',
+      startScript: 'start',
     });
   }));
 });

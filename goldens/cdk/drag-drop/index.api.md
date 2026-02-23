@@ -9,6 +9,7 @@ import { ElementRef } from '@angular/core';
 import { EventEmitter } from '@angular/core';
 import * as i0 from '@angular/core';
 import { InjectionToken } from '@angular/core';
+import { Injector } from '@angular/core';
 import { NgZone } from '@angular/core';
 import { Observable } from 'rxjs';
 import { OnChanges } from '@angular/core';
@@ -66,7 +67,7 @@ export class CdkDrag<T = any> implements AfterViewInit, OnChanges, OnDestroy {
     getFreeDragPosition(): Readonly<Point>;
     getPlaceholderElement(): HTMLElement;
     getRootElement(): HTMLElement;
-    lockAxis: DragAxis;
+    lockAxis: DragAxis | null;
     readonly moved: Observable<CdkDragMove<T>>;
     // (undocumented)
     static ngAcceptInputType_disabled: unknown;
@@ -259,7 +260,7 @@ export class CdkDropList<T = any> implements OnDestroy {
     getSortedItems(): CdkDrag[];
     hasAnchor: boolean;
     id: string;
-    lockAxis: DragAxis;
+    lockAxis: DragAxis | null;
     // (undocumented)
     static ngAcceptInputType_autoScrollDisabled: unknown;
     // (undocumented)
@@ -299,15 +300,23 @@ export class CdkDropListGroup<T> implements OnDestroy {
 export function copyArrayItem<T = any>(currentArray: T[], targetArray: T[], currentIndex: number, targetIndex: number): void;
 
 // @public
+export function createDragRef<T = unknown>(injector: Injector, element: ElementRef<HTMLElement> | HTMLElement, config?: DragRefConfig): DragRef<T>;
+
+// @public
+export function createDropListRef<T = unknown>(injector: Injector, element: ElementRef<HTMLElement> | HTMLElement): DropListRef<T>;
+
+// @public
 export type DragAxis = 'x' | 'y';
 
 // @public
 export type DragConstrainPosition = (userPointerPosition: Point, dragRef: DragRef, dimensions: DOMRect, pickupPositionInElement: Point) => Point;
 
-// @public
+// @public @deprecated
 export class DragDrop {
     constructor(...args: unknown[]);
+    // @deprecated
     createDrag<T = any>(element: ElementRef<HTMLElement> | HTMLElement, config?: DragRefConfig): DragRef<T>;
+    // @deprecated
     createDropList<T = any>(element: ElementRef<HTMLElement> | HTMLElement): DropListRef<T>;
     // (undocumented)
     static ɵfac: i0.ɵɵFactoryDeclaration<DragDrop, never>;
@@ -330,7 +339,7 @@ export interface DragDropConfig extends Partial<DragRefConfig> {
     // (undocumented)
     listOrientation?: DropListOrientation;
     // (undocumented)
-    lockAxis?: DragAxis;
+    lockAxis?: DragAxis | null;
     // (undocumented)
     previewClass?: string | string[];
     // (undocumented)
@@ -423,7 +432,7 @@ export class DragRef<T = any> {
     getRootElement(): HTMLElement;
     getVisibleElement(): HTMLElement;
     isDragging(): boolean;
-    lockAxis: 'x' | 'y';
+    lockAxis: 'x' | 'y' | null;
     readonly moved: Observable<{
         source: DragRef;
         pointerPosition: {
@@ -523,7 +532,7 @@ export class DropListRef<T = any> {
     isDragging(): boolean;
     _isOverContainer(x: number, y: number): boolean;
     isReceiving(): boolean;
-    lockAxis: 'x' | 'y';
+    lockAxis: 'x' | 'y' | null;
     readonly receivingStarted: Subject<{
         receiver: DropListRef;
         initiator: DropListRef;

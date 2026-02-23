@@ -17,10 +17,10 @@ import {
 import {Component, signal, ViewChild, WritableSignal} from '@angular/core';
 import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-import {MatNativeDateModule} from '../core';
+import {provideNativeDateAdapter} from '../core';
 import {AUG, DEC, FEB, JAN, JUL, JUN, MAR, MAY, NOV, OCT, SEP} from '../testing';
-import {MatCalendarBody} from './calendar-body';
 import {MatYearView} from './year-view';
+import {MatCalendarCellClassFunction} from './calendar-body';
 
 describe('MatYearView', () => {
   let dir: WritableSignal<Direction>;
@@ -29,16 +29,7 @@ describe('MatYearView', () => {
     dir = signal<Direction>('ltr');
 
     TestBed.configureTestingModule({
-      imports: [
-        MatNativeDateModule,
-        MatCalendarBody,
-        MatYearView,
-        // Test components.
-        StandardYearView,
-        YearViewWithDateFilter,
-        YearViewWithDateClass,
-      ],
-      providers: [provideFakeDirectionality(dir)],
+      providers: [provideNativeDateAdapter(), provideFakeDirectionality(dir)],
     });
   }));
 
@@ -408,9 +399,9 @@ describe('MatYearView', () => {
 class StandardYearView {
   date = new Date(2017, JAN, 5);
   selected = new Date(2017, MAR, 10);
-  selectedMonth: Date;
+  selectedMonth!: Date;
 
-  @ViewChild(MatYearView) yearView: MatYearView<Date>;
+  @ViewChild(MatYearView) yearView!: MatYearView<Date>;
 }
 
 @Component({
@@ -443,7 +434,7 @@ class YearViewWithDateFilter {
 })
 class YearViewWithDateClass {
   activeDate = new Date(2017, JAN, 1);
-  dateClass(date: Date) {
-    return date.getMonth() % 2 == 0 ? 'even' : undefined;
-  }
+  dateClass: MatCalendarCellClassFunction<Date> = (date: Date) => {
+    return date.getMonth() % 2 == 0 ? 'even' : [];
+  };
 }

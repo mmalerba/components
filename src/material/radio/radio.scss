@@ -4,12 +4,27 @@
 @use './radio-common';
 
 $fallbacks: m3-radio.get-tokens();
+$_is-external-build: true;
 
 .mat-mdc-radio-button {
   -webkit-tap-highlight-color: transparent;
 
   @include radio-common.radio-structure(true);
   @include radio-common.radio-noop-animations();
+
+  // Clicking the label toggles the radio, but MDC does not include any styles that inform the
+  // user of this. Therefore we add the pointer cursor on top of MDC's styles.
+  label {
+    cursor: pointer;
+
+    // TODO(crisbeto): disable internally due to a large amount of breakages.
+    // Prevent the label from taking up space when it's empty.
+    @if ($_is-external-build) {
+      &:empty {
+        display: none;
+      }
+    }
+  }
 
   .mdc-radio__background::before {
     background-color: token-utils.slot(radio-ripple-color, $fallbacks);
@@ -88,8 +103,8 @@ $fallbacks: m3-radio.get-tokens();
   position: absolute;
   top: 50%;
   left: 50%;
-  height: 48px;
-  width: 48px;
+  height: token-utils.slot(radio-touch-target-size, $fallbacks);
+  width: token-utils.slot(radio-touch-target-size, $fallbacks);
   transform: translate(-50%, -50%);
   display: token-utils.slot(radio-touch-target-display, $fallbacks);
 

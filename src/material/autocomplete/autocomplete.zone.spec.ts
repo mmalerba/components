@@ -13,12 +13,12 @@ import {
 import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 import {FormControl, ReactiveFormsModule} from '@angular/forms';
 import {Subscription} from 'rxjs';
-import {MATERIAL_ANIMATIONS, MatOption} from '../core';
-import {MatFormField} from '../form-field';
+import {MATERIAL_ANIMATIONS, MatOption, ThemePalette} from '../core';
+import {FloatLabelType, MatFormField} from '../form-field';
 import {MatInputModule} from '../input';
 import {MatAutocomplete} from './autocomplete';
 import {MatAutocompleteTrigger} from './autocomplete-trigger';
-import {MatAutocompleteModule} from './module';
+import {MatAutocompleteModule} from './autocomplete-module';
 
 describe('MatAutocomplete Zone.js integration', () => {
   // Creates a test component fixture.
@@ -119,26 +119,26 @@ describe('MatAutocomplete Zone.js integration', () => {
 })
 class SimpleAutocomplete implements OnDestroy {
   stateCtrl = new FormControl<{name: string; code: string} | string | null>(null);
-  filteredStates: any[];
-  valueSub: Subscription;
-  floatLabel = 'auto';
-  position = 'auto';
-  width: number;
+  filteredStates!: any[];
+  valueSub!: Subscription;
+  floatLabel: FloatLabelType = 'auto';
+  position: 'auto' | 'above' | 'below' = 'auto';
+  width!: number;
   disableRipple = false;
   autocompleteDisabled = false;
   hasLabel = true;
   requireSelection = false;
-  ariaLabel: string;
-  ariaLabelledby: string;
+  ariaLabel!: string;
+  ariaLabelledby!: string;
   panelClass = 'class-one class-two';
-  theme: string;
+  theme!: ThemePalette;
   openedSpy = jasmine.createSpy('autocomplete opened spy');
   closedSpy = jasmine.createSpy('autocomplete closed spy');
 
-  @ViewChild(MatAutocompleteTrigger, {static: true}) trigger: MatAutocompleteTrigger;
-  @ViewChild(MatAutocomplete) panel: MatAutocomplete;
-  @ViewChild(MatFormField) formField: MatFormField;
-  @ViewChildren(MatOption) options: QueryList<MatOption>;
+  @ViewChild(MatAutocompleteTrigger, {static: true}) trigger!: MatAutocompleteTrigger;
+  @ViewChild(MatAutocomplete) panel!: MatAutocomplete;
+  @ViewChild(MatFormField) formField!: MatFormField;
+  @ViewChildren(MatOption) options!: QueryList<MatOption>;
 
   states: {code: string; name: string; height?: number; disabled?: boolean}[] = [
     {code: 'AL', name: 'Alabama'},

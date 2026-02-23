@@ -10,20 +10,23 @@ import {ListRange} from '../collections';
 import {Platform} from '../platform';
 import {
   afterNextRender,
+  ApplicationRef,
   booleanAttribute,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
+  effect,
   ElementRef,
   inject,
-  Inject,
+  InjectionToken,
   Injector,
   Input,
   OnDestroy,
   OnInit,
-  Optional,
   Output,
   signal,
+  untracked,
   ViewChild,
   ViewEncapsulation,
 } from '@angular/core';
@@ -35,7 +38,7 @@ import {
   Subject,
   Subscription,
 } from 'rxjs';
-import {auditTime, startWith, takeUntil} from 'rxjs/operators';
+import {auditTime, distinctUntilChanged, filter, startWith, takeUntil} from 'rxjs/operators';
 import {CdkScrollable, ExtendedScrollToOptions} from './scrollable';
 import {ViewportRuler} from './viewport-ruler';
 import {CdkVirtualScrollRepeater} from './virtual-scroll-repeater';
@@ -55,6 +58,14 @@ function rangesEqual(r1: ListRange, r2: ListRange): boolean {
 const SCROLL_SCHEDULER =
   typeof requestAnimationFrame !== 'undefined' ? animationFrameScheduler : asapScheduler;
 
+/**
+ * Lightweight token that can be used to inject the `CdkVirtualScrollViewport`
+ * without introducing a hard dependency on it.
+ */
+export const CDK_VIRTUAL_SCROLL_VIEWPORT = new InjectionToken<CdkVirtualScrollViewport>(
+  'CDK_VIRTUAL_SCROLL_VIEWPORT',
+);
+
 /** A viewport that virtualizes its scrolling with the help of `CdkVirtualForOf`. */
 @Component({
   selector: 'cdk-virtual-scroll-viewport',
@@ -70,12 +81,10 @@ const SCROLL_SCHEDULER =
   providers: [
     {
       provide: CdkScrollable,
-      useFactory: (
-        virtualScrollable: CdkVirtualScrollable | null,
-        viewport: CdkVirtualScrollViewport,
-      ) => virtualScrollable || viewport,
-      deps: [[new Optional(), new Inject(VIRTUAL_SCROLLABLE)], CdkVirtualScrollViewport],
+      useFactory: () =>
+        inject(VIRTUAL_SCROLLABLE, {optional: true}) || inject(CdkVirtualScrollViewport),
     },
+    {provide: CDK_VIRTUAL_SCROLL_VIEWPORT, useExisting: CdkVirtualScrollViewport},
   ],
 })
 export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements OnInit, OnDestroy {
@@ -93,6 +102,7 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
 
   /** Emits when the rendered range changes. */
   private readonly _renderedRangeSubject = new Subject<ListRange>();
+  private readonly _renderedContentOffsetSubject = new Subject<number | null>();
 
   /** The direction the viewport scrolls. */
   @Input()
@@ -127,10 +137,18 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
   );
 
   /** The element that wraps the rendered content. */
-  @ViewChild('contentWrapper', {static: true}) _contentWrapper: ElementRef<HTMLElement>;
+  @ViewChild('contentWrapper', {static: true}) _contentWrapper!: ElementRef<HTMLElement>;
 
   /** A stream that emits whenever the rendered range changes. */
   readonly renderedRangeStream: Observable<ListRange> = this._renderedRangeSubject;
+
+  /**
+   * Emits the offset from the start of the viewport to the start of the rendered data (in pixels).
+   */
+  readonly renderedContentOffset: Observable<number> = this._renderedContentOffsetSubject.pipe(
+    filter(offset => offset !== null),
+    distinctUntilChanged(),
+  );
 
   /**
    * The total size of all content (in pixels), including content that is not currently rendered.
@@ -147,7 +165,7 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
    * The CSS transform applied to the rendered subset of items so that they appear within the bounds
    * of the visible viewport.
    */
-  private _renderedContentTransform: string;
+  private _renderedContentTransform: string | undefined;
 
   /** The currently rendered range of indices. */
   private _renderedRange: ListRange = {start: 0, end: 0};
@@ -159,7 +177,7 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
   private _viewportSize = 0;
 
   /** the currently attached CdkVirtualScrollRepeater. */
-  private _forOf: CdkVirtualScrollRepeater<any> | null;
+  private _forOf: CdkVirtualScrollRepeater<any> | null = null;
 
   /** The last rendered content offset that was set. */
   private _renderedContentOffset = 0;
@@ -170,8 +188,7 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
    */
   private _renderedContentOffsetNeedsRewrite = false;
 
-  /** Whether there is a pending change detection cycle. */
-  private _isChangeDetectionPending = false;
+  private _changeDetectionNeeded = signal(false);
 
   /** A list of functions to run after the next change detection cycle. */
   private _runAfterChangeDetection: Function[] = [];
@@ -202,6 +219,18 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
       this.elementRef.nativeElement.classList.add('cdk-virtual-scrollable');
       this.scrollable = this;
     }
+
+    const ref = effect(
+      () => {
+        if (this._changeDetectionNeeded()) {
+          this._doChangeDetection();
+        }
+      },
+      // Using ApplicationRef injector is important here because we want this to be a root
+      // effect that runs before change detection of any application views (since we're depending on markForCheck marking parents dirty)
+      {injector: inject(ApplicationRef).injector},
+    );
+    inject(DestroyRef).onDestroy(() => void ref.destroy());
   }
 
   override ngOnInit() {
@@ -488,16 +517,16 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
       this._runAfterChangeDetection.push(runAfter);
     }
 
-    // Use a Promise to batch together calls to `_doChangeDetection`. This way if we set a bunch of
-    // properties sequentially we only have to run `_doChangeDetection` once at the end.
-    if (!this._isChangeDetectionPending) {
-      this._isChangeDetectionPending = true;
-      this.ngZone.runOutsideAngular(() =>
-        Promise.resolve().then(() => {
-          this._doChangeDetection();
-        }),
-      );
+    if (untracked(this._changeDetectionNeeded)) {
+      return;
     }
+    this.ngZone.runOutsideAngular(() => {
+      Promise.resolve().then(() => {
+        this.ngZone.run(() => {
+          this._changeDetectionNeeded.set(true);
+        });
+      });
+    });
   }
 
   /** Run change detection. */
@@ -516,11 +545,12 @@ export class CdkVirtualScrollViewport extends CdkVirtualScrollable implements On
       // bypassSecurityTrustStyle is banned in Google. However the value is safe, it's composed of
       // string literals, a variable that can only be 'X' or 'Y', and user input that is run through
       // the `Number` function first to coerce it to a numeric value.
-      this._contentWrapper.nativeElement.style.transform = this._renderedContentTransform;
+      this._contentWrapper.nativeElement.style.transform = this._renderedContentTransform!;
+      this._renderedContentOffsetSubject.next(this.getOffsetToRenderedContentStart());
 
       afterNextRender(
         () => {
-          this._isChangeDetectionPending = false;
+          this._changeDetectionNeeded.set(false);
           const runAfterChangeDetection = this._runAfterChangeDetection;
           this._runAfterChangeDetection = [];
           for (const fn of runAfterChangeDetection) {

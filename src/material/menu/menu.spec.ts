@@ -30,7 +30,6 @@ import {
 } from '@angular/core';
 import {ComponentFixture, fakeAsync, flush, TestBed, tick} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import {Subject} from 'rxjs';
 import {
   createKeyboardEvent,
@@ -43,7 +42,8 @@ import {
   provideFakeDirectionality,
 } from '../../cdk/testing/private';
 import {MATERIAL_ANIMATIONS, MatRipple} from '../core';
-import {MatMenu, MatMenuItem, MatMenuModule} from './index';
+import {MatButton} from '@angular/material/button';
+import {MatMenu, MatMenuItem} from './index';
 import {
   MAT_MENU_DEFAULT_OPTIONS,
   MAT_MENU_SCROLL_STRATEGY,
@@ -256,10 +256,6 @@ describe('MatMenu', () => {
   }));
 
   it('should move focus to another item if the active item is destroyed', fakeAsync(() => {
-    // TODO(crisbeto): figure out why NoopAnimationsModule is necessary
-    // here and our token isn't enough. Likely indicates an issue.
-    TestBed.resetTestingModule().configureTestingModule({imports: [NoopAnimationsModule]});
-    overlayContainerElement = TestBed.inject(OverlayContainer).getContainerElement();
     const fixture = TestBed.createComponent(MenuWithRepeatedItems);
     fixture.detectChanges();
     const triggerEl = fixture.componentInstance.triggerEl.nativeElement;
@@ -268,17 +264,19 @@ describe('MatMenu', () => {
     fixture.detectChanges();
     tick(500);
 
-    const items = overlayContainerElement.querySelectorAll(
+    const items = overlayContainerElement.querySelectorAll<HTMLElement>(
       '.mat-mdc-menu-panel .mat-mdc-menu-item',
     );
 
-    expect(document.activeElement).toBe(items[0]);
+    // Stub out the `_hasFocus` method since it's hard to move focus reliably within the test.
+    spyOn(fixture.componentInstance.itemInstances.first, '_hasFocus').and.callFake(() => true);
+    const spy = spyOn(items[1], 'focus');
 
     fixture.componentInstance.items.shift();
     fixture.detectChanges();
     tick(500);
 
-    expect(document.activeElement).toBe(items[1]);
+    expect(spy).toHaveBeenCalled();
   }));
 
   it('should be able to set a custom class on the backdrop', fakeAsync(() => {
@@ -1282,6 +1280,23 @@ describe('MatMenu', () => {
     }));
   });
 
+  it('does not open if the trigger element is disabled (including disabledInteractive)', fakeAsync(() => {
+    const fixture = TestBed.createComponent(DisabledMenu);
+    fixture.detectChanges();
+
+    const trigger = fixture.componentInstance.triggerEl.nativeElement;
+    trigger.click();
+    fixture.detectChanges();
+    tick(500);
+    expect(overlayContainerElement.querySelector('.mat-mdc-menu-panel [mat-menu-item]')).toBeNull();
+
+    dispatchKeyboardEvent(trigger, 'keydown', ENTER);
+    trigger.click();
+    fixture.detectChanges();
+    tick(500);
+    expect(overlayContainerElement.querySelector('.mat-mdc-menu-panel [mat-menu-item]')).toBeNull();
+  }));
+
   describe('positions', () => {
     let fixture: ComponentFixture<PositionedMenu>;
     let trigger: HTMLElement;
@@ -1538,8 +1553,8 @@ describe('MatMenu', () => {
      * subject.openMenu();
      */
     class OverlapSubject<T extends TestableMenu> {
-      readonly fixture: ComponentFixture<T>;
-      readonly trigger: HTMLElement;
+      readonly fixture!: ComponentFixture<T>;
+      readonly trigger!: HTMLElement;
 
       constructor(ctor: {new (): T}, inputs: {[key: string]: any} = {}) {
         this.fixture = TestBed.createComponent(ctor);
@@ -2555,7 +2570,6 @@ describe('MatMenu', () => {
 describe('MatMenu default overrides', () => {
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      imports: [MatMenuModule],
       providers: [
         {
           provide: MAT_MENU_DEFAULT_OPTIONS,
@@ -2617,18 +2631,18 @@ class FakeIcon {}
   imports: [MatMenuTrigger, MatMenu, MatMenuItem, FakeIcon],
 })
 class SimpleMenu {
-  @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
-  @ViewChild('triggerEl') triggerEl: ElementRef<HTMLElement>;
-  @ViewChild(MatMenu) menu: MatMenu;
-  @ViewChildren(MatMenuItem) items: QueryList<MatMenuItem>;
+  @ViewChild(MatMenuTrigger) trigger!: MatMenuTrigger;
+  @ViewChild('triggerEl') triggerEl!: ElementRef<HTMLElement>;
+  @ViewChild(MatMenu) menu!: MatMenu;
+  @ViewChildren(MatMenuItem) items!: QueryList<MatMenuItem>;
   extraItems: string[] = [];
   closeCallback = jasmine.createSpy('menu closed callback');
-  backdropClass: string;
-  panelClass: string;
+  backdropClass!: string;
+  panelClass!: string;
   restoreFocus = true;
-  ariaLabel: string;
-  ariaLabelledby: string;
-  ariaDescribedby: string;
+  ariaLabel!: string;
+  ariaLabelledby!: string;
+  ariaDescribedby!: string;
 }
 
 @Component({
@@ -2640,6 +2654,20 @@ class SimpleMenuOnPush extends SimpleMenu {}
 
 @Component({
   template: `
+    <button mat-button disabled [disabledInteractive]="true"
+        [matMenuTriggerFor]="menu" #triggerEl>Toggle menu</button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item> Action! </button>
+    </mat-menu>
+  `,
+  imports: [MatButton, MatMenuTrigger, MatMenu, MatMenuItem],
+})
+class DisabledMenu {
+  @ViewChild('triggerEl', {read: ElementRef}) triggerEl!: ElementRef<HTMLElement>;
+}
+
+@Component({
+  template: `
     <button [matMenuTriggerFor]="menu" #triggerEl>Toggle menu</button>
     <mat-menu [xPosition]="xPosition" [yPosition]="yPosition" #menu="matMenu">
       <button mat-menu-item> Positioned Content </button>
@@ -2648,8 +2676,8 @@ class SimpleMenuOnPush extends SimpleMenu {}
   imports: [MatMenuTrigger, MatMenu, MatMenuItem],
 })
 class PositionedMenu {
-  @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
-  @ViewChild('triggerEl') triggerEl: ElementRef<HTMLElement>;
+  @ViewChild(MatMenuTrigger) trigger!: MatMenuTrigger;
+  @ViewChild('triggerEl') triggerEl!: ElementRef<HTMLElement>;
   xPosition: MenuPositionX = 'before';
   yPosition: MenuPositionY = 'above';
 }
@@ -2668,9 +2696,9 @@ interface TestableMenu {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem],
 })
 class OverlapMenu implements TestableMenu {
-  @Input() overlapTrigger: boolean;
-  @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
-  @ViewChild('triggerEl') triggerEl: ElementRef<HTMLElement>;
+  @Input() overlapTrigger: boolean = false;
+  @ViewChild(MatMenuTrigger) trigger!: MatMenuTrigger;
+  @ViewChild('triggerEl', {read: ElementRef}) triggerEl!: ElementRef<HTMLElement>;
 }
 
 @Component({
@@ -2682,16 +2710,15 @@ class OverlapMenu implements TestableMenu {
     </ng-template>
   `,
   exportAs: 'matCustomMenu',
-  imports: [MatMenuTrigger, MatMenu, MatMenuItem],
 })
 class CustomMenuPanel implements MatMenuPanel {
-  direction: Direction;
+  direction!: Direction;
   xPosition: MenuPositionX = 'after';
   yPosition: MenuPositionY = 'below';
   overlapTrigger = true;
-  parentMenu: MatMenuPanel;
+  parentMenu!: MatMenuPanel;
 
-  @ViewChild(TemplateRef) templateRef: TemplateRef<any>;
+  @ViewChild(TemplateRef) templateRef!: TemplateRef<any>;
   @Output() readonly close = new EventEmitter<void | 'click' | 'keydown' | 'tab'>();
   focusFirstItem = () => {};
   resetActiveItem = () => {};
@@ -2705,10 +2732,10 @@ class CustomMenuPanel implements MatMenuPanel {
       <button mat-menu-item> Custom Content </button>
     </custom-menu>
   `,
-  imports: [MatMenuTrigger, MatMenu, MatMenuItem, CustomMenuPanel],
+  imports: [MatMenuTrigger, MatMenuItem, CustomMenuPanel],
 })
 class CustomMenu {
-  @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
+  @ViewChild(MatMenuTrigger) trigger!: MatMenuTrigger;
 }
 
 @Component({
@@ -2761,22 +2788,22 @@ class CustomMenu {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem],
 })
 class NestedMenu {
-  @ViewChild('root') rootMenu: MatMenu;
-  @ViewChild('rootTrigger') rootTrigger: MatMenuTrigger;
-  @ViewChild('rootTriggerEl') rootTriggerEl: ElementRef<HTMLElement>;
-  @ViewChild('alternateTrigger') alternateTrigger: MatMenuTrigger;
+  @ViewChild('root') rootMenu!: MatMenu;
+  @ViewChild('rootTrigger') rootTrigger!: MatMenuTrigger;
+  @ViewChild('rootTriggerEl') rootTriggerEl!: ElementRef<HTMLElement>;
+  @ViewChild('alternateTrigger') alternateTrigger!: MatMenuTrigger;
   readonly rootCloseCallback = jasmine.createSpy('root menu closed callback');
 
-  @ViewChild('levelOne') levelOneMenu: MatMenu;
-  @ViewChild('levelOneTrigger') levelOneTrigger: MatMenuTrigger;
+  @ViewChild('levelOne') levelOneMenu!: MatMenu;
+  @ViewChild('levelOneTrigger') levelOneTrigger!: MatMenuTrigger;
   readonly levelOneCloseCallback = jasmine.createSpy('level one menu closed callback');
 
-  @ViewChild('levelTwo') levelTwoMenu: MatMenu;
-  @ViewChild('levelTwoTrigger') levelTwoTrigger: MatMenuTrigger;
+  @ViewChild('levelTwo') levelTwoMenu!: MatMenu;
+  @ViewChild('levelTwoTrigger') levelTwoTrigger!: MatMenuTrigger;
   readonly levelTwoCloseCallback = jasmine.createSpy('level one menu closed callback');
 
-  @ViewChild('lazy') lazyMenu: MatMenu;
-  @ViewChild('lazyTrigger') lazyTrigger: MatMenuTrigger;
+  @ViewChild('lazy') lazyMenu!: MatMenu;
+  @ViewChild('lazyTrigger') lazyTrigger!: MatMenuTrigger;
   showLazy = false;
 
   firstItemDisabled = false;
@@ -2803,8 +2830,8 @@ class NestedMenu {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem],
 })
 class NestedMenuRepeater {
-  @ViewChild('rootTriggerEl') rootTriggerEl: ElementRef<HTMLElement>;
-  @ViewChild('levelOneTrigger') levelOneTrigger: MatMenuTrigger;
+  @ViewChild('rootTriggerEl') rootTriggerEl!: ElementRef<HTMLElement>;
+  @ViewChild('levelOneTrigger') levelOneTrigger!: MatMenuTrigger;
 
   items = ['one', 'two', 'three'];
 }
@@ -2824,7 +2851,7 @@ class NestedMenuRepeater {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem],
 })
 class SubmenuDeclaredInsideParentMenu {
-  @ViewChild('rootTriggerEl') rootTriggerEl: ElementRef;
+  @ViewChild('rootTriggerEl') rootTriggerEl!: ElementRef;
 }
 
 // Note: for some reason doing `spyOn(item, 'ngOnDestroy')` doesn't work, even though a
@@ -2853,10 +2880,10 @@ class DestroyChecker implements OnDestroy {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem, MatMenuContent, DestroyChecker],
 })
 class SimpleLazyMenu {
-  @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
-  @ViewChild('triggerEl') triggerEl: ElementRef<HTMLElement>;
-  @ViewChildren(MatMenuItem) items: QueryList<MatMenuItem>;
-  @ViewChildren(DestroyChecker) destroyCheckers: QueryList<DestroyChecker>;
+  @ViewChild(MatMenuTrigger) trigger!: MatMenuTrigger;
+  @ViewChild('triggerEl') triggerEl!: ElementRef<HTMLElement>;
+  @ViewChildren(MatMenuItem) items!: QueryList<MatMenuItem>;
+  @ViewChildren(DestroyChecker) destroyCheckers!: QueryList<DestroyChecker>;
 }
 
 @Component({
@@ -2880,8 +2907,8 @@ class SimpleLazyMenu {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem, MatMenuContent],
 })
 class LazyMenuWithContext {
-  @ViewChild('triggerOne') triggerOne: MatMenuTrigger;
-  @ViewChild('triggerTwo') triggerTwo: MatMenuTrigger;
+  @ViewChild('triggerOne') triggerOne!: MatMenuTrigger;
+  @ViewChild('triggerTwo') triggerTwo!: MatMenuTrigger;
 }
 
 @Component({
@@ -2898,9 +2925,9 @@ class LazyMenuWithContext {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem],
 })
 class DynamicPanelMenu {
-  @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
-  @ViewChild('one') firstMenu: MatMenu;
-  @ViewChild('two') secondMenu: MatMenu;
+  @ViewChild(MatMenuTrigger) trigger!: MatMenuTrigger;
+  @ViewChild('one') firstMenu!: MatMenu;
+  @ViewChild('two') secondMenu!: MatMenu;
 }
 
 @Component({
@@ -2915,7 +2942,7 @@ class DynamicPanelMenu {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem],
 })
 class MenuWithCheckboxItems {
-  @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
+  @ViewChild(MatMenuTrigger) trigger!: MatMenuTrigger;
 }
 
 @Component({
@@ -2930,9 +2957,9 @@ class MenuWithCheckboxItems {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem],
 })
 class SimpleMenuWithRepeater {
-  @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
-  @ViewChild(MatMenu) menu: MatMenu;
-  @ViewChildren(MatMenuItem) itemInstances: QueryList<MatMenuItem>;
+  @ViewChild(MatMenuTrigger) trigger!: MatMenuTrigger;
+  @ViewChild(MatMenu) menu!: MatMenu;
+  @ViewChildren(MatMenuItem) itemInstances!: QueryList<MatMenuItem>;
   items = [
     {label: 'Pizza', disabled: false},
     {label: 'Pasta', disabled: false},
@@ -2953,8 +2980,8 @@ class SimpleMenuWithRepeater {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem, MatMenuContent],
 })
 class SimpleMenuWithRepeaterInLazyContent {
-  @ViewChild(MatMenuTrigger) trigger: MatMenuTrigger;
-  @ViewChild(MatMenu) menu: MatMenu;
+  @ViewChild(MatMenuTrigger) trigger!: MatMenuTrigger;
+  @ViewChild(MatMenu) menu!: MatMenu;
   items = [
     {label: 'Pizza', disabled: false},
     {label: 'Pasta', disabled: false},
@@ -2981,8 +3008,8 @@ class SimpleMenuWithRepeaterInLazyContent {
   imports: [MatMenuTrigger, MatMenu, MatMenuItem, MatMenuContent],
 })
 class LazyMenuWithOnPush {
-  @ViewChild('triggerEl', {read: ElementRef}) rootTrigger: ElementRef;
-  @ViewChild('menuItem', {read: ElementRef}) menuItemWithSubmenu: ElementRef;
+  @ViewChild('triggerEl', {read: ElementRef}) rootTrigger!: ElementRef;
+  @ViewChild('menuItem', {read: ElementRef}) menuItemWithSubmenu!: ElementRef;
 }
 
 @Component({
@@ -2991,25 +3018,25 @@ class LazyMenuWithOnPush {
       <button [matMenuTriggerFor]="menu"></button>
     </mat-menu>
   `,
-  imports: [MatMenuTrigger, MatMenu, MatMenuItem],
+  imports: [MatMenuTrigger, MatMenu],
 })
 class InvalidRecursiveMenu {}
 
 @Component({
   template: '<mat-menu aria-label="label"></mat-menu>',
-  imports: [MatMenuTrigger, MatMenu, MatMenuItem],
+  imports: [MatMenu],
 })
 class StaticAriaLabelMenu {}
 
 @Component({
   template: '<mat-menu aria-labelledby="some-element"></mat-menu>',
-  imports: [MatMenuTrigger, MatMenu, MatMenuItem],
+  imports: [MatMenu],
 })
 class StaticAriaLabelledByMenu {}
 
 @Component({
   template: '<mat-menu aria-describedby="some-element"></mat-menu>',
-  imports: [MatMenuTrigger, MatMenu, MatMenuItem],
+  imports: [MatMenu],
 })
 class StaticAriaDescribedbyMenu {}
 
@@ -3025,8 +3052,9 @@ class StaticAriaDescribedbyMenu {}
   imports: [MatMenuTrigger, MatMenu, MatMenuItem],
 })
 class MenuWithRepeatedItems {
-  @ViewChild(MatMenuTrigger, {static: false}) trigger: MatMenuTrigger;
-  @ViewChild('triggerEl', {static: false}) triggerEl: ElementRef<HTMLElement>;
-  @ViewChild(MatMenu, {static: false}) menu: MatMenu;
+  @ViewChild(MatMenuTrigger, {static: false}) trigger!: MatMenuTrigger;
+  @ViewChild('triggerEl', {static: false}) triggerEl!: ElementRef<HTMLElement>;
+  @ViewChild(MatMenu, {static: false}) menu!: MatMenu;
+  @ViewChildren(MatMenuItem) itemInstances!: QueryList<MatMenuItem>;
   items = ['One', 'Two', 'Three'];
 }

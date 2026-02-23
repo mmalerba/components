@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 
-import {ElementRef, NgZone} from '@angular/core';
+import {DOCUMENT, ElementRef, Injector, NgZone} from '@angular/core';
 import {Direction} from '../bidi';
 import {coerceElement} from '../coercion';
 import {ViewportRuler} from '../scrolling';
@@ -50,6 +50,24 @@ enum AutoScrollHorizontalDirection {
 }
 
 /**
+ * Creates a `DropListRef` for an element, turning it into a drop list.
+ * @param injector Injector used to resolve dependencies.
+ * @param element Element to which to attach the drop list functionality.
+ */
+export function createDropListRef<T = unknown>(
+  injector: Injector,
+  element: ElementRef<HTMLElement> | HTMLElement,
+): DropListRef<T> {
+  return new DropListRef(
+    element,
+    injector.get(DragDropRegistry),
+    injector.get(DOCUMENT),
+    injector.get(NgZone),
+    injector.get(ViewportRuler),
+  );
+}
+
+/**
  * Reference to a drop list. Used to manipulate or dispose of the container.
  */
 export class DropListRef<T = any> {
@@ -63,7 +81,7 @@ export class DropListRef<T = any> {
   sortingDisabled: boolean = false;
 
   /** Locks the position of the draggable elements inside the container along the specified axis. */
-  lockAxis: 'x' | 'y';
+  lockAxis: 'x' | 'y' | null = null;
 
   /**
    * Whether auto-scrolling the view when the user
@@ -137,10 +155,10 @@ export class DropListRef<T = any> {
   }>();
 
   /** Arbitrary data that can be attached to the drop list. */
-  data: T;
+  data!: T;
 
   /** Element that is the direct parent of the drag items. */
-  private _container: HTMLElement;
+  private _container!: HTMLElement;
 
   /** Whether an item in the list is being dragged. */
   private _isDragging = false;
@@ -149,7 +167,7 @@ export class DropListRef<T = any> {
   private _parentPositions: ParentPositionTracker;
 
   /** Strategy being used to sort items within the list. */
-  private _sortStrategy: DropListSortStrategy;
+  private _sortStrategy!: DropListSortStrategy;
 
   /** Cached `DOMRect` of the drop list. */
   private _domRect: DOMRect | undefined;
@@ -173,7 +191,7 @@ export class DropListRef<T = any> {
   private _horizontalScrollDirection = AutoScrollHorizontalDirection.NONE;
 
   /** Node that is being auto-scrolled. */
-  private _scrollNode: HTMLElement | Window;
+  private _scrollNode!: HTMLElement | Window;
 
   /** Used to signal to the current auto-scroll sequence when to stop. */
   private readonly _stopScrollTimers = new Subject<void>();
@@ -188,7 +206,7 @@ export class DropListRef<T = any> {
   private _scrollableElements: HTMLElement[] = [];
 
   /** Initial value for the element's `scroll-snap-type` style. */
-  private _initialScrollSnap: string;
+  private _initialScrollSnap!: string;
 
   /** Direction of the list's layout. */
   private _direction: Direction = 'ltr';

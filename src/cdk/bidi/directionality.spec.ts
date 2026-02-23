@@ -10,13 +10,6 @@ describe('Directionality', () => {
     fakeDocument = {body: {}, documentElement: {}};
 
     TestBed.configureTestingModule({
-      imports: [
-        BidiModule,
-        ElementWithDir,
-        ElementWithPredefinedAutoDir,
-        InjectsDirectionality,
-        ElementWithPredefinedUppercaseDir,
-      ],
       providers: [{provide: DIR_DOCUMENT, useFactory: () => fakeDocument}],
     });
   }));
@@ -130,7 +123,7 @@ describe('Directionality', () => {
       fixture.detectChanges();
       expect(fixture.componentInstance.dir.value).toBe('rtl');
 
-      fixture.componentInstance.direction.set('not-valid');
+      fixture.componentInstance.direction.set('not-valid' as any);
       fixture.detectChanges();
       expect(fixture.componentInstance.dir.value).toBe('ltr');
     });
@@ -177,8 +170,8 @@ class InjectsDirectionality {
   imports: [Dir, InjectsDirectionality],
 })
 class ElementWithDir {
-  @ViewChild(Dir) dir: Dir;
-  direction = signal('rtl');
+  @ViewChild(Dir) dir!: Dir;
+  direction = signal<Direction>('rtl');
   changeCount = 0;
 }
 
@@ -187,15 +180,15 @@ class ElementWithDir {
   imports: [Dir],
 })
 class ElementWithPredefinedAutoDir {
-  @ViewChild(Dir) dir: Dir;
+  @ViewChild(Dir) dir!: Dir;
 }
 
 @Component({
-  template: '<div dir="RTL"></div>',
+  template: '<div [dir]="$any(`RTL`)"></div>',
   imports: [Dir],
 })
 class ElementWithPredefinedUppercaseDir {
-  @ViewChild(Dir) dir: Dir;
+  @ViewChild(Dir) dir!: Dir;
 }
 
 interface FakeDocument {
